@@ -1,15 +1,15 @@
 # asusmerlin-nvpnmgr
-Automatically update VPN client connection to recommended NordVPN server on Asus Merlin router firmware. Tested on RT-AC68U running v384.16 from https://www.asuswrt-merlin.net/download
+Automatically update VPN client connection to recommended NordVPN server on Asus Merlin router firmware. Tested on RT-AC68U running v384.16 from [here](https://www.asuswrt-merlin.net/download)
 
 ## Prerequisites
 
-a NordVPN account is required to establish a connection.
+A NordVPN account is required to establish a connection.
 
-an Asus router running v384.15 or later of the Merlin firmware.
+An Asus router running v384.15 or later of the Merlin firmware.
 
 The JFFS partition needs to be enabled.
 
-a VPN connection with the string "nordvpn" needs to exist in 1 of the 5 VPN client configurations on the router for the script to successfully run (install possible as long as the above prerequisites are in place). Configure this initially using the information from NordVPN about configuring the connection. Future executions of the script will also use the required naming convention.
+A VPN connection with the string "nordvpn" needs to exist in 1 of the 5 VPN client configurations on the router for the script to successfully run (install possible as long as the above prerequisites are in place). Configure this initially using the information from NordVPN about configuring the connection. Future executions of the script will also use the required naming convention.
 
 ## Installation (Script)
 To install the required files, run the following command on the Asus router running Merlin firmware:
@@ -25,16 +25,16 @@ run the following command
 ```
 There is currently no validation on the input for scheduled entries - make sure you enter valid values!
 
-(menu approach inspired by https://github.com/jackyaz)
+(menu approach inspired by [jackyaz](https://github.com/jackyaz))
 
 ## Usage (CLI)
-- where [1|2|3|4|5] is noted, this refers to the instance of the VPN connection
-- where [openvpn_udp|openvpn_tcp] is noted, this refers to the VPN protocol (as named by NordVPN in their API). This is currently fixed to use the "openvpn_udp" VPN profiles. Future version may support multiple protocols (see "To Do" section).
-- where [minute] is noted, this refers to the minute in the hour when a scheduled update should take place
-- where [hour] is noted, this refers to the hour in the day/s when a scheduled update should take place
-- where [day numbers] is noted, this refers to the days when an update will take place from 0 to 6 (1 = Monday). Multiple days can be specified separating days with a comma (e.g. "1,5" is Monday and Friday). 
+-   where `[1|2|3|4|5]` is noted, this refers to the instance of the VPN connection
+-   where `[openvpn_udp|openvpn_tcp]` is noted, this refers to the VPN protocol (as named by NordVPN in their API). This is currently fixed to use the "openvpn_udp" VPN profiles. Future version may support multiple protocols (see "To Do" section).
+-   where `[minute]` is noted, this refers to the minute in the hour when a scheduled update should take place
+-   where `[hour]` is noted, this refers to the hour in the day/s when a scheduled update should take place
+-   where `[day numbers]` is noted, this refers to the days when an update will take place from 0 to 6 (1 = Monday). Multiple days can be specified separating days with a comma (e.g. "1,5" is Monday and Friday).
 
-If a * is needed for minute, hour or day, the parameter must be enclosed in quotes (e.g. "*")
+If a `*` is needed for minute, hour or day, the parameter must be enclosed in quotes (e.g. `"*"`
 
 ### Manual Server Update
 to manually trigger an update
@@ -57,7 +57,7 @@ This is currently fixed to use the "openvpn_udp" VPN profiles. Future version ma
 ### Cancel Scheduled Server Update
 to cancel scheduled updates configured in cron/cru
 ```
-./nordvpnmanager.sh cancel [1|2|3|4|5] 
+./nordvpnmanager.sh cancel [1|2|3|4|5]
 ```
 This will not affect any existing connections
 
@@ -68,11 +68,11 @@ The actual script has been created but will not complete successfully without th
 ## To Do
 Possible enhancements (when I get round to it!):
 
-- create a menu DONE
-- create menu entry validation
-- query available protocols via NordVPN api
-- handle tcp and udp protocols DONE
-- handle all protocols
-- write options to temp nvram (I haven't figured out how a web page passes parameters to an addon script. This might be needed instead of passing them from the page. e.g. page write temp nvram entries that are used by the script and then discarded?!?)
-- create web page for UI (I need help with this!)
-- test web page functions
+-   create a menu DONE
+-   create menu entry validation
+-   query available protocols via NordVPN api
+-   handle tcp and udp protocols DONE
+-   handle all protocols
+-   write options to temp nvram (I haven't figured out how a web page passes parameters to an addon script. This might be needed instead of passing them from the page. e.g. page write temp nvram entries that are used by the script and then discarded?!?)
+-   create web page for UI (I need help with this!)
+-   test web page functions
