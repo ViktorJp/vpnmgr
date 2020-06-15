@@ -707,39 +707,6 @@ DeleteScheduleMenu(){
 
 Addon_Install(){
 	# use to download the files from github
-	GetFiles(){
-	 echo "downloading $GIT_REPO using $GIT_REPO_BRANCH branch"
-	 GETFILENAME=addon_vars
-	 SCRIPTSECTION=get_$GETFILENAME
-	 [ -f "$LOCAL_REPO/$GETFILENAME" ] && rm "$LOCAL_REPO/$GETFILENAME"
-	 wget -O "$LOCAL_REPO/$GETFILENAME" "$GITHUB_DIR/$GETFILENAME" >/dev/null 2>&1 || errorcheck
-
-	 GETFILENAME=install.sh
-	 SCRIPTSECTION=get_$GETFILENAME
-	 [ -f "$LOCAL_REPO/$GETFILENAME" ] && rm "$LOCAL_REPO/$GETFILENAME"
-	 wget -O "$LOCAL_REPO/$GETFILENAME" "$GITHUB_DIR/$GETFILENAME" >/dev/null 2>&1 || errorcheck
-	 chmod 755 "$LOCAL_REPO/$GETFILENAME"
-
-	 GETFILENAME=nordvpnmanager.sh
-	 SCRIPTSECTION=get_$GETFILENAME
-	 [ -f "$LOCAL_REPO/$GETFILENAME" ] && rm "$LOCAL_REPO/$GETFILENAME"
-	 wget -O "$LOCAL_REPO/$GETFILENAME" "$GITHUB_DIR/$GETFILENAME" >/dev/null 2>&1 || errorcheck
-	 chmod 755 "$LOCAL_REPO/$GETFILENAME"
-
-	 GETFILENAME=ui_install.sh
-	 SCRIPTSECTION=get_$GETFILENAME
-	 [ -f "$LOCAL_REPO/$GETFILENAME" ] && rm "$LOCAL_REPO/$GETFILENAME"
-	 wget -O "$LOCAL_REPO/$GETFILENAME" "$GITHUB_DIR/$GETFILENAME" >/dev/null 2>&1 || errorcheck
-	 chmod 755 "$LOCAL_REPO/$GETFILENAME"
-
-	 GETFILENAME=nvpnmgr-menu.sh
-	 SCRIPTSECTION=get_$GETFILENAME
-	 [ -f "$LOCAL_REPO/$GETFILENAME" ] && rm "$LOCAL_REPO/$GETFILENAME"
-	 wget -O "$LOCAL_REPO/$GETFILENAME" "$GITHUB_DIR/$GETFILENAME" >/dev/null 2>&1 || errorcheck
-	 chmod 755 "$LOCAL_REPO/$GETFILENAME"
-
-	 SCRIPTSECTION=
-	}
 
 	# Check this is an Asus Merlin router
 	nvram get buildinfo | grep merlin >/dev/null 2>&1
@@ -769,9 +736,6 @@ Addon_Install(){
 
 	# create local repo folder
 	mkdir -p "$LOCAL_REPO"
-
-	# Get files
-	GetFiles
 
 	echo "installation complete... visit https://github.com/h0me5k1n/asusmerlin-nvpnmgr for CLI usage information or run \"nvpnmgr-menu.sh\" for menu driven configuration."
 }
