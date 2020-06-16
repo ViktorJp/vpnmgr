@@ -36,10 +36,6 @@ GITHUB_DIR="https://raw.githubusercontent.com/jackyaz/$GIT_REPO/$GIT_REPO_BRANCH
 # Local repo dir
 LOCAL_REPO="/jffs/scripts/$MY_ADDON_NAME"
 
-JSONSCRIPT="$SCRIPTPATH/JSON.sh"
-
-cd "$SCRIPTPATH"
-
 # variables
 EVENT=$MY_ADDON_NAME
 TYPE=$1
@@ -83,35 +79,26 @@ errorcheck(){
 
 # use to create content of vJSON variable
 getRecommended(){
- curl -s -m 5 "https://api.nordvpn.com/v1/servers/recommendations?filters\[servers_groups\]\[identifier\]=$VPNTYPE&filters\[servers_technologies\]\[identifier\]=${VPNPROT}&limit=1" || errorcheck
-}
-
-# use to download the JSON.sh script from github
-getJSONSH(){
- [ -f "$JSONSCRIPT" ] && rm "$JSONSCRIPT"
- wget -O "$JSONSCRIPT" "https://raw.githubusercontent.com/dominictarr/JSON.sh/master/JSON.sh" >/dev/null 2>&1 || errorcheck
- chmod +x "$JSONSCRIPT"
+	curl -s -m 5 "https://api.nordvpn.com/v1/servers/recommendations?filters\[servers_groups\]\[identifier\]=$VPNTYPE&filters\[servers_technologies\]\[identifier\]=${VPNPROT}&limit=1" || errorcheck
 }
 
 # use to create content of OVPN_IP variable
 getIP(){
- # check vJSON variable contents exist
- [ -z "$vJSON" ] && errorcheck
- # check JSONSCRIPT script exists
- [ ! -f "$JSONSCRIPT" ] && errorcheck
- echo $vJSON | "$JSONSCRIPT" -b | grep station | cut -f2 | tr -d '"'
+	# check vJSON variable contents exist
+	[ -z "$vJSON" ] && errorcheck
+	echo $vJSON | jq -e '.[].station // empty' | tr -d '"'
 }
 
 # use to create content of OVPN_HOSTNAME variable
 getHostname(){
- [ -z "$vJSON" ] && errorcheck
- echo $vJSON | "$JSONSCRIPT" -b | grep hostname | cut -f2 | tr -d '"'
+	[ -z "$vJSON" ] && errorcheck
+	echo $vJSON | jq -e '.[].hostname // empty' | tr -d '"'
 }
 
 # use to create content of OVPNFILE variable
 getOVPNFilename(){
- [ -z "$OVPN_HOSTNAME" ] || [ -z "$VPNPROT_SHORT" ] && errorcheck
- echo ${OVPN_HOSTNAME}.${VPNPROT_SHORT}.ovpn
+	[ -z "$OVPN_HOSTNAME" ] || [ -z "$VPNPROT_SHORT" ] && errorcheck
+	echo ${OVPN_HOSTNAME}.${VPNPROT_SHORT}.ovpn
 }
 
 # use to create content of OVPN_DETAIL variable
