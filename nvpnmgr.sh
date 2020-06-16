@@ -358,17 +358,17 @@ SetVPNType(){
 		case "$menu" in
 			1)
 				# check for connections
-				VPNTYPE=standard
+				VPNTYPE=legacy_standard
 				break
 			;;
 			2)
 				# configure now
-				VPNTYPE=double
+				VPNTYPE=legacy_double_vpn
 				break
 			;;
 			3)
 				# configure now
-				VPNTYPE=p2p
+				VPNTYPE=legacy_p2p
 				break
 			;;
 			x)
@@ -376,7 +376,7 @@ SetVPNType(){
 				break
 			;;
 			*)
-				VPNTYPE=standard
+				VPNTYPE=legacy_standard
 				break
 			;;
 		esac
