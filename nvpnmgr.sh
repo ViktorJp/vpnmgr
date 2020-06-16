@@ -242,9 +242,9 @@ UpdateVPN(){
 
 ScheduleVPN(){
 	checkConnName
-	CRU_MINUTE=$4
-	CRU_HOUR=$5
-	CRU_DAYNUMBERS=$6
+	CRU_MINUTE=$3
+	CRU_HOUR=$4
+	CRU_DAYNUMBERS=$5
 	
 	# default options 5:25am on Mondays and Thursdays
 	[ -z "$CRU_MINUTE" ] && CRU_MINUTE=25
