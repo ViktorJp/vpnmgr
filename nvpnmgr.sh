@@ -36,45 +36,11 @@ GITHUB_DIR="https://raw.githubusercontent.com/jackyaz/$GIT_REPO/$GIT_REPO_BRANCH
 # Local repo dir
 LOCAL_REPO="/jffs/scripts/$MY_ADDON_NAME"
 
-# variables
-EVENT=$MY_ADDON_NAME
-TYPE=$1
-VPN_NO=$2
-VPNPROT=$3
-# set VPN type (default "Standard VPN servers")
-VPNTYPE=legacy_standard
-# Other VPN types
-if [ "$TYPE" != "list" ]
-then
-    if [ "$4" = "double" ] || [ "$7" = "double" ]
-    then
-    echo "configuring Double VPN..."
-    VPNTYPE=legacy_double_vpn  # Double VPN
-    VPNTYPE_PARAM=double
-    elif [ "$4" = "p2p" ] || [ "$7" = "p2p" ]
-    then
-    echo "configuring P2P VPN..."
-    VPNTYPE=legacy_p2p # P2P
-    VPNTYPE_PARAM=p2p
-    else
-    echo "configuring Standard VPN..."
-    VPNTYPE_PARAM=standard
-    fi
-fi
-#VPNPROT=openvpn_udp # use openvpn_udp or openvpn_tcp - this sets the default to openvpn_udp no matter what you pass to the script
-VPNPROT_SHORT=${VPNPROT/*_/}
-
-# check processing is for this addon
-# stop processing if event unmatched
-if [ "$EVENT" != "$MY_ADDON_NAME" ]; then
-	exit 0
-fi
-
 # functions
 errorcheck(){
- echo "$SCRIPTSECTION reported an error..."
- logger -t "$MY_ADDON_NAME addon" "$SCRIPTSECTION reported an error"
- exit 1
+	echo "$SCRIPTSECTION reported an error..."
+	logger -t "$MY_ADDON_NAME addon" "$SCRIPTSECTION reported an error"
+	exit 1
 }
 
 # use to create content of vJSON variable
@@ -276,21 +242,12 @@ delCRONentry(){
 # ----------------
 # ----------------
 
-# logic processing
-if [ "$TYPE" = "update" ]; then
-	UpdateVPN "$VPN_NO" "$VPNPROT" "$VPNTYPE"
-fi
-
 UpdateVPN(){
 	checkConnName
 	logger -t "$MY_ADDON_NAME addon" "Updating to recommended NORDVPN server (VPNClient$1)..."
 	setVPN
 	logger -t "$MY_ADDON_NAME addon" "Update complete (VPNClient$1 - server $OVPN_HOSTNAME - type $VPNTYPE_PARAM)"
 }
-
-if [ "$TYPE" = "schedule" ]; then
-	ScheduleVPN "$4" "$5" "$6"
-fi
 
 ScheduleVPN(){
 	checkConnName
@@ -320,10 +277,6 @@ ScheduleVPN(){
 	logger -t "$MY_ADDON_NAME addon" "Scheduling complete (VPNClient$VPN_NO - type $VPNTYPE_PARAM)"
 }
 
-if [ "$TYPE" = "cancel" ]; then
-	CancelVPN
-fi
-
 CancelVPN(){
 	checkConnName
 	[ -z "$1" ] && errorcheck
@@ -331,10 +284,6 @@ CancelVPN(){
 	delCRONentry
 	logger -t "$MY_ADDON_NAME addon" "Removal of schedule complete (VPNClient$1)"
 }
-
-if [ "$TYPE" = "list" ]; then
-	listEntries
-fi
 
 # default variables for this script
 OPTIONCHECK=0
