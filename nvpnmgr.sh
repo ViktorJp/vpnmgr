@@ -69,173 +69,162 @@ getOVPNFilename(){
 
 # use to create content of OVPN_DETAIL variable
 getOVPNcontents(){
- [ -z "$OVPNFILE" ] || [ -z "$VPNPROT_SHORT" ] && errorcheck
- curl -s -m 5 "https://downloads.nordcdn.com/configs/files/ovpn_$VPNPROT_SHORT/servers/$OVPNFILE" || errorcheck
+	[ -z "$OVPNFILE" ] || [ -z "$VPNPROT_SHORT" ] && errorcheck
+	curl -s -m 5 "https://downloads.nordcdn.com/configs/files/ovpn_$VPNPROT_SHORT/servers/$OVPNFILE" || errorcheck
 }
 
 # use to create content of CLIENT_CA variable
 getClientCA(){
- [ -z "$OVPN_DETAIL" ] && errorcheck
- echo "$OVPN_DETAIL" | awk '/<ca>/{flag=1;next}/<\/ca>/{flag=0}flag' | sed '/^#/ d'
+	[ -z "$OVPN_DETAIL" ] && errorcheck
+	echo "$OVPN_DETAIL" | awk '/<ca>/{flag=1;next}/<\/ca>/{flag=0}flag' | sed '/^#/ d'
 }
 
 # use to create content of CRT_CLIENT_STATIC variable
 getClientCRT(){
- [ -z "$OVPN_DETAIL" ] && errorcheck
- echo "$OVPN_DETAIL" | awk '/<tls-auth>/{flag=1;next}/<\/tls-auth>/{flag=0}flag' | sed '/^#/ d'
+	[ -z "$OVPN_DETAIL" ] && errorcheck
+	echo "$OVPN_DETAIL" | awk '/<tls-auth>/{flag=1;next}/<\/tls-auth>/{flag=0}flag' | sed '/^#/ d'
 }
 
 # use to create content of EXISTING_NAME variable
 getConnName(){
- [ -z "$VPN_NO" ] && errorcheck
- nvram get vpn_client${VPN_NO}_desc
+	[ -z "$VPN_NO" ] && errorcheck
+	nvram get vpn_client${VPN_NO}_desc
 }
 
 # EXISTING_NAME check - it must contain "nordvpn"
 checkConnName(){
- [ -z "$VPN_NO" ] && errorcheck
- EXISTING_NAME=$(getConnName)
- STR_COMPARE=nordvpn
- if echo $EXISTING_NAME | grep -v $STR_COMPARE >/dev/null 2>&1
- then
-  logger -t "$MY_ADDON_NAME addon" "decription must contain nordvpn (VPNClient$VPN_NO)..."
-  errorcheck
- fi
+	[ -z "$VPN_NO" ] && errorcheck
+	EXISTING_NAME=$(getConnName)
+	STR_COMPARE=nordvpn
+	if echo $EXISTING_NAME | grep -v $STR_COMPARE >/dev/null 2>&1; then
+		logger -t "$MY_ADDON_NAME addon" "decription must contain nordvpn (VPNClient$VPN_NO)..."
+		errorcheck
+	fi
 }
 
 # use to create content of EXISTING_IP variable
 getServerIP(){
- [ -z "$VPN_NO" ] && errorcheck
- nvram get vpn_client${VPN_NO}_addr
+	[ -z "$VPN_NO" ] && errorcheck
+	nvram get vpn_client${VPN_NO}_addr
 }
 
 # use to create content of CONNECTSTATE variable - set to 2 if the VPN is connected
 getConnectState(){
- [ -z "$VPN_NO" ] && errorcheck
- nvram get vpn_client${VPN_NO}_state
+	[ -z "$VPN_NO" ] && errorcheck
+	nvram get vpn_client${VPN_NO}_state
 }
 
 # configure VPN
 setVPN(){
- echo "updating VPN Client connection $VPN_NO now..."
- vJSON=$(getRecommended)
- getJSONSH
- OVPN_IP=$(getIP)
- OVPN_HOSTNAME=$(getHostname)
- OVPNFILE=$(getOVPNFilename)
- OVPN_DETAIL=$(getOVPNcontents)
- CLIENT_CA=$(getClientCA)
- CRT_CLIENT_STATIC=$(getClientCRT)
- EXISTING_NAME=$(getConnName)
- EXISTING_IP=$(getServerIP)
- CONNECTSTATE=$(getConnectState)
- 
- [ -z "$OVPN_IP" ] || [ -z "$OVPN_HOSTNAME" ] || [ -z "$VPN_NO" ] && errorcheck
- [ -z "$CLIENT_CA" ] || [ -z "$CRT_CLIENT_STATIC" ] && errorcheck
- [ -z "$CONNECTSTATE" ] && errorcheck
- # check that new VPN server IP is different
- if [ "$OVPN_IP" != "$EXISTING_IP" ]
- then
-  echo "changing VPN Client connection $VPN_NO to $OVPN_HOSTNAME"
-  nvram set vpn_client${VPN_NO}_addr=${OVPN_IP}
-  nvram set vpn_client${VPN_NO}_desc=${OVPN_HOSTNAME}
-  echo "$CLIENT_CA" > /jffs/openvpn/vpn_crt_client${VPN_NO}_ca
-  echo "${CRT_CLIENT_STATIC}" > /jffs/openvpn/vpn_crt_client${VPN_NO}_static
-  nvram commit
-  # restart if connected - 2 is "connected"
-  if [ "$CONNECTSTATE" = "2" ]
-  then
-   service stop_vpnclient${VPN_NO}
-   sleep 3
-   service start_vpnclient${VPN_NO}
-  fi
-  echo "complete"
- else
-  echo "recommended server for VPN Client connection $VPN_NO is already the recommended server - $OVPN_HOSTNAME"
- fi
+	echo "updating VPN Client connection $VPN_NO now..."
+	vJSON=$(getRecommended)
+	OVPN_IP=$(getIP)
+	OVPN_HOSTNAME=$(getHostname)
+	OVPNFILE=$(getOVPNFilename)
+	OVPN_DETAIL=$(getOVPNcontents)
+	CLIENT_CA=$(getClientCA)
+	CRT_CLIENT_STATIC=$(getClientCRT)
+	EXISTING_NAME=$(getConnName)
+	EXISTING_IP=$(getServerIP)
+	CONNECTSTATE=$(getConnectState)
+	
+	[ -z "$OVPN_IP" ] || [ -z "$OVPN_HOSTNAME" ] || [ -z "$VPN_NO" ] && errorcheck
+	[ -z "$CLIENT_CA" ] || [ -z "$CRT_CLIENT_STATIC" ] && errorcheck
+	[ -z "$CONNECTSTATE" ] && errorcheck
+	# check that new VPN server IP is different
+	if [ "$OVPN_IP" != "$EXISTING_IP" ]; then
+		echo "changing VPN Client connection $VPN_NO to $OVPN_HOSTNAME"
+		nvram set vpn_client${VPN_NO}_addr=${OVPN_IP}
+		nvram set vpn_client${VPN_NO}_desc=${OVPN_HOSTNAME}
+		echo "$CLIENT_CA" > /jffs/openvpn/vpn_crt_client${VPN_NO}_ca
+		echo "${CRT_CLIENT_STATIC}" > /jffs/openvpn/vpn_crt_client${VPN_NO}_static
+		nvram commit
+		# restart if connected - 2 is "connected"
+		if [ "$CONNECTSTATE" = "2" ]; then
+			service stop_vpnclient${VPN_NO}
+			sleep 3
+			service start_vpnclient${VPN_NO}
+		fi
+		echo "complete"
+	else
+		echo "recommended server for VPN Client connection $VPN_NO is already the recommended server - $OVPN_HOSTNAME"
+	fi
 }
 
 # check for entries, connection state and schedule entry
 listEntries(){
-		echo "VPN CLient List:"
-    # from 1 to 5
-    for VPN_NO in 1 2 3 4 5
-    do
-        VPN_CLIENTDESC="$(nvram get vpn_client${VPN_NO}_desc | grep nordvpn)"
-        if [ ! -z "$VPN_CLIENTDESC" ]
-        then
-            if [ "$(getConnectState)" = "2" ]
-            then
-                CONNECTSTATE=ACTIVE
-            else
-                CONNECTSTATE=INACTIVE
-            fi
-            cru l | grep "#${MY_ADDON_NAME}${VPN_NO}" >/dev/null 2>&1
-            if [ $? -ne 0 ]
-            then
-                SCHEDULESTATE=UNSCHEDULED
-            else
-                SCHEDULESTATE=SCHEDULED
-            fi
-            echo "$VPN_NO. ${VPN_CLIENTDESC} (${CONNECTSTATE} and ${SCHEDULESTATE})"
-        else
-            echo "$VPN_NO. no nordvpn entry found"
-        fi
-    done
+	echo "VPN CLient List:"
+	# from 1 to 5
+	for VPN_NO in 1 2 3 4 5; do
+		VPN_CLIENTDESC="$(nvram get vpn_client${VPN_NO}_desc | grep nordvpn)"
+		if [ ! -z "$VPN_CLIENTDESC" ]; then
+			if [ "$(getConnectState)" = "2" ]; then
+				CONNECTSTATE=ACTIVE
+			else
+				CONNECTSTATE=INACTIVE
+			fi
+			cru l | grep "#${MY_ADDON_NAME}${VPN_NO}" >/dev/null 2>&1
+			if [ $? -ne 0 ]; then
+				SCHEDULESTATE=UNSCHEDULED
+			else
+				SCHEDULESTATE=SCHEDULED
+			fi
+			echo "$VPN_NO. ${VPN_CLIENTDESC} (${CONNECTSTATE} and ${SCHEDULESTATE})"
+		else
+			echo "$VPN_NO. no nordvpn entry found"
+		fi
+	done
 }
 
 getCRONentry(){
- [ -z "$VPN_NO" ] || [ -z "$MY_ADDON_NAME" ] && errorcheck
- cru l | grep "${MY_ADDON_NAME}${VPN_NO}" | sed 's/ sh.*//'
- [ $? -ne 0 ] && echo NOTFOUND
+	[ -z "$VPN_NO" ] || [ -z "$MY_ADDON_NAME" ] && errorcheck
+	cru l | grep "${MY_ADDON_NAME}${VPN_NO}" | sed 's/ sh.*//'
+	[ $? -ne 0 ] && echo NOTFOUND
 }
 
 setCRONentry(){
- echo "scheduling VPN Client connection $VPN_NO updating..."
- [ -z "$VPN_NO" ] || [ -z "$MY_ADDON_NAME" ] || [ -z "$SCRIPTPATH" ] || [ -z "$MY_ADDON_SCRIPT" ] || [ -z "$VPNPROT" ] || [ -z "$VPNTYPE_PARAM" ] && errorcheck
- [ -z "$CRU_MINUTE" ] || [ -z "$CRU_HOUR" ] || [ -z "$CRU_DAYNUMBERS" ] && errorcheck
- # add new cru entry
- if cru l | grep "${MY_ADDON_NAME}${VPN_NO}" >/dev/null 2>&1
- then
-  # replace existing
-  cru d ${MY_ADDON_NAME}${VPN_NO}
-  cru a ${MY_ADDON_NAME}${VPN_NO} "${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh ${SCRIPTPATH}/${MY_ADDON_SCRIPT} update ${VPN_NO} ${VPNPROT} ${VPNTYPE_PARAM}"
- else
-  # or add new if not exist
-  cru a ${MY_ADDON_NAME}${VPN_NO} "${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh ${SCRIPTPATH}/${MY_ADDON_SCRIPT} update ${VPN_NO} ${VPNPROT} ${VPNTYPE_PARAM}"
- fi
- # add persistent cru entry to /jffs/scripts/services-start for restarts
- if cat /jffs/scripts/services-start | grep "${MY_ADDON_NAME}${VPN_NO}" >/dev/null 2>&1
- then
-  # remove and replace existing
-  sed -i "/${MY_ADDON_NAME}${VPN_NO}/d" /jffs/scripts/services-start
-  echo "cru a ${MY_ADDON_NAME}${VPN_NO} \"${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh ${SCRIPTPATH}/${MY_ADDON_SCRIPT} update ${VPN_NO} ${VPNPROT} ${VPNTYPE_PARAM}\"" >> /jffs/scripts/services-start
- else
-  # or add new if not exist
-  echo "cru a ${MY_ADDON_NAME}${VPN_NO} \"${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh ${SCRIPTPATH}/${MY_ADDON_SCRIPT} update ${VPN_NO} ${VPNPROT} ${VPNTYPE_PARAM}\"" >> /jffs/scripts/services-start
- fi
- am_settings_set nvpn_cron${VPN_NO} 1
- am_settings_set nvpn_cronstr${VPN_NO} "${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS}"
- echo "complete"
+	echo "scheduling VPN Client connection $VPN_NO updating..."
+	[ -z "$VPN_NO" ] || [ -z "$MY_ADDON_NAME" ] || [ -z "$SCRIPTPATH" ] || [ -z "$MY_ADDON_SCRIPT" ] || [ -z "$VPNPROT" ] || [ -z "$VPNTYPE_PARAM" ] && errorcheck
+	[ -z "$CRU_MINUTE" ] || [ -z "$CRU_HOUR" ] || [ -z "$CRU_DAYNUMBERS" ] && errorcheck
+	# add new cru entry
+	if cru l | grep "${MY_ADDON_NAME}${VPN_NO}" >/dev/null 2>&1; then
+		# replace existing
+		cru d ${MY_ADDON_NAME}${VPN_NO}
+		cru a ${MY_ADDON_NAME}${VPN_NO} "${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh ${SCRIPTPATH}/${MY_ADDON_SCRIPT} update ${VPN_NO} ${VPNPROT} ${VPNTYPE_PARAM}"
+	else
+		# or add new if not exist
+		cru a ${MY_ADDON_NAME}${VPN_NO} "${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh ${SCRIPTPATH}/${MY_ADDON_SCRIPT} update ${VPN_NO} ${VPNPROT} ${VPNTYPE_PARAM}"
+	fi
+	# add persistent cru entry to /jffs/scripts/services-start for restarts
+	if cat /jffs/scripts/services-start | grep "${MY_ADDON_NAME}${VPN_NO}" >/dev/null 2>&1; then
+		# remove and replace existing
+		sed -i "/${MY_ADDON_NAME}${VPN_NO}/d" /jffs/scripts/services-start
+		echo "cru a ${MY_ADDON_NAME}${VPN_NO} \"${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh ${SCRIPTPATH}/${MY_ADDON_SCRIPT} update ${VPN_NO} ${VPNPROT} ${VPNTYPE_PARAM}\"" >> /jffs/scripts/services-start
+	else
+		# or add new if not exist
+		echo "cru a ${MY_ADDON_NAME}${VPN_NO} \"${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh ${SCRIPTPATH}/${MY_ADDON_SCRIPT} update ${VPN_NO} ${VPNPROT} ${VPNTYPE_PARAM}\"" >> /jffs/scripts/services-start
+	fi
+	am_settings_set nvpn_cron${VPN_NO} 1
+	am_settings_set nvpn_cronstr${VPN_NO} "${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS}"
+	echo "complete"
 }
 
 delCRONentry(){
- echo "removing VPN Client connection $VPN_NO schedule entry..."
- [ -z "$VPN_NO" ] || [ -z "$MY_ADDON_NAME" ] && errorcheck
- # remove cru entry
- if cru l | grep "${MY_ADDON_NAME}${VPN_NO}" >/dev/null 2>&1
- then
-  # remove existing
-  cru d ${MY_ADDON_NAME}${VPN_NO}
- fi
- # remove persistent cru entry from /jffs/scripts/services-start for restarts
- if cat /jffs/scripts/services-start | grep "${MY_ADDON_NAME}${VPN_NO}" >/dev/null 2>&1; then
-  # remove and replace existing
-  sed -i "/${MY_ADDON_NAME}${VPN_NO}/d" /jffs/scripts/services-start
- fi
- am_settings_set nvpn_cron${VPN_NO}
- am_settings_set nvpn_cronstr${VPN_NO}
- echo "complete"
+	echo "removing VPN Client connection $VPN_NO schedule entry..."
+	[ -z "$VPN_NO" ] || [ -z "$MY_ADDON_NAME" ] && errorcheck
+	# remove cru entry
+	if cru l | grep "${MY_ADDON_NAME}${VPN_NO}" >/dev/null 2>&1; then
+		# remove existing
+		cru d ${MY_ADDON_NAME}${VPN_NO}
+	fi
+	# remove persistent cru entry from /jffs/scripts/services-start for restarts
+	if cat /jffs/scripts/services-start | grep "${MY_ADDON_NAME}${VPN_NO}" >/dev/null 2>&1; then
+		# remove and replace existing
+		sed -i "/${MY_ADDON_NAME}${VPN_NO}/d" /jffs/scripts/services-start
+	fi
+	am_settings_set nvpn_cron${VPN_NO}
+	am_settings_set nvpn_cronstr${VPN_NO}
+	echo "complete"
 }
 
 # ----------------
@@ -259,19 +248,19 @@ ScheduleVPN(){
 	[ -z "$CRU_MINUTE" ] && CRU_MINUTE=25
 	[ -z "$CRU_HOUR" ] && CRU_HOUR=5
 	[ -z "$CRU_DAYNUMBERS" ] && CRU_DAYNUMBERS=1,4
-
- # CRON entry format = 5 5 * * 1,3,5 sh /jffs/scripts/asusvpn-autoselectbest.sh #autoselectvpn#
- # command to add (in /jffs/scripts/services-start) cru a autoselectvpn "5 5 * * 1,3,5 sh /jffs/scripts/asusvpn-autoselectbest.sh"
-
- # cru command syntax to add, list, and delete cron jobs
- # id – Unique ID for each cron job.
- # min – Minute (0-59)
- # hour – Hours (0-23)
- # day – Day (0-31)
- # month – Month (0-12 [12 is December])
- # week – Day of the week(0-7 [7 or 0 is Sunday])
- # command – Script or command name to schedule.
-
+	
+	# CRON entry format = 5 5 * * 1,3,5 sh /jffs/scripts/asusvpn-autoselectbest.sh #autoselectvpn#
+	# command to add (in /jffs/scripts/services-start) cru a autoselectvpn "5 5 * * 1,3,5 sh /jffs/scripts/asusvpn-autoselectbest.sh"
+	
+	# cru command syntax to add, list, and delete cron jobs
+	# id – Unique ID for each cron job.
+	# min – Minute (0-59)
+	# hour – Hours (0-23)
+	# day – Day (0-31)
+	# month – Month (0-12 [12 is December])
+	# week – Day of the week(0-7 [7 or 0 is Sunday])
+	# command – Script or command name to schedule.
+	
 	logger -t "$MY_ADDON_NAME addon" "Configuring scheduled update to recommended NORDVPN server (VPNClient$VPN_NO)..."
 	setCRONentry
 	logger -t "$MY_ADDON_NAME addon" "Scheduling complete (VPNClient$VPN_NO - type $VPNTYPE_PARAM)"
@@ -331,11 +320,13 @@ SetVPNProtocol(){
 			1)
 				# check for connections
 				VPNPROT=openvpn_udp
+				VPNPROT_SHORT="$(echo "$VPNPROT" | cut -f2 -d'_')"
 				break
 			;;
 			2)
 				# configure now
 				VPNPROT=openvpn_tcp
+				VPNPROT_SHORT="$(echo "$VPNPROT" | cut -f2 -d'_')"
 				break
 			;;
 			x)
@@ -348,7 +339,7 @@ SetVPNProtocol(){
 			;;
 		esac
 	done
-
+	
 	if [ -z "$VPNPROT" ]; then
 		ReturnToMainMenu "you must choose a protocol option"
 	fi
@@ -360,7 +351,7 @@ SetVPNType(){
 	printf "   2. Double VPN\\n"
 	printf "   3. P2P\\n"
 	read -r "menu"
-
+	
 	while true; do
 		case "$menu" in
 			1)
@@ -447,14 +438,14 @@ MainMenu(){
 	printf "   z. Uninstall $MY_ADDON_NAME\\n"
 	printf "\\n"
 	printf "\\e[1m############################################################\\e[0m\\n"
-
+	
 	VPN_NO=
 	VPNPROT=
 	VPNTYPE=
 	CRU_HOUR=
 	CRU_DAYNUMBERS=
 	CRU_MINUTE=
-
+	
 	while true; do
 		if [ "$OPTIONCHECK" = "1" ]
 		then
@@ -468,31 +459,31 @@ MainMenu(){
 		case "$menu" in
 			1)
 				printf "\\n"
-                # check for connections
+				# check for connections
 				ListMenu
 				break
 			;;
 			2)
 				printf "\\n"
-                # configure now
+				# configure now
 				UpdateNowMenu
 				break
 			;;
 			3)
 				printf "\\n"
-                # configure schedule
+				# configure schedule
 				ScheduleUpdateMenu
 				break
 			;;
 			d)
 				printf "\\n"
-                # remove schedule
+				# remove schedule
 				DeleteScheduleMenu
 				break
 			;;
 			u)
 				printf "\\n"
-                # update script from github
+				# update script from github
 				"$LOCAL_REPO/install.sh"
 				PressEnter
 				break
@@ -559,7 +550,7 @@ ListMenu(){
 	listEntries
 	printf "\\n"
 	PressEnter
-
+	
 	ReturnToMainMenu
 }
 
@@ -573,7 +564,7 @@ UpdateNowMenu(){
 	
 	UpdateVPN "$VPN_NO" "$VPNPROT" "$VPNTYPE"
 	PressEnter
-
+	
 	ReturnToMainMenu "Update VPN complete ($VPNTYPE)"
 }
 
@@ -587,58 +578,55 @@ ScheduleUpdateMenu(){
 	SetDays
 	SetHours
 	SetMinutes
-
+	
 	ScheduleVPN "$VPN_NO" "$VPNPROT" "$CRU_MINUTE" "$CRU_HOUR" "$CRU_DAYNUMBERS" "$VPNTYPE"
 	PressEnter
-
+	
 	ReturnToMainMenu "Scheduled VPN update complete ($VPNTYPE)"
 }
 
 DeleteScheduleMenu(){
 	ScriptHeader
 	DeleteScheduleMenuHeader
-
+	
 	SetVPNClient
-
+	
 	CancelVPN "$VPN_NO"
 	PressEnter
-
+	
 	ReturnToMainMenu "Delete VPN schedule complete"
 }
 
 Addon_Install(){
 	# use to download the files from github
-
+	
 	# Check this is an Asus Merlin router
-	nvram get buildinfo | grep merlin >/dev/null 2>&1
-	if [ $? != 0 ]
-	then
-	    echo "This script is only supported on an Asus Router running Merlin firmware!"
-	    exit 5
+	
+	if ! nvram get buildinfo | grep merlin >/dev/null 2>&1; then
+		echo "This script is only supported on an Asus Router running Merlin firmware!"
+		exit 5
 	fi
-
+	
 	# Does the firmware support addons?
-	nvram get rc_support | grep -q am_addons
-	if [ $? != 0 ]
-	then
-	    echo "This firmware does not support addons!"
-	    logger "$MY_ADDON_NAME addon" "This firmware does not support addons!"
-	    exit 5
+	
+	if ! nvram get rc_support | grep -q am_addons; then
+		echo "This firmware does not support addons!"
+		logger "$MY_ADDON_NAME addon" "This firmware does not support addons!"
+		exit 5
 	fi
-
+	
 	# Check jffs is enabled
-	JFFS_STATE=$(nvram get jffs2_on)
-	if [ $JFFS_STATE != 1 ]
-	then
-	    echo "This addon requires jffs to be enabled!"
-	    logger "$MY_ADDON_NAME addon" "This addon requires jffs to be enabled!"
-	    exit 5
+	if [ "$(nvram get jffs2_on)" != 1 ]; then
+		echo "This addon requires jffs to be enabled!"
+		logger "$MY_ADDON_NAME addon" "This addon requires jffs to be enabled!"
+		exit 5
 	fi
-
+	
 	# create local repo folder
 	mkdir -p "$LOCAL_REPO"
-
+	
 	echo "installation complete... visit https://github.com/h0me5k1n/asusmerlin-nvpnmgr for CLI usage information or run \"nvpnmgr-menu.sh\" for menu driven configuration."
+	Clear_Lock
 }
 
 Addon_Uninstall(){
@@ -649,5 +637,8 @@ Addon_Uninstall(){
 #	printf "Uninstall of $MY_ADDON_NAME completed"
 }
 
-ScriptHeader
-MainMenu
+if [ -z "$1" ]; then
+	ScriptHeader
+	MainMenu
+	exit 0
+fi
