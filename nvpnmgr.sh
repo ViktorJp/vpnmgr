@@ -19,9 +19,9 @@ SCRIPTPATH=$(dirname "$SCRIPT")
 . /usr/sbin/helper.sh
 
 # addon name
-MY_ADDON_NAME=nordvpnmanager
+MY_ADDON_NAME="nordvpnmanager"
 # control script
-MY_ADDON_SCRIPT=nordvpnmanager.sh
+MY_ADDON_SCRIPT="nvpnmgr.sh"
 # addon page
 #MY_ADDON_PAGE=NordVPNManager.asp
 # tab name
