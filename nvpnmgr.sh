@@ -30,7 +30,7 @@ MY_ADDON_SCRIPT="nvpnmgr.sh"
 GIT_REPO="asusmerlin-nvpnmgr"
 # Github repo branch - modify to pull different branch
 # (fetch will overwrite local changes)
-GIT_REPO_BRANCH=master
+GIT_REPO_BRANCH="master"
 # Github dir
 GITHUB_DIR="https://raw.githubusercontent.com/jackyaz/$GIT_REPO/$GIT_REPO_BRANCH"
 # Local repo dir
@@ -52,19 +52,19 @@ getRecommended(){
 getIP(){
 	# check vJSON variable contents exist
 	[ -z "$vJSON" ] && errorcheck
-	echo $vJSON | jq -e '.[].station // empty' | tr -d '"'
+	echo "$vJSON" | jq -e '.[].station // empty' | tr -d '"'
 }
 
 # use to create content of OVPN_HOSTNAME variable
 getHostname(){
 	[ -z "$vJSON" ] && errorcheck
-	echo $vJSON | jq -e '.[].hostname // empty' | tr -d '"'
+	echo "$vJSON" | jq -e '.[].hostname // empty' | tr -d '"'
 }
 
 # use to create content of OVPNFILE variable
 getOVPNFilename(){
 	[ -z "$OVPN_HOSTNAME" ] || [ -z "$VPNPROT_SHORT" ] && errorcheck
-	echo ${OVPN_HOSTNAME}.${VPNPROT_SHORT}.ovpn
+	echo "$OVPN_HOSTNAME.$VPNPROT_SHORT.ovpn"
 }
 
 # use to create content of OVPN_DETAIL variable
@@ -88,16 +88,16 @@ getClientCRT(){
 # use to create content of EXISTING_NAME variable
 getConnName(){
 	[ -z "$VPN_NO" ] && errorcheck
-	nvram get vpn_client${VPN_NO}_desc
+	nvram get vpn_client"$VPN_NO"_desc
 }
 
 # EXISTING_NAME check - it must contain "nordvpn"
 checkConnName(){
 	[ -z "$VPN_NO" ] && errorcheck
-	EXISTING_NAME=$(getConnName)
-	STR_COMPARE=nordvpn
+	EXISTING_NAME="$(getConnName)"
+	STR_COMPARE="nordvpn"
 	if [ "$EXISTING_NAME" != "Client $VPN_NO" ]; then
-		if echo $EXISTING_NAME | grep -v $STR_COMPARE >/dev/null 2>&1; then
+		if echo "$EXISTING_NAME" | grep -v "$STR_COMPARE" >/dev/null 2>&1; then
 			logger -st "$MY_ADDON_NAME addon" "decription must contain nordvpn (VPNClient$VPN_NO)..."
 			errorcheck
 		fi
@@ -107,29 +107,29 @@ checkConnName(){
 # use to create content of EXISTING_IP variable
 getServerIP(){
 	[ -z "$VPN_NO" ] && errorcheck
-	nvram get vpn_client${VPN_NO}_addr
+	nvram get vpn_client"$VPN_NO"_addr
 }
 
 # use to create content of CONNECTSTATE variable - set to 2 if the VPN is connected
 getConnectState(){
 	[ -z "$VPN_NO" ] && errorcheck
-	nvram get vpn_client${VPN_NO}_state
+	nvram get vpn_client"$VPN_NO"_state
 }
 
 # configure VPN
 setVPN(){
 	echo "updating VPN Client connection $VPN_NO now..."
 	
-	vJSON=$(getRecommended)
-	OVPN_IP=$(getIP)
-	OVPN_HOSTNAME=$(getHostname)
-	OVPNFILE=$(getOVPNFilename)
-	OVPN_DETAIL=$(getOVPNcontents)
-	CLIENT_CA=$(getClientCA)
-	CRT_CLIENT_STATIC=$(getClientCRT)
-	EXISTING_NAME=$(getConnName)
-	EXISTING_IP=$(getServerIP)
-	CONNECTSTATE=$(getConnectState)
+	vJSON="$(getRecommended)"
+	OVPN_IP="$(getIP)"
+	OVPN_HOSTNAME="$(getHostname)"
+	OVPNFILE="$(getOVPNFilename)"
+	OVPN_DETAIL="$(getOVPNcontents)"
+	CLIENT_CA="$(getClientCA)"
+	CRT_CLIENT_STATIC="$(getClientCRT)"
+	EXISTING_NAME="$(getConnName)"
+	EXISTING_IP="$(getServerIP)"
+	CONNECTSTATE="$(getConnectState)"
 	
 	[ -z "$OVPN_IP" ] || [ -z "$OVPN_HOSTNAME" ] || [ -z "$VPN_NO" ] && errorcheck
 	[ -z "$CLIENT_CA" ] || [ -z "$CRT_CLIENT_STATIC" ] && errorcheck
@@ -230,10 +230,6 @@ delCRONentry(){
 	echo "complete"
 }
 
-# ----------------
-# ----------------
-# ----------------
-
 UpdateVPN(){
 	checkConnName
 	logger -st "$MY_ADDON_NAME addon" "Updating to recommended NORDVPN server (VPNClient$1)..."
@@ -251,18 +247,6 @@ ScheduleVPN(){
 	[ -z "$CRU_MINUTE" ] && CRU_MINUTE=25
 	[ -z "$CRU_HOUR" ] && CRU_HOUR=5
 	[ -z "$CRU_DAYNUMBERS" ] && CRU_DAYNUMBERS=1,4
-	
-	# CRON entry format = 5 5 * * 1,3,5 sh /jffs/scripts/asusvpn-autoselectbest.sh #autoselectvpn#
-	# command to add (in /jffs/scripts/services-start) cru a autoselectvpn "5 5 * * 1,3,5 sh /jffs/scripts/asusvpn-autoselectbest.sh"
-	
-	# cru command syntax to add, list, and delete cron jobs
-	# id – Unique ID for each cron job.
-	# min – Minute (0-59)
-	# hour – Hours (0-23)
-	# day – Day (0-31)
-	# month – Month (0-12 [12 is December])
-	# week – Day of the week(0-7 [7 or 0 is Sunday])
-	# command – Script or command name to schedule.
 	
 	logger -st "$MY_ADDON_NAME addon" "Configuring scheduled update to recommended NORDVPN server (VPNClient$VPN_NO)..."
 	setCRONentry
@@ -321,14 +305,12 @@ SetVPNProtocol(){
 	while true; do
 		case "$menu" in
 			1)
-				# check for connections
-				VPNPROT=openvpn_udp
+				VPNPROT="openvpn_udp"
 				VPNPROT_SHORT="$(echo "$VPNPROT" | cut -f2 -d'_')"
 				break
 			;;
 			2)
-				# configure now
-				VPNPROT=openvpn_tcp
+				VPNPROT="openvpn_tcp"
 				VPNPROT_SHORT="$(echo "$VPNPROT" | cut -f2 -d'_')"
 				break
 			;;
@@ -342,7 +324,6 @@ SetVPNProtocol(){
 			;;
 		esac
 	done
-	
 	if [ -z "$VPNPROT" ]; then
 		ReturnToMainMenu "you must choose a protocol option"
 	fi
@@ -358,18 +339,15 @@ SetVPNType(){
 	while true; do
 		case "$menu" in
 			1)
-				# check for connections
-				VPNTYPE=legacy_standard
+				VPNTYPE="legacy_standard"
 				break
 			;;
 			2)
-				# configure now
-				VPNTYPE=legacy_double_vpn
+				VPNTYPE="legacy_double_vpn"
 				break
 			;;
 			3)
-				# configure now
-				VPNTYPE=legacy_p2p
+				VPNTYPE="legacy_p2p"
 				break
 			;;
 			x)
@@ -377,7 +355,7 @@ SetVPNType(){
 				break
 			;;
 			*)
-				VPNTYPE=legacy_standard
+				VPNTYPE="legacy_standard"
 				break
 			;;
 		esac
@@ -601,17 +579,13 @@ DeleteScheduleMenu(){
 }
 
 Addon_Install(){
-	# use to download the files from github
-	
 	# Check this is an Asus Merlin router
-	
 	if ! nvram get buildinfo | grep merlin >/dev/null 2>&1; then
 		echo "This script is only supported on an Asus Router running Merlin firmware!"
 		exit 5
 	fi
 	
 	# Does the firmware support addons?
-	
 	if ! nvram get rc_support | grep -q am_addons; then
 		echo "This firmware does not support addons!"
 		logger "$MY_ADDON_NAME addon" "This firmware does not support addons!"
