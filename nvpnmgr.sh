@@ -642,3 +642,17 @@ if [ -z "$1" ]; then
 	MainMenu
 	exit 0
 fi
+
+case "$1" in
+	install)
+		Check_Lock
+		Addon_Install
+		exit 0
+	;;
+	*)
+		Check_Lock
+		echo "Command not recognised, please try again"
+		Clear_Lock
+		exit 1
+	;;
+esac
