@@ -96,9 +96,11 @@ checkConnName(){
 	[ -z "$VPN_NO" ] && errorcheck
 	EXISTING_NAME=$(getConnName)
 	STR_COMPARE=nordvpn
-	if echo $EXISTING_NAME | grep -v $STR_COMPARE >/dev/null 2>&1; then
-		logger -t "$MY_ADDON_NAME addon" "decription must contain nordvpn (VPNClient$VPN_NO)..."
-		errorcheck
+	if [ "$EXISTING_NAME" != "Client $VPN_NO" ]; then
+		if echo $EXISTING_NAME | grep -v $STR_COMPARE >/dev/null 2>&1; then
+			logger -st "$MY_ADDON_NAME addon" "decription must contain nordvpn (VPNClient$VPN_NO)..."
+			errorcheck
+		fi
 	fi
 }
 
