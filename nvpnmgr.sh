@@ -45,7 +45,7 @@ errorcheck(){
 
 # use to create content of vJSON variable
 getRecommended(){
-	curl -s -m 5 "https://api.nordvpn.com/v1/servers/recommendations?filters\[servers_groups\]\[identifier\]=$VPNTYPE&filters\[servers_technologies\]\[identifier\]=${VPNPROT}&limit=1" || errorcheck
+	curl -s "https://api.nordvpn.com/v1/servers/recommendations?filters\[servers_groups\]\[identifier\]=$VPNTYPE&filters\[servers_technologies\]\[identifier\]=${VPNPROT}&limit=1" || errorcheck
 }
 
 # use to create content of OVPN_IP variable
@@ -70,7 +70,7 @@ getOVPNFilename(){
 # use to create content of OVPN_DETAIL variable
 getOVPNcontents(){
 	[ -z "$OVPNFILE" ] || [ -z "$VPNPROT_SHORT" ] && errorcheck
-	curl -s -m 5 "https://downloads.nordcdn.com/configs/files/ovpn_$VPNPROT_SHORT/servers/$OVPNFILE" || errorcheck
+	curl -s "https://downloads.nordcdn.com/configs/files/ovpn_$VPNPROT_SHORT/servers/$OVPNFILE" || errorcheck
 }
 
 # use to create content of CLIENT_CA variable
