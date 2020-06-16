@@ -119,6 +119,7 @@ getConnectState(){
 # configure VPN
 setVPN(){
 	echo "updating VPN Client connection $VPN_NO now..."
+	
 	vJSON=$(getRecommended)
 	OVPN_IP=$(getIP)
 	OVPN_HOSTNAME=$(getHostname)
@@ -627,7 +628,7 @@ Addon_Install(){
 	# create local repo folder
 	mkdir -p "$LOCAL_REPO"
 	
-	echo "installation complete... visit https://github.com/h0me5k1n/asusmerlin-nvpnmgr for CLI usage information or run \"nvpnmgr-menu.sh\" for menu driven configuration."
+	echo "installation complete..."
 	Clear_Lock
 }
 
