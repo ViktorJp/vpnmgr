@@ -39,7 +39,7 @@ LOCAL_REPO="/jffs/scripts/$MY_ADDON_NAME"
 # functions
 errorcheck(){
 	echo "$SCRIPTSECTION reported an error..."
-	logger -t "$MY_ADDON_NAME addon" "$SCRIPTSECTION reported an error"
+	logger -st "$MY_ADDON_NAME addon" "$SCRIPTSECTION reported an error"
 	exit 1
 }
 
@@ -235,9 +235,9 @@ delCRONentry(){
 
 UpdateVPN(){
 	checkConnName
-	logger -t "$MY_ADDON_NAME addon" "Updating to recommended NORDVPN server (VPNClient$1)..."
+	logger -st "$MY_ADDON_NAME addon" "Updating to recommended NORDVPN server (VPNClient$1)..."
 	setVPN
-	logger -t "$MY_ADDON_NAME addon" "Update complete (VPNClient$1 - server $OVPN_HOSTNAME - type $VPNTYPE_PARAM)"
+	logger -st "$MY_ADDON_NAME addon" "Update complete (VPNClient$1 - server $OVPN_HOSTNAME - type $VPNTYPE)"
 }
 
 ScheduleVPN(){
@@ -263,17 +263,17 @@ ScheduleVPN(){
 	# week – Day of the week(0-7 [7 or 0 is Sunday])
 	# command – Script or command name to schedule.
 	
-	logger -t "$MY_ADDON_NAME addon" "Configuring scheduled update to recommended NORDVPN server (VPNClient$VPN_NO)..."
+	logger -st "$MY_ADDON_NAME addon" "Configuring scheduled update to recommended NORDVPN server (VPNClient$VPN_NO)..."
 	setCRONentry
-	logger -t "$MY_ADDON_NAME addon" "Scheduling complete (VPNClient$VPN_NO - type $VPNTYPE_PARAM)"
+	logger -st "$MY_ADDON_NAME addon" "Scheduling complete (VPNClient$VPN_NO - type $VPNTYPE_PARAM)"
 }
 
 CancelVPN(){
 	checkConnName
 	[ -z "$1" ] && errorcheck
-	logger -t "$MY_ADDON_NAME addon" "Removing scheduled update to recommended NORDVPN server (VPNClient$1)..."
+	logger -st "$MY_ADDON_NAME addon" "Removing scheduled update to recommended NORDVPN server (VPNClient$1)..."
 	delCRONentry
-	logger -t "$MY_ADDON_NAME addon" "Removal of schedule complete (VPNClient$1)"
+	logger -st "$MY_ADDON_NAME addon" "Removal of schedule complete (VPNClient$1)"
 }
 
 # default variables for this script
