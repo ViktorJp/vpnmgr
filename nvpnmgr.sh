@@ -250,7 +250,7 @@ ScheduleVPN(){
 	
 	logger -st "$MY_ADDON_NAME addon" "Configuring scheduled update to recommended NORDVPN server (VPNClient$VPN_NO)..."
 	setCRONentry
-	logger -st "$MY_ADDON_NAME addon" "Scheduling complete (VPNClient$VPN_NO - type $VPNTYPE_PARAM)"
+	logger -st "$MY_ADDON_NAME addon" "Scheduling complete (VPNClient$VPN_NO - type $VPNTYPE)"
 }
 
 CancelVPN(){
@@ -260,9 +260,6 @@ CancelVPN(){
 	delCRONentry
 	logger -st "$MY_ADDON_NAME addon" "Removal of schedule complete (VPNClient$1)"
 }
-
-# default variables for this script
-OPTIONCHECK=0
 
 PressEnter(){
 	while true; do
@@ -278,8 +275,7 @@ PressEnter(){
 }
 
 ReturnToMainMenu(){
-	OPTIONCHECK=1
-	RETURNTEXT="$1"
+	PressEnter
 	ScriptHeader
 	UpdateNowMenuHeader
 }
@@ -288,10 +284,11 @@ SetVPNClient(){
 	printf "\\n\\e[1mPlease select a VPN client connection (x to cancel): \\e[0m"
 	read -r "VPN_NO"
 	if [ "$VPN_NO" = "x" ]; then
-		OPTIONCHECK=1
-		ReturnToMainMenu "previous operation cancelled"
+		printf "previous operation cancelled"
+		ReturnToMainMenu
 	elif [ -z "$VPN_NO" ]; then
-		ReturnToMainMenu "you must specify a valid VPN client"
+		printf "you must specify a valid VPN client"
+		ReturnToMainMenu
 	fi
 	# validate VPN_NO here (must be a number from 1 to 5 have "nordvpn" in the name)
 }
@@ -315,17 +312,20 @@ SetVPNProtocol(){
 				break
 			;;
 			x)
-				ReturnToMainMenu "previous operation cancelled"
+				printf "previous operation cancelled"
+				ReturnToMainMenu
 				break
 			;;
 			*)
-				ReturnToMainMenu "you must choose a protocol option"
+				printf "you must choose a protocol option"
+				ReturnToMainMenu
 				break
 			;;
 		esac
 	done
 	if [ -z "$VPNPROT" ]; then
-		ReturnToMainMenu "you must choose a protocol option"
+		printf "you must choose a protocol option"
+		ReturnToMainMenu
 	fi
 }
 
@@ -351,7 +351,8 @@ SetVPNType(){
 				break
 			;;
 			x)
-				ReturnToMainMenu "previous operation cancelled"
+				printf "previous operation cancelled"
+				ReturnToMainMenu
 				break
 			;;
 			*)
@@ -361,7 +362,8 @@ SetVPNType(){
 		esac
 	done
 	if [ -z "$VPNTYPE" ]; then
-		ReturnToMainMenu "type not set or previous operation cancelled"
+		printf "type not set or previous operation cancelled"
+		ReturnToMainMenu
 	fi
 }
 
@@ -369,7 +371,8 @@ SetDays(){
 	printf "\\n\\e[1mPlease choose update day/s (x to cancel - blank for every day): \\e[0m"
 	read -r "CRU_DAYNUMBERS"
 	if [ "$CRU_DAYNUMBERS" = "x" ]; then
-		ReturnToMainMenu "previous operation cancelled"
+		printf "previous operation cancelled"
+		ReturnToMainMenu
 	elif [ -z "$CRU_DAYNUMBERS" ]; then
 		CRU_DAYNUMBERS="*"
 		printf "\\n\\e[1mSet to every day\\e[0m\\n"
@@ -381,9 +384,11 @@ SetHours(){
 	printf "\\n\\e[1mPlease choose update hour/s (x to cancel): \\e[0m"
 	read -r "CRU_HOUR"
 	if [ "$CRU_HOUR" = "x" ]; then
-		ReturnToMainMenu "previous operation cancelled"
+		printf "previous operation cancelled"
+		ReturnToMainMenu
 	elif [ -z "$CRU_HOUR" ]; then
-		ReturnToMainMenu "you must specify a valid hour or hours separated by comma"
+		printf "you must specify a valid hour or hours separated by comma"
+		ReturnToMainMenu
 	fi
 	# validate HOURS here (must be a number from 0 to 23)
 }
@@ -392,10 +397,11 @@ SetMinutes(){
 	printf "\\n\\e[1mPlease choose update minute/s (x to cancel): \\e[0m"
 	read -r "CRU_MINUTE"
 	if [ "$CRU_MINUTE" = "x" ]; then
-		OPTIONCHECK=1
-		ReturnToMainMenu "previous operation cancelled"
+		printf "previous operation cancelled"
+		ReturnToMainMenu
 	elif [ -z "$CRU_MINUTE" ]; then
-		ReturnToMainMenu "you must specify a valid minute or minutes separated by comma"
+		printf "you must specify a valid minute or minutes separated by comma"
+		ReturnToMainMenu
 	fi
 	# validate MINUTES here (must be a number from 0 to 59)
 }
@@ -428,14 +434,7 @@ MainMenu(){
 	CRU_MINUTE=
 	
 	while true; do
-		if [ "$OPTIONCHECK" = "1" ]
-		then
-			printf "$RETURNTEXT\\n"
-			OPTIONCHECK=0
-		else
-			printf "\\n"
-		fi
-		printf "Choose an option:    "
+		printf "\\nChoose an option:    "
 		read -r "menu"
 		case "$menu" in
 			1)
@@ -484,11 +483,13 @@ MainMenu(){
 					Addon_Uninstall
 					exit 0
 				else
-					ReturnToMainMenu "Uninstall of $MY_ADDON_NAME cancelled"
+					printf "Uninstall of $MY_ADDON_NAME cancelled"
+					ReturnToMainMenu
 				fi
 			;;
 			*)
-				ReturnToMainMenu "Please choose a valid option"
+				printf "Please choose a valid option"
+				ReturnToMainMenu
 			;;
 		esac
 	done
@@ -546,7 +547,8 @@ UpdateNowMenu(){
 	UpdateVPN "$VPN_NO" "$VPNPROT" "$VPNTYPE"
 	PressEnter
 	
-	ReturnToMainMenu "Update VPN complete ($VPNTYPE)"
+	printf "Update VPN complete ($VPNTYPE)"
+	ReturnToMainMenu
 }
 
 ScheduleUpdateMenu(){
@@ -563,7 +565,8 @@ ScheduleUpdateMenu(){
 	ScheduleVPN "$VPN_NO" "$VPNPROT" "$CRU_MINUTE" "$CRU_HOUR" "$CRU_DAYNUMBERS" "$VPNTYPE"
 	PressEnter
 	
-	ReturnToMainMenu "Scheduled VPN update complete ($VPNTYPE)"
+	printf "Scheduled VPN update complete ($VPNTYPE)"
+	ReturnToMainMenu
 }
 
 DeleteScheduleMenu(){
@@ -575,7 +578,8 @@ DeleteScheduleMenu(){
 	CancelVPN "$VPN_NO"
 	PressEnter
 	
-	ReturnToMainMenu "Delete VPN schedule complete"
+	printf "Delete VPN schedule complete"
+	ReturnToMainMenu
 }
 
 Addon_Install(){
