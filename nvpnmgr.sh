@@ -187,25 +187,25 @@ getCRONentry(){
 
 setCRONentry(){
 	echo "scheduling VPN Client connection $VPN_NO updating..."
-	[ -z "$VPN_NO" ] || [ -z "$MY_ADDON_NAME" ] || [ -z "$SCRIPTPATH" ] || [ -z "$MY_ADDON_SCRIPT" ] || [ -z "$VPNPROT" ] || [ -z "$VPNTYPE_PARAM" ] && errorcheck
+	[ -z "$VPN_NO" ] || [ -z "$MY_ADDON_NAME" ] || [ -z "$SCRIPTPATH" ] || [ -z "$MY_ADDON_SCRIPT" ] || [ -z "$VPNPROT" ] || [ -z "$VPNTYPE" ] && errorcheck
 	[ -z "$CRU_MINUTE" ] || [ -z "$CRU_HOUR" ] || [ -z "$CRU_DAYNUMBERS" ] && errorcheck
 	# add new cru entry
 	if cru l | grep "${MY_ADDON_NAME}${VPN_NO}" >/dev/null 2>&1; then
 		# replace existing
 		cru d ${MY_ADDON_NAME}${VPN_NO}
-		cru a ${MY_ADDON_NAME}${VPN_NO} "${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh ${SCRIPTPATH}/${MY_ADDON_SCRIPT} update ${VPN_NO} ${VPNPROT} ${VPNTYPE_PARAM}"
+		cru a ${MY_ADDON_NAME}${VPN_NO} "${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh ${SCRIPTPATH}/${MY_ADDON_SCRIPT} update ${VPN_NO} ${VPNPROT} ${VPNTYPE}"
 	else
 		# or add new if not exist
-		cru a ${MY_ADDON_NAME}${VPN_NO} "${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh ${SCRIPTPATH}/${MY_ADDON_SCRIPT} update ${VPN_NO} ${VPNPROT} ${VPNTYPE_PARAM}"
+		cru a ${MY_ADDON_NAME}${VPN_NO} "${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh ${SCRIPTPATH}/${MY_ADDON_SCRIPT} update ${VPN_NO} ${VPNPROT} ${VPNTYPE}"
 	fi
 	# add persistent cru entry to /jffs/scripts/services-start for restarts
 	if cat /jffs/scripts/services-start | grep "${MY_ADDON_NAME}${VPN_NO}" >/dev/null 2>&1; then
 		# remove and replace existing
 		sed -i "/${MY_ADDON_NAME}${VPN_NO}/d" /jffs/scripts/services-start
-		echo "cru a ${MY_ADDON_NAME}${VPN_NO} \"${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh ${SCRIPTPATH}/${MY_ADDON_SCRIPT} update ${VPN_NO} ${VPNPROT} ${VPNTYPE_PARAM}\"" >> /jffs/scripts/services-start
+		echo "cru a ${MY_ADDON_NAME}${VPN_NO} \"${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh ${SCRIPTPATH}/${MY_ADDON_SCRIPT} update ${VPN_NO} ${VPNPROT} ${VPNTYPE}\"" >> /jffs/scripts/services-start
 	else
 		# or add new if not exist
-		echo "cru a ${MY_ADDON_NAME}${VPN_NO} \"${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh ${SCRIPTPATH}/${MY_ADDON_SCRIPT} update ${VPN_NO} ${VPNPROT} ${VPNTYPE_PARAM}\"" >> /jffs/scripts/services-start
+		echo "cru a ${MY_ADDON_NAME}${VPN_NO} \"${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh ${SCRIPTPATH}/${MY_ADDON_SCRIPT} update ${VPN_NO} ${VPNPROT} ${VPNTYPE}\"" >> /jffs/scripts/services-start
 	fi
 	am_settings_set nvpn_cron${VPN_NO} 1
 	am_settings_set nvpn_cronstr${VPN_NO} "${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS}"
