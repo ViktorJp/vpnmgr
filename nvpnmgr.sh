@@ -472,7 +472,7 @@ SetVPNClient(){
 		printf "you must specify a valid VPN client"
 		ReturnToMainMenu
 	fi
-	# validate VPN_NO here (must be a number from 1 to 5 have "nordvpn" in the name)
+	# validate VPN_NO here (must be a number from 1 to 5 have "NordVPN" in the name)
 }
 
 SetVPNProtocol(){
@@ -592,7 +592,7 @@ ScriptHeader(){
 	clear
 	printf "\\n"
 	printf "\\e[1m############################################################\\e[0m\\n"
-	printf "\\e[1m##                   $MY_ADDON_NAME Menu                  ##\\e[0m\\n"
+	printf "\\e[1m##                   $SCRIPT_NAME Menu                  ##\\e[0m\\n"
 	printf "\\e[1m############################################################\\e[0m\\n"
 	printf "\\n"
 }
@@ -602,9 +602,9 @@ MainMenu(){
 	printf "   2. Update a VPN client connection NOW\\n"
 	printf "   3. Schedule a VPN client connection update\\n"
 	printf "   d. Delete a scheduled VPN client connection update\\n"
-	printf "   u. Update $MY_ADDON_NAME\\n"
-	printf "   x. Exit $MY_ADDON_NAME menu\\n\\n"
-	printf "   z. Uninstall $MY_ADDON_NAME\\n"
+	printf "   u. Update $SCRIPT_NAME\\n"
+	printf "   e. Exit $SCRIPT_NAME menu\\n\\n"
+	printf "   z. Uninstall $SCRIPT_NAME\\n"
 	printf "\\n"
 	printf "\\e[1m############################################################\\e[0m\\n"
 	
@@ -650,22 +650,22 @@ MainMenu(){
 				PressEnter
 				break
 			;;
-			x)
+			e)
 				ScriptHeader
-				printf "\\n\\e[1mThanks for using $MY_ADDON_NAME!\\e[0m\\n\\n\\n"
+				printf "\\n\\e[1mThanks for using $SCRIPT_NAME!\\e[0m\\n\\n\\n"
 				exit 0
 			;;
 			z)
-				printf "\\n\\e[1mAre you sure you want to uninstall $MY_ADDON_NAME (Y to confirm)?\\e[0m "
+				printf "\\n\\e[1mAre you sure you want to uninstall $SCRIPT_NAME (Y to confirm)?\\e[0m "
 				read -r "confirm"
 				if [ "$confirm" = "Y" ]
 				then
-					echo "Uninstalling $MY_ADDON_NAME..."
+					echo "Uninstalling $SCRIPT_NAME..."
 					# remove script
 					Addon_Uninstall
 					exit 0
 				else
-					printf "Uninstall of $MY_ADDON_NAME cancelled"
+					printf "Uninstall of $SCRIPT_NAME cancelled"
 					ReturnToMainMenu
 				fi
 			;;
@@ -818,11 +818,11 @@ Menu_Install(){
 }
 
 Addon_Uninstall(){
-	printf "Uninstalling $MY_ADDON_NAME has not yet been tested...\\n"
-#	printf "Uninstalling $MY_ADDON_NAME..."
+	printf "Uninstalling $SCRIPT_NAME has not yet been tested...\\n"
+#	printf "Uninstalling $SCRIPT_NAME..."
 #	cd ~
 #	rm -f "$LOCAL_REPO" 2>/dev/null
-#	printf "Uninstall of $MY_ADDON_NAME completed"
+#	printf "Uninstall of $SCRIPT_NAME completed"
 }
 
 if [ -z "$1" ]; then
