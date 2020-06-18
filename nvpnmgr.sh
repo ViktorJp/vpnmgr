@@ -764,41 +764,56 @@ UpdateNowMenu(){
 # 	ReturnToMainMenu
 # }
 
+Check_Requirements(){
+	CHECKSFAILED="false"
 	
-	SetVPNClient
+	if [ "$(nvram get jffs2_scripts)" -ne 1 ]; then
+		nvram set jffs2_scripts=1
+		nvram commit
+		Print_Output "true" "Custom JFFS Scripts enabled" "$WARN"
+	fi
 	
-	CancelVPN "$VPN_NO"
-	PressEnter
+	if [ ! -f "/opt/bin/opkg" ]; then
+		Print_Output "true" "Entware not detected!" "$ERR"
+		CHECKSFAILED="true"
+	fi
 	
-	printf "Delete VPN schedule complete"
-	ReturnToMainMenu
+	if ! Firmware_Version_Check "install" ; then
+		Print_Output "true" "Unsupported firmware version detected" "$ERR"
+		Print_Output "true" "$SCRIPT_NAME requires Merlin 384.15/384.13_4 or Fork 43E5 (or later)" "$ERR"
+		CHECKSFAILED="true"
+	fi
+	
+	if [ "$CHECKSFAILED" = "false" ]; then
+		Print_Output "true" "Installing required packages from Entware" "$PASS"
+		opkg update
+		opkg install jq
+		return 0
+	else
+		return 1
+	fi
 }
 
-Addon_Install(){
-	# Check this is an Asus Merlin router
-	if ! nvram get buildinfo | grep merlin >/dev/null 2>&1; then
-		echo "This script is only supported on an Asus Router running Merlin firmware!"
-		exit 5
+Menu_Install(){
+	Print_Output "true" "Welcome to $SCRIPT_NAME $SCRIPT_VERSION, a script by h0me5k1n and JackYaz"
+	sleep 1
+	
+	Print_Output "true" "Checking your router meets the requirements for $SCRIPT_NAME"
+	
+	if ! Check_Requirements; then
+		Print_Output "true" "Requirements for $SCRIPT_NAME not met, please see above for the reason(s)" "$CRIT"
+		PressEnter
+		Clear_Lock
+		rm -f "/jffs/scripts/$SCRIPT_NAME" 2>/dev/null
+		exit 1
 	fi
 	
-	# Does the firmware support addons?
-	if ! nvram get rc_support | grep -q am_addons; then
-		echo "This firmware does not support addons!"
-		logger "$MY_ADDON_NAME addon" "This firmware does not support addons!"
-		exit 5
-	fi
+	Create_Dirs
+	Create_Symlinks
 	
-	# Check jffs is enabled
-	if [ "$(nvram get jffs2_on)" != 1 ]; then
-		echo "This addon requires jffs to be enabled!"
-		logger "$MY_ADDON_NAME addon" "This addon requires jffs to be enabled!"
-		exit 5
-	fi
+	Update_File "shared-jy.tar.gz"
 	
-	# create local repo folder
-	mkdir -p "$LOCAL_REPO"
-	
-	echo "installation complete..."
+	Shortcut_nvpnmgr create
 	Clear_Lock
 }
 
