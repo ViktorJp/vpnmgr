@@ -739,8 +739,6 @@ ListMenu(){
 	ScriptHeader
 	
 	listEntries
-	printf "\\n"
-	PressEnter
 }
 
 UpdateNowMenu(){
@@ -752,7 +750,6 @@ UpdateNowMenu(){
 	SetVPNType
 	
 	UpdateVPN "$VPN_NO" "$VPNPROT" "$VPNTYPE"
-	PressEnter
 	
 	printf "Update VPN complete (%s)" "$VPNTYPE"
 }
@@ -769,7 +766,6 @@ UpdateNowMenu(){
 # 	SetMinutes
 #
 # 	ScheduleVPN "$VPN_NO" "$VPNPROT" "$CRU_MINUTE" "$CRU_HOUR" "$CRU_DAYNUMBERS" "$VPNTYPE"
-# 	PressEnter
 #
 # 	printf "Scheduled VPN update complete ($VPNTYPE)"
 # }
@@ -781,7 +777,6 @@ UpdateNowMenu(){
 # 	SetVPNClient
 #
 # 	CancelVPN "$VPN_NO"
-# 	PressEnter
 #
 # 	printf "Delete VPN schedule complete"
 # }
