@@ -36,6 +36,7 @@ readonly PASS="\\e[32m"
 ### End of output format variables ###
 
 # Load standard variables and helper script
+#shellcheck disable=SC1091
 . /usr/sbin/helper.sh
 
 # $1 = print to syslog, $2 = message to print, $3 = log level
@@ -338,7 +339,7 @@ listEntries(){
 	# from 1 to 5
 	for i in 1 2 3 4 5; do
 		VPN_CLIENTDESC="$(nvram get vpn_client"$i"_desc | grep NordVPN)"
-		if [ ! -z "$VPN_CLIENTDESC" ]; then
+		if [ -n "$VPN_CLIENTDESC" ]; then
 			CONNECTSTATE=""
 			SCHEDULESTATE=""
 			if [ "$(getConnectState "$i")" = "2" ]; then
@@ -346,8 +347,7 @@ listEntries(){
 			else
 				CONNECTSTATE="Inactive"
 			fi
-			cru l | grep "#$SCRIPT_NAME$i" >/dev/null 2>&1
-			if [ $? -ne 0 ]; then
+			if ! cru l | grep "#$SCRIPT_NAME$i" >/dev/null 2>&1; then
 				SCHEDULESTATE="Unscheduled"
 			else
 				SCHEDULESTATE="Scheduled"
@@ -754,7 +754,7 @@ UpdateNowMenu(){
 	UpdateVPN "$VPN_NO" "$VPNPROT" "$VPNTYPE"
 	PressEnter
 	
-	printf "Update VPN complete ($VPNTYPE)"
+	printf "Update VPN complete (%s)" "$VPNTYPE"
 }
 
 # ScheduleUpdateMenu(){
