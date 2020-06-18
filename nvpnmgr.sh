@@ -36,6 +36,15 @@ Print_Output(){
 		printf "\\e[1m$3%s: $2\\e[0m\\n\\n" "$SCRIPT_NAME"
 	fi
 }
+
+Firmware_Version_Check(){
+	if nvram get rc_support | grep -qF "am_addons"; then
+		return 0
+	else
+		return 1
+	fi
+}
+
 ### Code for these functions inspired by https://github.com/Adamm00 - credit to @Adamm ###
 Check_Lock(){
 	if [ -f "/tmp/$SCRIPT_NAME.lock" ]; then
@@ -186,6 +195,31 @@ Update_File(){
 		return 1
 	fi
 }
+
+Create_Dirs(){
+	if [ ! -d "$SCRIPT_DIR" ]; then
+		mkdir -p "$SCRIPT_DIR"
+	fi
+	
+	if [ ! -d "$SHARED_DIR" ]; then
+		mkdir -p "$SHARED_DIR"
+	fi
+	
+	if [ ! -d "$SCRIPT_WEBPAGE_DIR" ]; then
+		mkdir -p "$SCRIPT_WEBPAGE_DIR"
+	fi
+	
+	if [ ! -d "$SCRIPT_WEB_DIR" ]; then
+		mkdir -p "$SCRIPT_WEB_DIR"
+	fi
+}
+
+Create_Symlinks(){
+	rm -rf "${SCRIPT_WEB_DIR:?}/"* 2>/dev/null
+	
+	if [ ! -d "$SHARED_WEB_DIR" ]; then
+		ln -s "$SHARED_DIR" "$SHARED_WEB_DIR" 2>/dev/null
+	fi
 }
 
 # use to create content of vJSON variable
