@@ -358,86 +358,89 @@ listEntries(){
 	done
 }
 
-getCRONentry(){
-	[ -z "$VPN_NO" ] || [ -z "$MY_ADDON_NAME" ] && errorcheck
-	cru l | grep "${MY_ADDON_NAME}${VPN_NO}" | sed 's/ sh.*//'
-	[ $? -ne 0 ] && echo NOTFOUND
-}
-
-setCRONentry(){
-	echo "scheduling VPN Client connection $VPN_NO updating..."
-	[ -z "$VPN_NO" ] || [ -z "$MY_ADDON_NAME" ] || [ -z "$SCRIPTPATH" ] || [ -z "$MY_ADDON_SCRIPT" ] || [ -z "$VPNPROT" ] || [ -z "$VPNTYPE" ] && errorcheck
-	[ -z "$CRU_MINUTE" ] || [ -z "$CRU_HOUR" ] || [ -z "$CRU_DAYNUMBERS" ] && errorcheck
-	# add new cru entry
-	if cru l | grep "${MY_ADDON_NAME}${VPN_NO}" >/dev/null 2>&1; then
-		# replace existing
-		cru d ${MY_ADDON_NAME}${VPN_NO}
-		cru a ${MY_ADDON_NAME}${VPN_NO} "${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh ${SCRIPTPATH}/${MY_ADDON_SCRIPT} update ${VPN_NO} ${VPNPROT} ${VPNTYPE}"
-	else
-		# or add new if not exist
-		cru a ${MY_ADDON_NAME}${VPN_NO} "${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh ${SCRIPTPATH}/${MY_ADDON_SCRIPT} update ${VPN_NO} ${VPNPROT} ${VPNTYPE}"
-	fi
-	# add persistent cru entry to /jffs/scripts/services-start for restarts
-	if cat /jffs/scripts/services-start | grep "${MY_ADDON_NAME}${VPN_NO}" >/dev/null 2>&1; then
-		# remove and replace existing
-		sed -i "/${MY_ADDON_NAME}${VPN_NO}/d" /jffs/scripts/services-start
-		echo "cru a ${MY_ADDON_NAME}${VPN_NO} \"${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh ${SCRIPTPATH}/${MY_ADDON_SCRIPT} update ${VPN_NO} ${VPNPROT} ${VPNTYPE}\"" >> /jffs/scripts/services-start
-	else
-		# or add new if not exist
-		echo "cru a ${MY_ADDON_NAME}${VPN_NO} \"${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh ${SCRIPTPATH}/${MY_ADDON_SCRIPT} update ${VPN_NO} ${VPNPROT} ${VPNTYPE}\"" >> /jffs/scripts/services-start
-	fi
-	am_settings_set nvpn_cron${VPN_NO} 1
-	am_settings_set nvpn_cronstr${VPN_NO} "${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS}"
-	echo "complete"
-}
-
-delCRONentry(){
-	echo "removing VPN Client connection $VPN_NO schedule entry..."
-	[ -z "$VPN_NO" ] || [ -z "$MY_ADDON_NAME" ] && errorcheck
-	# remove cru entry
-	if cru l | grep "${MY_ADDON_NAME}${VPN_NO}" >/dev/null 2>&1; then
-		# remove existing
-		cru d ${MY_ADDON_NAME}${VPN_NO}
-	fi
-	# remove persistent cru entry from /jffs/scripts/services-start for restarts
-	if cat /jffs/scripts/services-start | grep "${MY_ADDON_NAME}${VPN_NO}" >/dev/null 2>&1; then
-		# remove and replace existing
-		sed -i "/${MY_ADDON_NAME}${VPN_NO}/d" /jffs/scripts/services-start
-	fi
-	am_settings_set nvpn_cron${VPN_NO}
-	am_settings_set nvpn_cronstr${VPN_NO}
-	echo "complete"
-}
+# getCRONentry(){
+# 	cru l | grep "$SCRIPT_NAME$1" | sed 's/ sh.*//'
+# 	[ $? -ne 0 ] && echo "Not found"
+# }
+#
+# setCRONentry(){
+# 	echo "Scheduling VPN Client connection $VPN_NO updating..."
+# 	[ -z "$VPN_NO" ] || [ -z "$VPNPROT" ] || [ -z "$VPNTYPE" ] && errorcheck
+# 	[ -z "$CRU_MINUTE" ] || [ -z "$CRU_HOUR" ] || [ -z "$CRU_DAYNUMBERS" ] && errorcheck
+# 	# add new cru entry
+# 	if cru l | grep "${SCRIPT_NAME}${VPN_NO}" >/dev/null 2>&1; then
+# 		# replace existing
+# 		cru d ${SCRIPT_NAME}${VPN_NO}
+# 		cru a ${SCRIPT_NAME}${VPN_NO} "${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh $SCRIPT_REPO/$SCRIPT_NAME setcron ${VPN_NO} ${VPNPROT} ${VPNTYPE}"
+# 	else
+# 		# or add new if not exist
+# 		cru a ${SCRIPT_NAME}${VPN_NO} "${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh $SCRIPT_REPO/$SCRIPT_NAME setcron ${VPN_NO} ${VPNPROT} ${VPNTYPE}"
+# 	fi
+# 	# add persistent cru entry to /jffs/scripts/services-start for restarts
+# 	if cat /jffs/scripts/services-start | grep "${SCRIPT_NAME}${VPN_NO}" >/dev/null 2>&1; then
+# 		# remove and replace existing
+# 		sed -i "/${SCRIPT_NAME}${VPN_NO}/d" /jffs/scripts/services-start
+# 		echo "cru a ${SCRIPT_NAME}${VPN_NO} \"${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh $SCRIPT_REPO/$SCRIPT_NAME setcron ${VPN_NO} ${VPNPROT} ${VPNTYPE}\"" >> /jffs/scripts/services-start
+# 	else
+# 		# or add new if not exist
+# 		echo "cru a ${SCRIPT_NAME}${VPN_NO} \"${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh $SCRIPT_REPO/$SCRIPT_NAME setcron ${VPN_NO} ${VPNPROT} ${VPNTYPE}\"" >> /jffs/scripts/services-start
+# 	fi
+# 	am_settings_set nvpn_cron${VPN_NO} 1
+# 	am_settings_set nvpn_cronstr${VPN_NO} "${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS}"
+# 	echo "complete"
+# }
+#
+# delCRONentry(){
+# 	echo "removing VPN Client connection $VPN_NO schedule entry..."
+# 	[ -z "$VPN_NO" ] || [ -z "$SCRIPT_NAME" ] && errorcheck
+# 	# remove cru entry
+# 	if cru l | grep "${SCRIPT_NAME}${VPN_NO}" >/dev/null 2>&1; then
+# 		# remove existing
+# 		cru d ${SCRIPT_NAME}${VPN_NO}
+# 	fi
+# 	# remove persistent cru entry from /jffs/scripts/services-start for restarts
+# 	if cat /jffs/scripts/services-start | grep "${SCRIPT_NAME}${VPN_NO}" >/dev/null 2>&1; then
+# 		# remove and replace existing
+# 		sed -i "/${SCRIPT_NAME}${VPN_NO}/d" /jffs/scripts/services-start
+# 	fi
+# 	am_settings_set nvpn_cron${VPN_NO}
+# 	am_settings_set nvpn_cronstr${VPN_NO}
+# 	echo "complete"
+# }
 
 UpdateVPN(){
-	checkConnName
-	logger -st "$MY_ADDON_NAME addon" "Updating to recommended NORDVPN server (VPNClient$1)..."
-	setVPN
-	logger -st "$MY_ADDON_NAME addon" "Update complete (VPNClient$1 - server $OVPN_HOSTNAME - type $VPNTYPE)"
+	VPN_NO="$1"
+	checkConnName "$VPN_NO"
+	logger -st "$SCRIPT_NAME addon" "Updating to recommended NordVPN server (VPNClient$VPN_NO)..."
+	setVPN "$VPN_NO"
+	logger -st "$SCRIPT_NAME addon" "Update complete (VPNClient$VPN_NO - server $OVPN_HOSTNAME - type $VPNTYPE)"
 }
 
-ScheduleVPN(){
-	checkConnName
-	CRU_MINUTE=$3
-	CRU_HOUR=$4
-	CRU_DAYNUMBERS=$5
-	
-	# default options 5:25am on Mondays and Thursdays
-	[ -z "$CRU_MINUTE" ] && CRU_MINUTE=25
-	[ -z "$CRU_HOUR" ] && CRU_HOUR=5
-	[ -z "$CRU_DAYNUMBERS" ] && CRU_DAYNUMBERS=1,4
-	
-	logger -st "$MY_ADDON_NAME addon" "Configuring scheduled update to recommended NORDVPN server (VPNClient$VPN_NO)..."
-	setCRONentry
-	logger -st "$MY_ADDON_NAME addon" "Scheduling complete (VPNClient$VPN_NO - type $VPNTYPE)"
-}
+# ScheduleVPN(){
+# 	VPN_NO="$1"
+# 	checkConnName "$VPN_NO"
+# 	CRU_MINUTE="$3"
+# 	CRU_HOUR="$4"
+# 	CRU_DAYNUMBERS="$5"
+#
+# 	# default options 5:25am on Mondays and Thursdays
+# 	[ -z "$CRU_MINUTE" ] && CRU_MINUTE=25
+# 	[ -z "$CRU_HOUR" ] && CRU_HOUR=5
+# 	[ -z "$CRU_DAYNUMBERS" ] && CRU_DAYNUMBERS=1,4
+#
+# 	logger -st "$SCRIPT_NAME addon" "Configuring scheduled update to recommended NordVPN server (VPNClient$VPN_NO)..."
+# 	setCRONentry
+# 	logger -st "$SCRIPT_NAME addon" "Scheduling complete (VPNClient$VPN_NO - type $VPNTYPE)"
+# }
+#
+# CancelVPN(){
+# 	checkConnName
+# 	[ -z "$1" ] && errorcheck
+# 	logger -st "$SCRIPT_NAME addon" "Removing scheduled update to recommended NordVPN server (VPNClient$1)..."
+# 	delCRONentry
+# 	logger -st "$SCRIPT_NAME addon" "Removal of schedule complete (VPNClient$1)"
+# }
 
-CancelVPN(){
-	checkConnName
-	[ -z "$1" ] && errorcheck
-	logger -st "$MY_ADDON_NAME addon" "Removing scheduled update to recommended NORDVPN server (VPNClient$1)..."
-	delCRONentry
-	logger -st "$MY_ADDON_NAME addon" "Removal of schedule complete (VPNClient$1)"
 }
 
 PressEnter(){
@@ -686,24 +689,24 @@ UpdateNowMenuHeader(){
 	printf "\\e[1m############################################################\\e[0m\\n"
 }
 
-ScheduleUpdateMenuHeader(){
-	printf "   Choose options as follows:\\n"
-	printf "     VPN client [1-5]\\n"
-	printf "     protocol to use (pick from list)\\n"
-	printf "     type to use (pick from list)\\n"
-	printf "     day/s to update [0-7]\\n"
-	printf "     hour/s to update [0-23]\\n"
-	printf "     minute/s to update [0-59]\\n"
-	printf "\\n"
-	printf "\\e[1m############################################################\\e[0m\\n"
-}
-
-DeleteScheduleMenuHeader(){
-	printf "   Choose schedule entry to delete:\\n"
-	printf "     VPN client [1-5]\\n"
-	printf "\\n"
-	printf "\\e[1m############################################################\\e[0m\\n"
-}
+# ScheduleUpdateMenuHeader(){
+# 	printf "   Choose options as follows:\\n"
+# 	printf "     VPN client [1-5]\\n"
+# 	printf "     protocol to use (pick from list)\\n"
+# 	printf "     type to use (pick from list)\\n"
+# 	printf "     day/s to update [0-7]\\n"
+# 	printf "     hour/s to update [0-23]\\n"
+# 	printf "     minute/s to update [0-59]\\n"
+# 	printf "\\n"
+# 	printf "\\e[1m############################################################\\e[0m\\n"
+# }
+#
+# DeleteScheduleMenuHeader(){
+# 	printf "   Choose schedule entry to delete:\\n"
+# 	printf "     VPN client [1-5]\\n"
+# 	printf "\\n"
+# 	printf "\\e[1m############################################################\\e[0m\\n"
+# }
 
 ListMenu(){
 	ScriptHeader
@@ -730,27 +733,37 @@ UpdateNowMenu(){
 	ReturnToMainMenu
 }
 
-ScheduleUpdateMenu(){
-	ScriptHeader
-	ScheduleUpdateMenuHeader
-	
-	SetVPNClient
-	SetVPNProtocol
-	SetVPNType
-	SetDays
-	SetHours
-	SetMinutes
-	
-	ScheduleVPN "$VPN_NO" "$VPNPROT" "$CRU_MINUTE" "$CRU_HOUR" "$CRU_DAYNUMBERS" "$VPNTYPE"
-	PressEnter
-	
-	printf "Scheduled VPN update complete ($VPNTYPE)"
-	ReturnToMainMenu
-}
+# ScheduleUpdateMenu(){
+# 	ScriptHeader
+# 	ScheduleUpdateMenuHeader
+#
+# 	SetVPNClient
+# 	SetVPNProtocol
+# 	SetVPNType
+# 	SetDays
+# 	SetHours
+# 	SetMinutes
+#
+# 	ScheduleVPN "$VPN_NO" "$VPNPROT" "$CRU_MINUTE" "$CRU_HOUR" "$CRU_DAYNUMBERS" "$VPNTYPE"
+# 	PressEnter
+#
+# 	printf "Scheduled VPN update complete ($VPNTYPE)"
+# 	ReturnToMainMenu
+# }
+#
+# DeleteScheduleMenu(){
+# 	ScriptHeader
+# 	DeleteScheduleMenuHeader
+#
+# 	SetVPNClient
+#
+# 	CancelVPN "$VPN_NO"
+# 	PressEnter
+#
+# 	printf "Delete VPN schedule complete"
+# 	ReturnToMainMenu
+# }
 
-DeleteScheduleMenu(){
-	ScriptHeader
-	DeleteScheduleMenuHeader
 	
 	SetVPNClient
 	
@@ -810,6 +823,9 @@ case "$1" in
 		exit 0
 	;;
 	*)
+	#schedulevpn)
+	#	ScheduleVPN "$VPN_NO" "$VPNPROT" "$CRU_MINUTE" "$CRU_HOUR" "$CRU_DAYNUMBERS" "$VPNTYPE"
+	#;;
 		Check_Lock
 		echo "Command not recognised, please try again"
 		Clear_Lock
