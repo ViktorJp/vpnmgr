@@ -48,7 +48,7 @@ Further reading about scripts is available here: [AsusWRT-Merlin User-scripts](h
 
 ![WebUI enable scripts](https://puu.sh/A3wnG/00a43283ed.png)
 
-## To Do
+## To Do (from [@h0me5k1n](https://github.com/h0me5k1n/asusmerlin-nvpnmgr))
 Possible enhancements (when I get round to it!):
 
 -   create menu entry validation
