@@ -229,55 +229,46 @@ getRecommended(){
 
 # use to create content of OVPN_IP variable
 getIP(){
-	# check vJSON variable contents exist
-	[ -z "$vJSON" ] && errorcheck
-	echo "$vJSON" | jq -e '.[].station // empty' | tr -d '"'
+	echo "$1" | jq -e '.[].station // empty' | tr -d '"'
 }
 
 # use to create content of OVPN_HOSTNAME variable
 getHostname(){
-	[ -z "$vJSON" ] && errorcheck
-	echo "$vJSON" | jq -e '.[].hostname // empty' | tr -d '"'
+	echo "$1" | jq -e '.[].hostname // empty' | tr -d '"'
 }
 
 # use to create content of OVPNFILE variable
 getOVPNFilename(){
-	[ -z "$OVPN_HOSTNAME" ] || [ -z "$VPNPROT_SHORT" ] && errorcheck
-	echo "$OVPN_HOSTNAME.$VPNPROT_SHORT.ovpn"
+	echo "$1.$2.ovpn"
 }
 
 # use to create content of OVPN_DETAIL variable
 getOVPNcontents(){
-	[ -z "$OVPNFILE" ] || [ -z "$VPNPROT_SHORT" ] && errorcheck
-	curl -s "https://downloads.nordcdn.com/configs/files/ovpn_$VPNPROT_SHORT/servers/$OVPNFILE" || errorcheck
+	curl -s "https://downloads.nordcdn.com/configs/files/ovpn_$2/servers/$1" || errorcheck
 }
 
 # use to create content of CLIENT_CA variable
 getClientCA(){
-	[ -z "$OVPN_DETAIL" ] && errorcheck
-	echo "$OVPN_DETAIL" | awk '/<ca>/{flag=1;next}/<\/ca>/{flag=0}flag' | sed '/^#/ d'
+	echo "$1" | awk '/<ca>/{flag=1;next}/<\/ca>/{flag=0}flag' | sed '/^#/ d'
 }
 
 # use to create content of CRT_CLIENT_STATIC variable
 getClientCRT(){
-	[ -z "$OVPN_DETAIL" ] && errorcheck
-	echo "$OVPN_DETAIL" | awk '/<tls-auth>/{flag=1;next}/<\/tls-auth>/{flag=0}flag' | sed '/^#/ d'
+	echo "$1" | awk '/<tls-auth>/{flag=1;next}/<\/tls-auth>/{flag=0}flag' | sed '/^#/ d'
 }
 
 # use to create content of EXISTING_NAME variable
 getConnName(){
-	[ -z "$VPN_NO" ] && errorcheck
-	nvram get vpn_client"$VPN_NO"_desc
+	nvram get vpn_client"$1"_desc
 }
 
-# EXISTING_NAME check - it must contain "nordvpn"
+# EXISTING_NAME check - it must contain "NordVPN"
 checkConnName(){
-	[ -z "$VPN_NO" ] && errorcheck
 	EXISTING_NAME="$(getConnName)"
-	STR_COMPARE="nordvpn"
-	if [ "$EXISTING_NAME" != "Client $VPN_NO" ]; then
+	STR_COMPARE="NordVPN"
+	if [ "$EXISTING_NAME" != "Client $1" ]; then
 		if echo "$EXISTING_NAME" | grep -v "$STR_COMPARE" >/dev/null 2>&1; then
-			logger -st "$MY_ADDON_NAME addon" "decription must contain nordvpn (VPNClient$VPN_NO)..."
+			logger -st "$SCRIPT_NAME addon" "decription must contain NordVPN (VPNClient$1)..."
 			errorcheck
 		fi
 	fi
@@ -285,47 +276,44 @@ checkConnName(){
 
 # use to create content of EXISTING_IP variable
 getServerIP(){
-	[ -z "$VPN_NO" ] && errorcheck
-	nvram get vpn_client"$VPN_NO"_addr
+	nvram get vpn_client"$1"_addr
 }
 
 # use to create content of CONNECTSTATE variable - set to 2 if the VPN is connected
 getConnectState(){
-	[ -z "$VPN_NO" ] && errorcheck
-	nvram get vpn_client"$VPN_NO"_state
+	nvram get vpn_client"$1"_state
 }
 
 # configure VPN
 setVPN(){
+	VPN_NO="$1"
 	echo "updating VPN Client connection $VPN_NO now..."
 	
 	vJSON="$(getRecommended)"
-	OVPN_IP="$(getIP)"
-	OVPN_HOSTNAME="$(getHostname)"
-	OVPNFILE="$(getOVPNFilename)"
-	OVPN_DETAIL="$(getOVPNcontents)"
-	CLIENT_CA="$(getClientCA)"
-	CRT_CLIENT_STATIC="$(getClientCRT)"
-	EXISTING_NAME="$(getConnName)"
-	EXISTING_IP="$(getServerIP)"
-	CONNECTSTATE="$(getConnectState)"
+	OVPN_IP="$(getIP "$vJSON")"
+	OVPN_HOSTNAME="$(getHostname "$vJSON")"
+	OVPNFILE="$(getOVPNFilename "$OVPN_HOSTNAME" "$VPNPROT_SHORT")"
+	OVPN_DETAIL="$(getOVPNcontents "$OVPNFILE" "$VPNPROT_SHORT")"
+	CLIENT_CA="$(getClientCA "$OVPN_DETAIL")"
+	CRT_CLIENT_STATIC="$(getClientCRT "$OVPN_DETAIL")"
+	EXISTING_NAME="$(getConnName "$VPN_NO")"
+	EXISTING_IP="$(getServerIP "$VPN_NO")"
+	CONNECTSTATE="$(getConnectState "$VPN_NO")"
 	
-	[ -z "$OVPN_IP" ] || [ -z "$OVPN_HOSTNAME" ] || [ -z "$VPN_NO" ] && errorcheck
-	[ -z "$CLIENT_CA" ] || [ -z "$CRT_CLIENT_STATIC" ] && errorcheck
-	[ -z "$CONNECTSTATE" ] && errorcheck
+	[ -z "$OVPN_IP" ] || [ -z "$OVPN_HOSTNAME" ] || [ -z "$CLIENT_CA" ] || [ -z "$CRT_CLIENT_STATIC" ] || [ -z "$CONNECTSTATE" ] && errorcheck
 	# check that new VPN server IP is different
 	if [ "$OVPN_IP" != "$EXISTING_IP" ]; then
 		echo "changing VPN Client connection $VPN_NO to $OVPN_HOSTNAME"
-		nvram set vpn_client${VPN_NO}_addr=${OVPN_IP}
-		nvram set vpn_client${VPN_NO}_desc=${OVPN_HOSTNAME}
-		echo "$CLIENT_CA" > /jffs/openvpn/vpn_crt_client${VPN_NO}_ca
-		echo "${CRT_CLIENT_STATIC}" > /jffs/openvpn/vpn_crt_client${VPN_NO}_static
+		nvram set vpn_client"$VPN_NO"_addr="$OVPN_IP"
+		nvram set vpn_client"$VPN_NO"_desc="$OVPN_HOSTNAME"
+		echo "$CLIENT_CA" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_ca
+		echo "$CRT_CLIENT_STATIC" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_static
 		nvram commit
 		# restart if connected - 2 is "connected"
 		if [ "$CONNECTSTATE" = "2" ]; then
-			service stop_vpnclient${VPN_NO}
+			service stop_vpnclient"$VPN_NO"
 			sleep 3
-			service start_vpnclient${VPN_NO}
+			service start_vpnclient"$VPN_NO"
 		fi
 		echo "complete"
 	else
@@ -335,25 +323,27 @@ setVPN(){
 
 # check for entries, connection state and schedule entry
 listEntries(){
-	echo "VPN CLient List:"
+	echo "VPN Client List:"
 	# from 1 to 5
-	for VPN_NO in 1 2 3 4 5; do
-		VPN_CLIENTDESC="$(nvram get vpn_client${VPN_NO}_desc | grep nordvpn)"
+	for i in 1 2 3 4 5; do
+		VPN_CLIENTDESC="$(nvram get vpn_client"$i"_desc | grep NordVPN)"
 		if [ ! -z "$VPN_CLIENTDESC" ]; then
-			if [ "$(getConnectState)" = "2" ]; then
-				CONNECTSTATE=ACTIVE
+			CONNECTSTATE=""
+			SCHEDULESTATE=""
+			if [ "$(getConnectState "$i")" = "2" ]; then
+				CONNECTSTATE="Active"
 			else
-				CONNECTSTATE=INACTIVE
+				CONNECTSTATE="Inactive"
 			fi
-			cru l | grep "#${MY_ADDON_NAME}${VPN_NO}" >/dev/null 2>&1
+			cru l | grep "#$SCRIPT_NAME$i" >/dev/null 2>&1
 			if [ $? -ne 0 ]; then
-				SCHEDULESTATE=UNSCHEDULED
+				SCHEDULESTATE="Unscheduled"
 			else
-				SCHEDULESTATE=SCHEDULED
+				SCHEDULESTATE="Scheduled"
 			fi
-			echo "$VPN_NO. ${VPN_CLIENTDESC} (${CONNECTSTATE} and ${SCHEDULESTATE})"
+			echo "$i. $VPN_CLIENTDESC ($CONNECTSTATE and $SCHEDULESTATE)"
 		else
-			echo "$VPN_NO. no nordvpn entry found"
+			echo "$i. No NordVPN entry found"
 		fi
 	done
 }
