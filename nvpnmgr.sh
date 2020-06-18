@@ -36,6 +36,34 @@ Print_Output(){
 		printf "\\e[1m$3%s: $2\\e[0m\\n\\n" "$SCRIPT_NAME"
 	fi
 }
+### Code for these functions inspired by https://github.com/Adamm00 - credit to @Adamm ###
+Check_Lock(){
+	if [ -f "/tmp/$SCRIPT_NAME.lock" ]; then
+		ageoflock=$(($(date +%s) - $(date +%s -r /tmp/$SCRIPT_NAME.lock)))
+		if [ "$ageoflock" -gt 600 ]; then
+			Print_Output "true" "Stale lock file found (>600 seconds old) - purging lock" "$ERR"
+			kill "$(sed -n '1p' /tmp/$SCRIPT_NAME.lock)" >/dev/null 2>&1
+			Clear_Lock
+			echo "$$" > "/tmp/$SCRIPT_NAME.lock"
+			return 0
+		else
+			Print_Output "true" "Lock file found (age: $ageoflock seconds) - stopping to prevent duplicate runs" "$ERR"
+			if [ -z "$1" ]; then
+				exit 1
+			else
+				return 1
+			fi
+		fi
+	else
+		echo "$$" > "/tmp/$SCRIPT_NAME.lock"
+		return 0
+	fi
+}
+
+Clear_Lock(){
+	rm -f "/tmp/$SCRIPT_NAME.lock" 2>/dev/null
+	return 0
+}
 }
 
 # use to create content of vJSON variable
