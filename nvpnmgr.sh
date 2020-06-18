@@ -441,6 +441,20 @@ UpdateVPN(){
 # 	logger -st "$SCRIPT_NAME addon" "Removal of schedule complete (VPNClient$1)"
 # }
 
+Shortcut_nvpnmgr(){
+	case $1 in
+		create)
+			if [ -d "/opt/bin" ] && [ ! -f "/opt/bin/$SCRIPT_NAME" ] && [ -f "/jffs/scripts/$SCRIPT_NAME" ]; then
+				ln -s /jffs/scripts/"$SCRIPT_NAME" /opt/bin
+				chmod 0755 /opt/bin/"$SCRIPT_NAME"
+			fi
+		;;
+		delete)
+			if [ -f "/opt/bin/$SCRIPT_NAME" ]; then
+				rm -f /opt/bin/"$SCRIPT_NAME"
+			fi
+		;;
+	esac
 }
 
 PressEnter(){
