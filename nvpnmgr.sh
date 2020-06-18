@@ -811,6 +811,10 @@ Addon_Uninstall(){
 }
 
 if [ -z "$1" ]; then
+	Create_Dirs
+	Set_Version_Custom_Settings "local"
+	Create_Symlinks
+	Shortcut_nvpnmgr create
 	ScriptHeader
 	MainMenu
 	exit 0
@@ -819,16 +823,62 @@ fi
 case "$1" in
 	install)
 		Check_Lock
-		Addon_Install
+		Menu_Install
 		exit 0
 	;;
-	*)
 	#schedulevpn)
 	#	ScheduleVPN "$VPN_NO" "$VPNPROT" "$CRU_MINUTE" "$CRU_HOUR" "$CRU_DAYNUMBERS" "$VPNTYPE"
 	#;;
+	develop)
 		Check_Lock
-		echo "Command not recognised, please try again"
+		sed -i 's/^readonly SCRIPT_BRANCH.*$/readonly SCRIPT_BRANCH="develop"/' "/jffs/scripts/$SCRIPT_NAME"
 		Clear_Lock
+		exec "$0" "update"
+		exit 0
+	;;
+	stable)
+		Check_Lock
+		sed -i 's/^readonly SCRIPT_BRANCH.*$/readonly SCRIPT_BRANCH="master"/' "/jffs/scripts/$SCRIPT_NAME"
+		Clear_Lock
+		exec "$0" "update"
+		exit 0
+	;;
+	update)
+		Check_Lock
+		Update_Version "unattended"
+		Clear_Lock
+		exit 0
+	;;
+	forceupdate)
+		Check_Lock
+		Update_Version "force" "unattended"
+		Clear_Lock
+		exit 0
+	;;
+	setversion)
+		Check_Lock
+		Set_Version_Custom_Settings "local"
+		Set_Version_Custom_Settings "server" "$SCRIPT_VERSION"
+		Clear_Lock
+		if [ -z "$2" ]; then
+			exec "$0"
+		fi
+		exit 0
+	;;
+	checkupdate)
+		Check_Lock
+		#shellcheck disable=SC2034
+		updatecheckresult="$(Update_Check)"
+		Clear_Lock
+		exit 0
+	;;
+	uninstall)
+		Check_Lock
+		Menu_Uninstall
+		exit 0
+	;;
+	*)
+		echo "Command not recognised, please try again"
 		exit 1
 	;;
 esac
