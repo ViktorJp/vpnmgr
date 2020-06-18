@@ -27,6 +27,15 @@ readonly PASS="\\e[32m"
 # Load standard variables and helper script
 . /usr/sbin/helper.sh
 
+# $1 = print to syslog, $2 = message to print, $3 = log level
+Print_Output(){
+	if [ "$1" = "true" ]; then
+		logger -t "$SCRIPT_NAME" "$2"
+		printf "\\e[1m$3%s: $2\\e[0m\\n\\n" "$SCRIPT_NAME"
+	else
+		printf "\\e[1m$3%s: $2\\e[0m\\n\\n" "$SCRIPT_NAME"
+	fi
+}
 }
 
 # use to create content of vJSON variable
