@@ -447,34 +447,13 @@ Shortcut_nvpnmgr(){
 	esac
 }
 
-PressEnter(){
-	while true; do
-		printf "Press enter to continue..."
-		read -r "key"
-		case "$key" in
-			*)
-				break
-			;;
-		esac
-	done
-	return 0
-}
-
-ReturnToMainMenu(){
-	PressEnter
-	ScriptHeader
-	UpdateNowMenuHeader
-}
-
 SetVPNClient(){
 	printf "\\n\\e[1mPlease select a VPN client connection (x to cancel): \\e[0m"
 	read -r "VPN_NO"
 	if [ "$VPN_NO" = "x" ]; then
 		printf "previous operation cancelled"
-		ReturnToMainMenu
 	elif [ -z "$VPN_NO" ]; then
 		printf "you must specify a valid VPN client"
-		ReturnToMainMenu
 	fi
 	# validate VPN_NO here (must be a number from 1 to 5 have "NordVPN" in the name)
 }
@@ -499,19 +478,16 @@ SetVPNProtocol(){
 			;;
 			x)
 				printf "previous operation cancelled"
-				ReturnToMainMenu
 				break
 			;;
 			*)
 				printf "you must choose a protocol option"
-				ReturnToMainMenu
 				break
 			;;
 		esac
 	done
 	if [ -z "$VPNPROT" ]; then
 		printf "you must choose a protocol option"
-		ReturnToMainMenu
 	fi
 }
 
@@ -538,7 +514,6 @@ SetVPNType(){
 			;;
 			x)
 				printf "previous operation cancelled"
-				ReturnToMainMenu
 				break
 			;;
 			*)
@@ -549,7 +524,6 @@ SetVPNType(){
 	done
 	if [ -z "$VPNTYPE" ]; then
 		printf "type not set or previous operation cancelled"
-		ReturnToMainMenu
 	fi
 }
 
@@ -558,7 +532,6 @@ SetDays(){
 	read -r "CRU_DAYNUMBERS"
 	if [ "$CRU_DAYNUMBERS" = "x" ]; then
 		printf "previous operation cancelled"
-		ReturnToMainMenu
 	elif [ -z "$CRU_DAYNUMBERS" ]; then
 		CRU_DAYNUMBERS="*"
 		printf "\\n\\e[1mSet to every day\\e[0m\\n"
@@ -571,10 +544,8 @@ SetHours(){
 	read -r "CRU_HOUR"
 	if [ "$CRU_HOUR" = "x" ]; then
 		printf "previous operation cancelled"
-		ReturnToMainMenu
 	elif [ -z "$CRU_HOUR" ]; then
 		printf "you must specify a valid hour or hours separated by comma"
-		ReturnToMainMenu
 	fi
 	# validate HOURS here (must be a number from 0 to 23)
 }
@@ -584,33 +555,59 @@ SetMinutes(){
 	read -r "CRU_MINUTE"
 	if [ "$CRU_MINUTE" = "x" ]; then
 		printf "previous operation cancelled"
-		ReturnToMainMenu
 	elif [ -z "$CRU_MINUTE" ]; then
 		printf "you must specify a valid minute or minutes separated by comma"
-		ReturnToMainMenu
 	fi
 	# validate MINUTES here (must be a number from 0 to 59)
+}
+
+PressEnter(){
+	while true; do
+		printf "Press enter to continue..."
+		read -r "key"
+		case "$key" in
+			*)
+				break
+			;;
+		esac
+	done
+	return 0
 }
 
 ScriptHeader(){
 	clear
 	printf "\\n"
-	printf "\\e[1m############################################################\\e[0m\\n"
-	printf "\\e[1m##                   $SCRIPT_NAME Menu                  ##\\e[0m\\n"
-	printf "\\e[1m############################################################\\e[0m\\n"
+	printf "\\e[1m##########################################################\\e[0m\\n"
+	printf "\\e[1m##                                                      ##\\e[0m\\n"
+	printf "\\e[1m##         _           __  __              _  _         ##\\e[0m\\n"
+	printf "\\e[1m##        | |         |  \/  |            | |(_)        ##\\e[0m\\n"
+	printf "\\e[1m##  _ __  | |_  _ __  | \  / |  ___  _ __ | | _  _ __   ##\\e[0m\\n"
+	printf "\\e[1m## | '_ \ | __|| '_ \ | |\/| | / _ \| '__|| || || '_ \  ##\\e[0m\\n"
+	printf "\\e[1m## | | | || |_ | |_) || |  | ||  __/| |   | || || | | | ##\\e[0m\\n"
+	printf "\\e[1m## |_| |_| \__|| .__/ |_|  |_| \___||_|   |_||_||_| |_| ##\\e[0m\\n"
+	printf "\\e[1m##             | |                                      ##\\e[0m\\n"
+	printf "\\e[1m##             |_|                                      ##\\e[0m\\n"
+	printf "\\e[1m##                                                      ##\\e[0m\\n"
+	printf "\\e[1m##                  %s on %-9s                 ##\\e[0m\\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
+	printf "\\e[1m##                                                      ##\\e[0m\\n"
+	printf "\\e[1m##       https://github.com/jackyaz/nvpnmgr           ##\\e[0m\\n"
+	printf "\\e[1m##                                                      ##\\e[0m\\n"
+	printf "\\e[1m##########################################################\\e[0m\\n"
 	printf "\\n"
 }
 
 MainMenu(){
-	printf "   1. Check for available NordVPN VPN client connections\\n"
-	printf "   2. Update a VPN client connection NOW\\n"
-	printf "   3. Schedule a VPN client connection update\\n"
-	printf "   d. Delete a scheduled VPN client connection update\\n"
-	printf "   u. Update $SCRIPT_NAME\\n"
-	printf "   e. Exit $SCRIPT_NAME menu\\n\\n"
-	printf "   z. Uninstall $SCRIPT_NAME\\n"
+	printf "1.    Check for available NordVPN VPN client configurations\\n"
+	printf "2.    Update a VPN client configuration now\\n"
+	printf "3.    Schedule a VPN client configuration update\\n"
+	printf "d.    Delete a scheduled VPN client configuration update\\n"
+	printf "u.    Check for updates\\n"
+	printf "uf.   Update %s with latest version (force update)\\n\\n" "$SCRIPT_NAME"
+	printf "e.    Exit %s\\n\\n" "$SCRIPT_NAME"
+	printf "z.    Uninstall %s\\n" "$SCRIPT_NAME"
 	printf "\\n"
-	printf "\\e[1m############################################################\\e[0m\\n"
+	printf "\\e[1m##########################################################\\e[0m\\n"
+	printf "\\n"
 	
 	VPN_NO=
 	VPNPROT=
@@ -620,62 +617,79 @@ MainMenu(){
 	CRU_MINUTE=
 	
 	while true; do
-		printf "\\nChoose an option:    "
+		printf "Choose an option:    "
 		read -r "menu"
 		case "$menu" in
 			1)
 				printf "\\n"
-				# check for connections
-				ListMenu
+				if Check_Lock "menu"; then
+					ListMenu
+				fi
+				PressEnter
 				break
 			;;
 			2)
 				printf "\\n"
-				# configure now
-				UpdateNowMenu
+				if Check_Lock "menu"; then
+					UpdateNowMenu
+				fi
+				PressEnter
 				break
 			;;
 			3)
 				printf "\\n"
-				# configure schedule
-				ScheduleUpdateMenu
+				if Check_Lock "menu"; then
+					ScheduleUpdateMenu
+				fi
+				PressEnter
 				break
 			;;
-			d)
+			4)
 				printf "\\n"
-				# remove schedule
-				DeleteScheduleMenu
+				if Check_Lock "menu"; then
+					DeleteScheduleMenu
+				fi
+				PressEnter
 				break
 			;;
 			u)
 				printf "\\n"
-				# update script from github
-				"$LOCAL_REPO/install.sh"
+				if Check_Lock "menu"; then
+					Menu_Update
+				fi
+				PressEnter
+				break
+			;;
+			uf)
+				printf "\\n"
+				if Check_Lock "menu"; then
+					Menu_ForceUpdate
+				fi
 				PressEnter
 				break
 			;;
 			e)
 				ScriptHeader
-				printf "\\n\\e[1mThanks for using $SCRIPT_NAME!\\e[0m\\n\\n\\n"
+				printf "\\n\\e[1mThanks for using %s!\\e[0m\\n\\n\\n" "$SCRIPT_NAME"
 				exit 0
 			;;
 			z)
-				printf "\\n\\e[1mAre you sure you want to uninstall $SCRIPT_NAME (Y to confirm)?\\e[0m "
-				read -r "confirm"
-				if [ "$confirm" = "Y" ]
-				then
-					echo "Uninstalling $SCRIPT_NAME..."
-					# remove script
-					Addon_Uninstall
-					exit 0
-				else
-					printf "Uninstall of $SCRIPT_NAME cancelled"
-					ReturnToMainMenu
-				fi
+				while true; do
+					printf "\\n\\e[1mAre you sure you want to uninstall %s? (y/n)\\e[0m\\n" "$SCRIPT_NAME"
+					read -r "confirm"
+					case "$confirm" in
+						y|Y)
+							Menu_Uninstall
+							exit 0
+						;;
+						*)
+							break
+						;;
+					esac
+				done
 			;;
 			*)
-				printf "Please choose a valid option"
-				ReturnToMainMenu
+				printf "\\nPlease choose a valid option\\n\\n"
 			;;
 		esac
 	done
@@ -718,8 +732,6 @@ ListMenu(){
 	listEntries
 	printf "\\n"
 	PressEnter
-	
-	ReturnToMainMenu
 }
 
 UpdateNowMenu(){
@@ -734,7 +746,6 @@ UpdateNowMenu(){
 	PressEnter
 	
 	printf "Update VPN complete ($VPNTYPE)"
-	ReturnToMainMenu
 }
 
 # ScheduleUpdateMenu(){
@@ -752,7 +763,6 @@ UpdateNowMenu(){
 # 	PressEnter
 #
 # 	printf "Scheduled VPN update complete ($VPNTYPE)"
-# 	ReturnToMainMenu
 # }
 #
 # DeleteScheduleMenu(){
@@ -765,7 +775,6 @@ UpdateNowMenu(){
 # 	PressEnter
 #
 # 	printf "Delete VPN schedule complete"
-# 	ReturnToMainMenu
 # }
 
 Check_Requirements(){
@@ -821,12 +830,27 @@ Menu_Install(){
 	Clear_Lock
 }
 
-Addon_Uninstall(){
-	printf "Uninstalling $SCRIPT_NAME has not yet been tested...\\n"
-#	printf "Uninstalling $SCRIPT_NAME..."
-#	cd ~
-#	rm -f "$LOCAL_REPO" 2>/dev/null
-#	printf "Uninstall of $SCRIPT_NAME completed"
+Menu_Update(){
+	Update_Version
+	Clear_Lock
+}
+
+Menu_ForceUpdate(){
+	Update_Version force
+	Clear_Lock
+}
+
+Menu_Uninstall(){
+	Print_Output "true" "Removing $SCRIPT_NAME..." "$PASS"
+	
+	rm -rf "$SCRIPT_WEB_DIR" 2>/dev/null
+	rm -rf "$SCRIPT_DIR" 2>/dev/null
+	
+	Shortcut_nvpnmgr delete
+	
+	rm -f "/jffs/scripts/$SCRIPT_NAME" 2>/dev/null
+	Clear_Lock
+	Print_Output "true" "Uninstall completed" "$PASS"
 }
 
 if [ -z "$1" ]; then
