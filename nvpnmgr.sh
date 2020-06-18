@@ -1,46 +1,32 @@
 #!/bin/sh
 
-# USAGE
-#
-# to check for and list current scheduled update entries
-#  scriptname list
-# to manually trigger an update
-#  scriptname update [1|2|3|4|5] [openvpn_udp|openvpn_tcp] [null|double|p2p]
-# to schedule updates using cron/cru
-#  scriptname schedule [1|2|3|4|5] [openvpn_udp|openvpn_tcp] [minute] [hour] [day numbers] [null|double|p2p]
-# to cancel schedule updates using cron/cru
-#  scriptname cancel [1|2|3|4|5]
 
-# Absolute path to this script, e.g. /home/user/bin/foo.sh
-SCRIPT=$(readlink -f "$0")
-# Absolute path this script is in, thus /home/user/bin
-SCRIPTPATH=$(dirname "$SCRIPT")
-# load standard variables and helper script
+
+
+### Start of script variables ###
+readonly SCRIPT_NAME="nvpnmgr"
+readonly SCRIPT_VERSION="v0.0.1"
+readonly SCRIPT_BRANCH="master"
+readonly SCRIPT_REPO="https://raw.githubusercontent.com/jackyaz/""$SCRIPT_NAME""/""$SCRIPT_BRANCH"
+readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
+readonly SCRIPT_WEBPAGE_DIR="$(readlink /www/user)"
+readonly SCRIPT_WEB_DIR="$SCRIPT_WEBPAGE_DIR/$SCRIPT_NAME"
+readonly SHARED_DIR="/jffs/addons/shared-jy"
+readonly SHARED_REPO="https://raw.githubusercontent.com/jackyaz/shared-jy/master"
+readonly SHARED_WEB_DIR="$SCRIPT_WEBPAGE_DIR/shared-jy"
+[ -z "$(nvram get odmpid)" ] && ROUTER_MODEL=$(nvram get productid) || ROUTER_MODEL=$(nvram get odmpid)
+### End of script variables ###
+
+### Start of output format variables ###
+readonly CRIT="\\e[41m"
+readonly ERR="\\e[31m"
+readonly WARN="\\e[33m"
+readonly PASS="\\e[32m"
+### End of output format variables ###
+
+# Load standard variables and helper script
 . /usr/sbin/helper.sh
 
-# addon name
-MY_ADDON_NAME="nordvpnmanager"
-# control script
-MY_ADDON_SCRIPT="nvpnmgr.sh"
-# addon page
-#MY_ADDON_PAGE=NordVPNManager.asp
-# tab name
-#MY_ADDON_TAB="NordVPN Manager"
-# Github repo name
-GIT_REPO="asusmerlin-nvpnmgr"
-# Github repo branch - modify to pull different branch
-# (fetch will overwrite local changes)
-GIT_REPO_BRANCH="master"
-# Github dir
-GITHUB_DIR="https://raw.githubusercontent.com/jackyaz/$GIT_REPO/$GIT_REPO_BRANCH"
-# Local repo dir
-LOCAL_REPO="/jffs/scripts/$MY_ADDON_NAME"
-
-# functions
-errorcheck(){
-	echo "$SCRIPTSECTION reported an error..."
-	logger -st "$MY_ADDON_NAME addon" "$SCRIPTSECTION reported an error"
-	exit 1
 }
 
 # use to create content of vJSON variable
