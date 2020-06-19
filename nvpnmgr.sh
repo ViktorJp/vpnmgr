@@ -26,6 +26,9 @@ readonly SHARED_DIR="/jffs/addons/shared-jy"
 readonly SHARED_REPO="https://raw.githubusercontent.com/jackyaz/shared-jy/master"
 readonly SHARED_WEB_DIR="$SCRIPT_WEBPAGE_DIR/shared-jy"
 [ -z "$(nvram get odmpid)" ] && ROUTER_MODEL=$(nvram get productid) || ROUTER_MODEL=$(nvram get odmpid)
+GLOBAL_VPN_NO=""
+GLOBAL_VPN_PROT=""
+GLOBAL_VPN_TYPE=""
 ### End of script variables ###
 
 ### Start of output format variables ###
@@ -303,13 +306,14 @@ getConnectState(){
 # configure VPN
 setVPN(){
 	VPN_NO="$1"
+	VPN_PROT="$2"
 	echo "updating VPN Client connection $VPN_NO now..."
 	
-	vJSON="$(getRecommended)"
+	vJSON="$(getRecommended "$VPN_NO" "$VPN_PROT")"
 	OVPN_IP="$(getIP "$vJSON")"
 	OVPN_HOSTNAME="$(getHostname "$vJSON")"
-	OVPNFILE="$(getOVPNFilename "$OVPN_HOSTNAME" "$VPNPROT_SHORT")"
-	OVPN_DETAIL="$(getOVPNcontents "$OVPNFILE" "$VPNPROT_SHORT")"
+	OVPNFILE="$(getOVPNFilename "$OVPN_HOSTNAME" "$(echo "$VPN_PROT" | cut -f2 -d'_')")"
+	OVPN_DETAIL="$(getOVPNcontents "$OVPNFILE" "$(echo "$VPN_PROT" | cut -f2 -d'_')")"
 	CLIENT_CA="$(getClientCA "$OVPN_DETAIL")"
 	CRT_CLIENT_STATIC="$(getClientCRT "$OVPN_DETAIL")"
 	EXISTING_NAME="$(getConnName "$VPN_NO")"
@@ -335,32 +339,6 @@ setVPN(){
 	else
 		echo "recommended server for VPN Client connection $VPN_NO is already the recommended server - $OVPN_HOSTNAME"
 	fi
-}
-
-# check for entries, connection state and schedule entry
-listEntries(){
-	echo "VPN Client List:"
-	# from 1 to 5
-	for i in 1 2 3 4 5; do
-		VPN_CLIENTDESC="$(nvram get vpn_client"$i"_desc | grep NordVPN)"
-		if [ -n "$VPN_CLIENTDESC" ]; then
-			CONNECTSTATE=""
-			SCHEDULESTATE=""
-			if [ "$(getConnectState "$i")" = "2" ]; then
-				CONNECTSTATE="Active"
-			else
-				CONNECTSTATE="Inactive"
-			fi
-			if ! cru l | grep "#$SCRIPT_NAME$i" >/dev/null 2>&1; then
-				SCHEDULESTATE="Unscheduled"
-			else
-				SCHEDULESTATE="Scheduled"
-			fi
-			echo "$i. $VPN_CLIENTDESC ($CONNECTSTATE and $SCHEDULESTATE)"
-		else
-			echo "$i. No NordVPN entry found"
-		fi
-	done
 }
 
 # getCRONentry(){
@@ -413,11 +391,13 @@ listEntries(){
 # 	echo "complete"
 # }
 
-UpdateVPN(){
+UpdateVPNConfig(){
 	VPN_NO="$1"
-	logger -st "$SCRIPT_NAME addon" "Updating to recommended NordVPN server (VPNClient$VPN_NO)..."
-	setVPN "$VPN_NO"
-	logger -st "$SCRIPT_NAME addon" "Update complete (VPNClient$VPN_NO - server $OVPN_HOSTNAME - type $VPNTYPE)"
+	VPN_PROT="$2"
+	VPN_TYPE="$3"
+	logger -st "$SCRIPT_NAME" "Updating to recommended NordVPN server (VPNClient$VPN_NO)..."
+	setVPN "$VPN_NO" "$VPN_PROT"
+	logger -st "$SCRIPT_NAME" "Update complete (VPNClient$VPN_NO - protocol $VPN_PROT - type $VPN_TYPE)"
 }
 
 # ScheduleVPN(){
@@ -459,83 +439,103 @@ Shortcut_nvpnmgr(){
 	esac
 }
 
-SetVPNClient(){
-	printf "\\n\\e[1mPlease select a VPN client connection (x to cancel): \\e[0m"
-	read -r "VPN_NO"
-	if [ "$VPN_NO" = "x" ]; then
-		printf "previous operation cancelled"
-	elif [ -z "$VPN_NO" ]; then
-		printf "you must specify a valid VPN client"
-	fi
-	# validate VPN_NO here (must be a number from 1 to 5 have "NordVPN" in the name)
-}
-
-SetVPNProtocol(){
-	printf "\\n\\e[1mPlease select a VPN protocol (x to cancel): \\e[0m\\n"
-	printf "   1. UDP\\n"
-	printf "   2. TCP\\n"
-	read -r "menu"
-
-	while true; do
-		case "$menu" in
-			1)
-				VPNPROT="openvpn_udp"
-				VPNPROT_SHORT="$(echo "$VPNPROT" | cut -f2 -d'_')"
-				break
-			;;
-			2)
-				VPNPROT="openvpn_tcp"
-				VPNPROT_SHORT="$(echo "$VPNPROT" | cut -f2 -d'_')"
-				break
-			;;
-			x)
-				printf "previous operation cancelled"
-				break
-			;;
-			*)
-				printf "you must choose a protocol option"
-				break
-			;;
-		esac
-	done
-	if [ -z "$VPNPROT" ]; then
-		printf "you must choose a protocol option"
-	fi
-}
-
-SetVPNType(){
-	printf "\\n\\e[1mPlease select a VPN Type (x to cancel): \\e[0m\\n"
-	printf "   1. Standard VPN (default)\\n"
-	printf "   2. Double VPN\\n"
-	printf "   3. P2P\\n"
-	read -r "menu"
+SetVPNParameters(){
+	exitmenu=""
+	vpnnum=""
+	vpnprot=""
+	vpntype=""
+	ScriptHeader
 	
 	while true; do
-		case "$menu" in
-			1)
-				VPNTYPE="legacy_standard"
+		printf "\\n\\e[1mPlease enter the VPN client number (1-5):\\e[0m    "
+		read -r "vpn_choice"
+		
+		if [ "$vpn_choice" = "e" ]; then
+			exitmenu="exit"
+			break
+		elif ! Validate_Number "" "$vpn_choice" "silent"; then
+			printf "\\n\\e[31mPlease enter a valid number (1-5)\\e[0m\\n"
+		else
+			if [ "$vpn_choice" -lt 1 ] || [ "$vpn_choice" -gt 5 ]; then
+				printf "\\n\\e[31mPlease enter a number between 1 and 5\\e[0m\\n"
+			else
+				vpnnum="$vpn_choice"
+				printf "\\n"
 				break
-			;;
-			2)
-				VPNTYPE="legacy_double_vpn"
-				break
-			;;
-			3)
-				VPNTYPE="legacy_p2p"
-				break
-			;;
-			x)
-				printf "previous operation cancelled"
-				break
-			;;
-			*)
-				VPNTYPE="legacy_standard"
-				break
-			;;
-		esac
+			fi
+		fi
 	done
-	if [ -z "$VPNTYPE" ]; then
-		printf "type not set or previous operation cancelled"
+	
+	if [ "$exitmenu" != "exit" ]; then
+		while true; do
+			printf "\\n\\e[1mPlease select a VPN protocol:\\e[0m\\n"
+			printf "    1. UDP\\n"
+			printf "    2. TCP\\n\\n"
+			printf "Choose an option:    "
+			read -r "protmenu"
+			
+			case "$protmenu" in
+				1)
+					vpnprot="openvpn_udp"
+					printf "\\n"
+					break
+				;;
+				2)
+					vpnprot="openvpn_tcp"
+					printf "\\n"
+					break
+				;;
+				e)
+					exitmenu="exit"
+					break
+				;;
+				*)
+					printf "\\n\\e[31mPlease enter a valid choice (1-2)\\e[0m\\n"
+				;;
+			esac
+		done
+	fi
+	
+	if [ "$exitmenu" != "exit" ]; then
+		while true; do
+			printf "\\n\\e[1mPlease select a VPN Type:\\e[0m\\n"
+			printf "    1. Standard VPN\\n"
+			printf "    2. Double VPN\\n"
+			printf "    3. P2P\\n\\n"
+			printf "Choose an option:    "
+			read -r "typemenu"
+			
+			case "$typemenu" in
+				1)
+					vpntype="legacy_standard"
+					printf "\\n"
+					break
+				;;
+				2)
+					vpntype="legacy_double_vpn"
+					printf "\\n"
+					break
+				;;
+				3)
+					vpntype="legacy_p2p"
+					printf "\\n"
+					break
+				;;
+				e)
+					exitmenu="exit"
+					break
+				;;
+				*)
+					printf "\\n\\e[31mPlease enter a valid choice (1-3)\\e[0m\\n"
+				;;
+			esac
+		done
+	fi
+	
+	if [ "$exitmenu" != "exit" ]; then
+		GLOBAL_VPN_NO="$vpnnum"
+		GLOBAL_VPN_PROT="$vpnprot"
+		GLOBAL_VPN_TYPE="$vpntype"
 	fi
 }
 
@@ -610,7 +610,7 @@ MainMenu(){
 	printf "1.    Check for available NordVPN VPN client configurations\\n"
 	printf "2.    Update a VPN client configuration now\\n"
 	printf "3.    Schedule a VPN client configuration update\\n"
-	printf "d.    Delete a scheduled VPN client configuration update\\n"
+	printf "d.    Delete a scheduled VPN client configuration update\\n\\n"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Update %s with latest version (force update)\\n\\n" "$SCRIPT_NAME"
 	printf "e.    Exit %s\\n\\n" "$SCRIPT_NAME"
@@ -619,13 +619,6 @@ MainMenu(){
 	printf "\\e[1m##########################################################\\e[0m\\n"
 	printf "\\n"
 	
-	VPN_NO=
-	VPNPROT=
-	VPNTYPE=
-	CRU_HOUR=
-	CRU_DAYNUMBERS=
-	CRU_MINUTE=
-	
 	while true; do
 		printf "Choose an option:    "
 		read -r "menu"
@@ -633,7 +626,8 @@ MainMenu(){
 			1)
 				printf "\\n"
 				if Check_Lock "menu"; then
-					ListMenu
+					Menu_ListVPN
+					printf "\\n"
 				fi
 				PressEnter
 				break
@@ -641,7 +635,8 @@ MainMenu(){
 			2)
 				printf "\\n"
 				if Check_Lock "menu"; then
-					UpdateNowMenu
+					Menu_UpdateVPN
+					printf "\\n"
 				fi
 				PressEnter
 				break
@@ -650,6 +645,7 @@ MainMenu(){
 				printf "\\n"
 				if Check_Lock "menu"; then
 					ScheduleUpdateMenu
+					printf "\\n"
 				fi
 				PressEnter
 				break
@@ -658,6 +654,7 @@ MainMenu(){
 				printf "\\n"
 				if Check_Lock "menu"; then
 					DeleteScheduleMenu
+					printf "\\n"
 				fi
 				PressEnter
 				break
@@ -708,15 +705,6 @@ MainMenu(){
 	MainMenu
 }
 
-UpdateNowMenuHeader(){
-	printf "   Choose options as follows:\\n"
-	printf "     VPN client [1-5]\\n"
-	printf "     protocol to use (pick from list)\\n"
-	printf "     type to use (pick from list)\\n"
-	printf "\\n"
-	printf "\\e[1m############################################################\\e[0m\\n"
-}
-
 # ScheduleUpdateMenuHeader(){
 # 	printf "   Choose options as follows:\\n"
 # 	printf "     VPN client [1-5]\\n"
@@ -736,32 +724,54 @@ UpdateNowMenuHeader(){
 # 	printf "\\e[1m############################################################\\e[0m\\n"
 # }
 
-ListMenu(){
+Menu_ListVPN(){
 	ScriptHeader
-	
-	listEntries
+	printf "VPN Client List:\\n\\n"
+	for i in 1 2 3 4 5; do
+		VPN_CLIENTDESC="$(nvram get vpn_client"$i"_desc | grep "NordVPN")"
+		if [ -n "$VPN_CLIENTDESC" ]; then
+			CONNECTSTATE=""
+			SCHEDULESTATE=""
+			if [ "$(getConnectState "$i")" = "2" ]; then
+				CONNECTSTATE="Active"
+			else
+				CONNECTSTATE="Inactive"
+			fi
+			if ! cru l | grep -q "#$SCRIPT_NAME$i"; then
+				SCHEDULESTATE="Unscheduled"
+			else
+				SCHEDULESTATE="Scheduled"
+			fi
+			printf "%s.    %s (%s and %s)\\n" "$i" "$VPN_CLIENTDESC" "$CONNECTSTATE" "$SCHEDULESTATE"
+		else
+			printf "%s.    No NordVPN entry found\\n" "$i"
+		fi
+	done
+	Clear_Lock
 }
 
-UpdateNowMenu(){
+Menu_UpdateVPN(){
 	ScriptHeader
-	UpdateNowMenuHeader
+	printf "    Choose options as follows:\\n"
+	printf "        - VPN client [1-5]\\n"
+	printf "        - protocol to use (pick from list)\\n"
+	printf "        - type of VPN to use (pick from list)\\n"
+	printf "\\n"
+	printf "\\e[1m############################################################\\e[0m\\n"
 	
-	SetVPNClient
-	SetVPNProtocol
-	SetVPNType
+	SetVPNParameters
 	
-	UpdateVPN "$VPN_NO" "$VPNPROT" "$VPNTYPE"
+	UpdateVPNConfig "$GLOBAL_VPN_NO" "$GLOBAL_VPN_PROT" "$GLOBAL_VPN_TYPE"
 	
-	printf "Update VPN complete (%s)" "$VPNTYPE"
+	printf "VPN update complete (%s)\\n" "$VPNTYPE"
+	Clear_Lock
 }
 
 # ScheduleUpdateMenu(){
 # 	ScriptHeader
 # 	ScheduleUpdateMenuHeader
 #
-# 	SetVPNClient
-# 	SetVPNProtocol
-# 	SetVPNType
+# 	SetVPNParameters
 # 	SetDays
 # 	SetHours
 # 	SetMinutes
