@@ -972,9 +972,9 @@ case "$1" in
 		Menu_Install
 		exit 0
 	;;
-	#schedulevpn)
-	#	ScheduleVPN "$VPN_NO" "$VPNPROT" "$CRU_MINUTE" "$CRU_HOUR" "$CRU_DAYNUMBERS" "$VPNTYPE"
-	#;;
+	updatevpn)
+		UpdateVPNConfig "$1" "$2" "$3"
+	;;
 	develop)
 		Check_Lock
 		sed -i 's/^readonly SCRIPT_BRANCH.*$/readonly SCRIPT_BRANCH="develop"/' "/jffs/scripts/$SCRIPT_NAME"
