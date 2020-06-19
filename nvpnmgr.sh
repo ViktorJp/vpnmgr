@@ -693,17 +693,6 @@ SetScheduleParameters(){
 	fi
 }
 
-SetMinutes(){
-	printf "\\n\\e[1mPlease choose update minute/s (x to cancel): \\e[0m"
-	read -r "CRU_MINUTE"
-	if [ "$CRU_MINUTE" = "x" ]; then
-		printf "previous operation cancelled"
-	elif [ -z "$CRU_MINUTE" ]; then
-		printf "you must specify a valid minute or minutes separated by comma"
-	fi
-	# validate MINUTES here (must be a number from 0 to 59)
-}
-
 PressEnter(){
 	while true; do
 		printf "Press enter to continue..."
