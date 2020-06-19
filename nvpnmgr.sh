@@ -294,10 +294,11 @@ getConnectState(){
 	nvram get vpn_client"$1"_state
 }
 
-# getCRONentry(){
-# 	cru l | grep "$SCRIPT_NAME$1" | sed 's/ sh.*//'
-# 	[ $? -ne 0 ] && echo "Not found"
-# }
+getCRONentry(){
+	if ! cru l | grep "$SCRIPT_NAME""_VPN""$1" | sed 's/ sh.*//'; then
+		Print_Output "true" "Existing cron entry for VPN client $1 not found" "$WARN"
+	fi
+}
 #
 # setCRONentry(){
 # 	echo "Scheduling VPN Client connection $VPN_NO updating..."
@@ -569,27 +570,129 @@ SetVPNParameters(){
 	fi
 }
 
-SetDays(){
-	printf "\\n\\e[1mPlease choose update day/s (x to cancel - blank for every day): \\e[0m"
-	read -r "CRU_DAYNUMBERS"
-	if [ "$CRU_DAYNUMBERS" = "x" ]; then
-		printf "previous operation cancelled"
-	elif [ -z "$CRU_DAYNUMBERS" ]; then
-		CRU_DAYNUMBERS="*"
-		printf "\\n\\e[1mSet to every day\\e[0m\\n"
+SetScheduleParameters(){
+	exitmenu=""
+	crudays=""
+	cruhours=""
+	crumins=""
+	
+	while true; do
+		printf "\\n\\e[1mPlease choose which day(s) to update VPN configuration (0-6, * for every day, or comma separated days):\\e[0m    "
+		read -r "day_choice"
+		
+		if [ "$day_choice" = "e" ]; then
+			exitmenu="exit"
+			break
+		elif [ "$day_choice" = "*" ]; then
+			crudays="$day_choice"
+			printf "\\n"
+			break
+		else
+			crudaystmp="$(echo "$day_choice" | sed "s/,/ /g")"
+			crudaysvalidated="true"
+			for i in $crudaystmp; do
+				if ! Validate_Number "" "$i" "silent"; then
+					printf "\\n\\e[31mPlease enter a valid number (0-6) or comma separated values\\e[0m\\n"
+					crudaysvalidated="false"
+					break
+				else
+					if [ "$i" -lt 0 ] || [ "$i" -gt 6 ]; then
+						printf "\\n\\e[31mPlease enter a number between 0 and 6 or comma separated values\\e[0m\\n"
+						crudaysvalidated="false"
+						break
+					fi
+				fi
+			done
+			if [ "$crudaysvalidated" = "true" ]; then
+				crudays="$day_choice"
+				printf "\\n"
+				break
+			fi
+		fi
+	done
+	
+	if [ "$exitmenu" != "exit" ]; then
+		while true; do
+			printf "\\n\\e[1mPlease choose which hour(s) to update VPN configuration (0-23, * for every day, or comma separated hours):\\e[0m    "
+			read -r "hour_choice"
+			
+			if [ "$hour_choice" = "e" ]; then
+				exitmenu="exit"
+				break
+			elif [ "$hour_choice" = "*" ]; then
+				cruhours="$hour_choice"
+				printf "\\n"
+				break
+			else
+				cruhourstmp="$(echo "$hour_choice" | sed "s/,/ /g")"
+				cruhoursvalidated="true"
+				for i in $cruhourstmp; do
+					if ! Validate_Number "" "$i" "silent"; then
+						printf "\\n\\e[31mPlease enter a valid number (0-23) or comma separated values\\e[0m\\n"
+						cruhoursvalidated="false"
+						break
+					else
+						if [ "$i" -lt 0 ] || [ "$i" -gt 23 ]; then
+							printf "\\n\\e[31mPlease enter a number between 0 and 23 or comma separated values\\e[0m\\n"
+							cruhoursvalidated="false"
+							break
+						fi
+					fi
+				done
+				if [ "$cruhoursvalidated" = "true" ]; then
+					cruhours="$hour_choice"
+					printf "\\n"
+					break
+				fi
+			fi
+		done
 	fi
-	# validate DAYS here (must be a number from 0 to 7 or these numbers separated by comma/s)
-}
-
-SetHours(){
-	printf "\\n\\e[1mPlease choose update hour/s (x to cancel): \\e[0m"
-	read -r "CRU_HOUR"
-	if [ "$CRU_HOUR" = "x" ]; then
-		printf "previous operation cancelled"
-	elif [ -z "$CRU_HOUR" ]; then
-		printf "you must specify a valid hour or hours separated by comma"
+	
+	if [ "$exitmenu" != "exit" ]; then
+		while true; do
+			printf "\\n\\e[1mPlease choose which minutes(s) to update VPN configuration (0-59, * for every day, or comma separated minutes):\\e[0m    "
+			read -r "min_choice"
+			
+			if [ "$min_choice" = "e" ]; then
+				exitmenu="exit"
+				break
+			elif [ "$min_choice" = "*" ]; then
+				crumins="$min_choice"
+				printf "\\n"
+				break
+			else
+				cruminstmp="$(echo "$min_choice" | sed "s/,/ /g")"
+				cruminsvalidated="true"
+				for i in $cruminstmp; do
+					if ! Validate_Number "" "$i" "silent"; then
+						printf "\\n\\e[31mPlease enter a valid number (0-59) or comma separated values\\e[0m\\n"
+						cruminsvalidated="false"
+						break
+					else
+						if [ "$i" -lt 0 ] || [ "$i" -gt 59 ]; then
+							printf "\\n\\e[31mPlease enter a number between 0 and 59 or comma separated values\\e[0m\\n"
+							cruminsvalidated="false"
+							break
+						fi
+					fi
+				done
+				if [ "$cruminsvalidated" = "true" ]; then
+					crumins="$min_choice"
+					printf "\\n"
+					break
+				fi
+			fi
+		done
 	fi
-	# validate HOURS here (must be a number from 0 to 23)
+	
+	if [ "$exitmenu" != "exit" ]; then
+		GLOBAL_CRU_DAYNUMBERS="$crudays"
+		GLOBAL_CRU_HOURS="$cruhours"
+		GLOBAL_CRU_MINS="$crumins"
+		return 0
+	else
+		return 1
+	fi
 }
 
 SetMinutes(){
@@ -672,8 +775,7 @@ MainMenu(){
 			3)
 				printf "\\n"
 				if Check_Lock "menu"; then
-					ScheduleUpdateMenu
-					printf "\\n"
+					Menu_ScheduleVPN
 				fi
 				PressEnter
 				break
@@ -733,18 +835,6 @@ MainMenu(){
 	MainMenu
 }
 
-# ScheduleUpdateMenuHeader(){
-# 	printf "   Choose options as follows:\\n"
-# 	printf "     VPN client [1-5]\\n"
-# 	printf "     protocol to use (pick from list)\\n"
-# 	printf "     type to use (pick from list)\\n"
-# 	printf "     day/s to update [0-7]\\n"
-# 	printf "     hour/s to update [0-23]\\n"
-# 	printf "     minute/s to update [0-59]\\n"
-# 	printf "\\n"
-# 	printf "\\e[1m############################################################\\e[0m\\n"
-# }
-#
 # DeleteScheduleMenuHeader(){
 # 	printf "   Choose schedule entry to delete:\\n"
 # 	printf "     VPN client [1-5]\\n"
@@ -776,20 +866,31 @@ Menu_UpdateVPN(){
 	Clear_Lock
 }
 
-# ScheduleUpdateMenu(){
-# 	ScriptHeader
-# 	ScheduleUpdateMenuHeader
-#
-# 	SetVPNParameters
-# 	SetDays
-# 	SetHours
-# 	SetMinutes
-#
-# 	ScheduleVPN "$VPN_NO" "$VPNPROT" "$CRU_MINUTE" "$CRU_HOUR" "$CRU_DAYNUMBERS" "$VPNTYPE"
-#
-# 	printf "Scheduled VPN update complete ($VPNTYPE)"
-# }
-#
+Menu_ScheduleVPN(){
+	ScriptHeader
+	ListVPNClients
+	printf "Choose options as follows:\\n"
+	printf "    - VPN client [1-5]\\n"
+	printf "    - protocol to use (pick from list)\\n"
+	printf "    - type of VPN to use (pick from list)\\n"
+	printf "    - day(s) to update [0-6]\\n"
+	printf "    - hour(s) to update [0-23]\\n"
+	printf "    - minute(s) to update [0-59]\\n"
+	printf "\\n"
+	printf "\\e[1m############################################################\\e[0m\\n"
+	
+	if SetVPNParameters; then
+			SetScheduleParameters
+			echo "$GLOBAL_CRU_DAYNUMBERS"
+			echo "$GLOBAL_CRU_HOURS"
+			echo "$GLOBAL_CRU_MINS"
+			#ScheduleVPN "$GLOBAL_VPN_NO" "$GLOBAL_VPN_PROT" "$GLOBAL_VPN_TYPE" "$GLOBAL_CRU_DAYNUMBERS" "$GLOBAL_CRU_HOURS" "$GLOBAL_CRU_MINS"
+	else
+		Print_Output "true" "VPN client update scheduling cancelled" "$WARN"
+	fi
+	Clear_Lock
+}
+
 # DeleteScheduleMenu(){
 # 	ScriptHeader
 # 	DeleteScheduleMenuHeader
