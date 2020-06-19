@@ -85,6 +85,8 @@ Clear_Lock(){
 	return 0
 }
 
+###################################
+
 Set_Version_Custom_Settings(){
 	SETTINGSFILE="/jffs/addons/custom_settings.txt"
 	case "$1" in
@@ -294,28 +296,6 @@ getConnectState(){
 	nvram get vpn_client"$1"_state
 }
 
-getCRONentry(){
-	if ! cru l | grep "$SCRIPT_NAME""_VPN""$1" | sed 's/ sh.*//'; then
-		Print_Output "true" "Existing cron entry for VPN client $1 not found" "$WARN"
-	fi
-}
-
-# delCRONentry(){
-# 	echo "removing VPN Client connection $VPN_NO schedule entry..."
-# 	[ -z "$VPN_NO" ] || [ -z "$SCRIPT_NAME" ] && errorcheck
-# 	# remove cru entry
-# 	if cru l | grep "${SCRIPT_NAME}${VPN_NO}" >/dev/null 2>&1; then
-# 		# remove existing
-# 		cru d ${SCRIPT_NAME}${VPN_NO}
-# 	fi
-# 	# remove persistent cru entry from /jffs/scripts/services-start for restarts
-# 	if cat /jffs/scripts/services-start | grep "${SCRIPT_NAME}${VPN_NO}" >/dev/null 2>&1; then
-# 		# remove and replace existing
-# 		sed -i "/${SCRIPT_NAME}${VPN_NO}/d" /jffs/scripts/services-start
-# 	fi
-# 	echo "complete"
-# }
-
 ListVPNClients(){
 	printf "VPN client List:\\n\\n"
 	for i in 1 2 3 4 5; do
@@ -366,9 +346,8 @@ UpdateVPNConfig(){
 	CONNECTSTATE="$(getConnectState "$VPN_NO")"
 	[ -z "$CONNECTSTATE" ] && Print_Output "true" "Error retrieving VPN client connection state" "$ERR" && return 1
 	
-	# check that new VPN server IP is different
 	if [ "$OVPN_IP" != "$EXISTING_IP" ]; then
-		Print_Output "true" "Updating VPN Client $VPN_NO to recommended NordVPN server" "$PASS"
+		Print_Output "true" "Updating VPN client $VPN_NO to recommended NordVPN server" "$PASS"
 		
 		#shellcheck disable=SC2018
 		#shellcheck disable=SC2019
@@ -388,15 +367,15 @@ UpdateVPNConfig(){
 		
 		echo "$CLIENT_CA" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_ca
 		echo "$CRT_CLIENT_STATIC" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_static
-		# restart if connected - 2 is "connected"
+		
 		if [ "$CONNECTSTATE" = "2" ]; then
 			service stop_vpnclient"$VPN_NO" >/dev/null 2>&1
 			sleep 3
 			service start_vpnclient"$VPN_NO" >/dev/null 2>&1
 		fi
-		Print_Output "true" "VPN Client $VPN_NO updated successfully ($OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT)" "$PASS"
+		Print_Output "true" "VPN client $VPN_NO updated successfully ($OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT)" "$PASS"
 	else
-		Print_Output "true" "VPN Client $VPN_NO is already using the recommended server" "$WARN"
+		Print_Output "true" "VPN client $VPN_NO is already using the recommended server" "$WARN"
 	fi
 }
 
@@ -410,22 +389,20 @@ ScheduleVPN(){
 	CRU_HOURS="$5"
 	CRU_MINUTES="$6"
 	
-	Print_Output "true" "Configuring scheduled update for VPN Client $VPN_NO" "$PASS"
+	Print_Output "true" "Configuring scheduled update for VPN client $VPN_NO" "$PASS"
 	
-	# add new cru entry
 	if cru l | grep -q "$SCRIPT_NAME$VPN_NO"; then
 		cru d "$SCRIPT_NAME""_VPN""$VPN_NO"
 	fi
 	
 	cru a "$SCRIPT_NAME""_VPN""$VPN_NO" "$CRU_MINUTES $CRU_HOURS * * $CRU_DAYNUMBERS /jffs/scripts/$SCRIPT_NAME updatevpn $VPN_NO $VPN_PROT $VPN_TYPE"
 	
-	# add persistent cru entry to /jffs/scripts/services-start for restarts
 	if [ -f /jffs/scripts/services-start ]; then
 		sed -i "/$SCRIPT_NAME""_VPN""$VPN_NO/d" /jffs/scripts/services-start
-		echo "cru a $SCRIPT_NAME""_VPN""$VPN_NO \"$CRU_MINUTES $CRU_HOURS * * $CRU_DAYNUMBERS /jffs/scripts/$SCRIPT_NAME updatevpn $VPN_NO $VPN_PROT $VPN_TYPE\" #$SCRIPT_NAME" >> /jffs/scripts/services-start
+		echo "cru a $SCRIPT_NAME""_VPN""$VPN_NO \"$CRU_MINUTES $CRU_HOURS * * $CRU_DAYNUMBERS /jffs/scripts/$SCRIPT_NAME updatevpn $VPN_NO $VPN_PROT $VPN_TYPE\" # $SCRIPT_NAME" >> /jffs/scripts/services-start
 	else
 		echo "#!/bin/sh" >> /jffs/scripts/services-start
-		echo "cru a $SCRIPT_NAME""_VPN""$VPN_NO \"$CRU_MINUTES $CRU_HOURS * * $CRU_DAYNUMBERS /jffs/scripts/$SCRIPT_NAME updatevpn $VPN_NO $VPN_PROT $VPN_TYPE\" #$SCRIPT_NAME" >> /jffs/scripts/services-start
+		echo "cru a $SCRIPT_NAME""_VPN""$VPN_NO \"$CRU_MINUTES $CRU_HOURS * * $CRU_DAYNUMBERS /jffs/scripts/$SCRIPT_NAME updatevpn $VPN_NO $VPN_PROT $VPN_TYPE\" # $SCRIPT_NAME" >> /jffs/scripts/services-start
 		chmod 755 /jffs/scripts/services-start
 	fi
 	
@@ -439,16 +416,33 @@ ScheduleVPN(){
 	else
 		VPN_TYPE_SHORT="$(echo "$VPN_TYPE_SHORT" | awk '{print toupper(substr($0,0,1))tolower(substr($0,2))}')"
 	fi
-	Print_Output "true" "Scheduled update created for VPN Client $VPN_NO ($VPN_TYPE_SHORT $VPN_PROT_SHORT)" "$PASS"
+	Print_Output "true" "Scheduled update created for VPN client $VPN_NO ($VPN_TYPE_SHORT $VPN_PROT_SHORT)" "$PASS"
 }
 
-#
-# CancelVPN(){
-# 	[ -z "$1" ] && errorcheck
-# 	logger -st "$SCRIPT_NAME addon" "Removing scheduled update to recommended NordVPN server (VPNClient$1)..."
-# 	delCRONentry
-# 	logger -st "$SCRIPT_NAME addon" "Removal of schedule complete (VPNClient$1)"
-# }
+CancelScheduleVPN(){
+	VPN_NO="$1"
+	SCHEDULESTATE=""
+	if ! cru l | grep -q "#$SCRIPT_NAME""_VPN""$VPN_NO#"; then
+		SCHEDULESTATE="Unscheduled"
+	else
+		SCHEDULESTATE="Scheduled"
+	fi
+	if [ "$SCHEDULESTATE" = "Scheduled" ]; then
+		Print_Output "true" "Removing scheduled update for VPN client $VPN_NO" "$PASS"
+		
+		if cru l | grep -q "$SCRIPT_NAME""_VPN""$VPN_NO"; then
+			cru d "$SCRIPT_NAME""_VPN""$VPN_NO"
+		fi
+		
+		if grep -q "$SCRIPT_NAME""_VPN""$VPN_NO" /jffs/scripts/services-start; then
+			sed -i "/$SCRIPT_NAME""_VPN""$VPN_NO/d" /jffs/scripts/services-start
+		fi
+		Print_Output "true" "Scheduled update cancelled for VPN client $VPN_NO" "$PASS"
+	else
+		printf "\\n"
+		Print_Output "true" "No schedule to cancel for VPN client $VPN_NO" "$WARN"
+	fi
+}
 
 Shortcut_nvpnmgr(){
 	case $1 in
@@ -730,7 +724,7 @@ MainMenu(){
 	printf "1.    List VPN client configurations\\n"
 	printf "2.    Update a VPN client configuration now\\n"
 	printf "3.    Schedule a VPN client configuration update\\n"
-	printf "d.    Delete a scheduled VPN client configuration update\\n\\n"
+	printf "4.    Delete a scheduled VPN client configuration update\\n\\n"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Update %s with latest version (force update)\\n\\n" "$SCRIPT_NAME"
 	printf "e.    Exit %s\\n\\n" "$SCRIPT_NAME"
@@ -765,10 +759,7 @@ MainMenu(){
 			;;
 			4)
 				printf "\\n"
-				if Check_Lock "menu"; then
-					DeleteScheduleMenu
-					printf "\\n"
-				fi
+				Menu_CancelScheduleVPN
 				PressEnter
 				break
 			;;
@@ -818,13 +809,6 @@ MainMenu(){
 	MainMenu
 }
 
-# DeleteScheduleMenuHeader(){
-# 	printf "   Choose schedule entry to delete:\\n"
-# 	printf "     VPN client [1-5]\\n"
-# 	printf "\\n"
-# 	printf "\\e[1m############################################################\\e[0m\\n"
-# }
-
 Menu_ListVPN(){
 	ScriptHeader
 	ListVPNClients
@@ -843,6 +827,7 @@ Menu_UpdateVPN(){
 	if SetVPNParameters; then
 		UpdateVPNConfig "$GLOBAL_VPN_NO" "$GLOBAL_VPN_PROT" "$GLOBAL_VPN_TYPE"
 	else
+		printf "\\n"
 		Print_Output "true" "VPN client update cancelled" "$WARN"
 	fi
 	Clear_Lock
@@ -865,20 +850,49 @@ Menu_ScheduleVPN(){
 			SetScheduleParameters
 			ScheduleVPN "$GLOBAL_VPN_NO" "$GLOBAL_VPN_PROT" "$GLOBAL_VPN_TYPE" "$GLOBAL_CRU_DAYNUMBERS" "$GLOBAL_CRU_HOURS" "$GLOBAL_CRU_MINS"
 	else
+		printf "\\n"
 		Print_Output "true" "VPN client update scheduling cancelled" "$WARN"
 	fi
 }
 
-# DeleteScheduleMenu(){
-# 	ScriptHeader
-# 	DeleteScheduleMenuHeader
-#
-# 	SetVPNClient
-#
-# 	CancelVPN "$VPN_NO"
-#
-# 	printf "Delete VPN schedule complete"
-# }
+Menu_CancelScheduleVPN(){
+	ScriptHeader
+	ListVPNClients
+	printf "Choose options as follows:\\n"
+	printf "    - VPN client [1-5]\\n"
+	printf "\\n"
+	printf "\\e[1m#########################################################\\e[0m\\n"
+	
+	exitmenu=""
+	cancelnum=""
+	
+	while true; do
+		printf "\\n\\e[1mPlease enter the VPN client number (1-5):\\e[0m    "
+		read -r "cancel_choice"
+		
+		if [ "$cancel_choice" = "e" ]; then
+			exitmenu="exit"
+			break
+		elif ! Validate_Number "" "$cancel_choice" "silent"; then
+			printf "\\n\\e[31mPlease enter a valid number (1-5)\\e[0m\\n"
+		else
+			if [ "$cancel_choice" -lt 1 ] || [ "$cancel_choice" -gt 5 ]; then
+				printf "\\n\\e[31mPlease enter a number between 1 and 5\\e[0m\\n"
+			else
+				cancelnum="$cancel_choice"
+				printf "\\n"
+				break
+			fi
+		fi
+	done
+	
+	if [ "$exitmenu" != "exit" ]; then
+		CancelScheduleVPN "$cancelnum"
+	else
+		printf "\\n"
+		Print_Output "true" "VPN client schedule cancellation cancelled" "$WARN"
+	fi
+}
 
 Check_Requirements(){
 	CHECKSFAILED="false"
