@@ -384,9 +384,9 @@ UpdateVPNConfig(){
 		echo "$CRT_CLIENT_STATIC" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_static
 		# restart if connected - 2 is "connected"
 		if [ "$CONNECTSTATE" = "2" ]; then
-			service stop_vpnclient"$VPN_NO"
+			service stop_vpnclient"$VPN_NO" >/dev/null 2>&1
 			sleep 3
-			service start_vpnclient"$VPN_NO"
+			service start_vpnclient"$VPN_NO" >/dev/null 2>&1
 		fi
 		Print_Output "true" "VPN Client $VPN_NO updated successfully" "$PASS"
 	else
