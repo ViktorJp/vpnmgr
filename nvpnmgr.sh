@@ -745,9 +745,7 @@ MainMenu(){
 		case "$menu" in
 			1)
 				printf "\\n"
-				if Check_Lock "menu"; then
-					Menu_ListVPN
-				fi
+				Menu_ListVPN
 				PressEnter
 				break
 			;;
@@ -761,9 +759,7 @@ MainMenu(){
 			;;
 			3)
 				printf "\\n"
-				if Check_Lock "menu"; then
-					Menu_ScheduleVPN
-				fi
+				Menu_ScheduleVPN
 				PressEnter
 				break
 			;;
@@ -832,7 +828,6 @@ MainMenu(){
 Menu_ListVPN(){
 	ScriptHeader
 	ListVPNClients
-	Clear_Lock
 }
 
 Menu_UpdateVPN(){
@@ -872,7 +867,6 @@ Menu_ScheduleVPN(){
 	else
 		Print_Output "true" "VPN client update scheduling cancelled" "$WARN"
 	fi
-	Clear_Lock
 }
 
 # DeleteScheduleMenu(){
