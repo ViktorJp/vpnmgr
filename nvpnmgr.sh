@@ -535,6 +535,9 @@ SetVPNParameters(){
 		GLOBAL_VPN_NO="$vpnnum"
 		GLOBAL_VPN_PROT="$vpnprot"
 		GLOBAL_VPN_TYPE="$vpntype"
+		return 0
+	else
+		return 1
 	fi
 }
 
@@ -758,11 +761,12 @@ Menu_UpdateVPN(){
 	printf "\\n"
 	printf "\\e[1m############################################################\\e[0m\\n"
 	
-	SetVPNParameters
-	
-	UpdateVPNConfig "$GLOBAL_VPN_NO" "$GLOBAL_VPN_PROT" "$GLOBAL_VPN_TYPE"
-	
-	printf "VPN update complete (VPN Client %s)\\n" "$GLOBAL_VPN_NO"
+	if SetVPNParameters; then
+		UpdateVPNConfig "$GLOBAL_VPN_NO" "$GLOBAL_VPN_PROT" "$GLOBAL_VPN_TYPE"
+		printf "VPN update complete (VPN Client %s)\\n" "$GLOBAL_VPN_NO"
+	else
+		printf "VPN client update cancelled\\n"
+	fi
 	Clear_Lock
 }
 
