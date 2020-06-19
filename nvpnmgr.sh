@@ -299,32 +299,7 @@ getCRONentry(){
 		Print_Output "true" "Existing cron entry for VPN client $1 not found" "$WARN"
 	fi
 }
-#
-# setCRONentry(){
-# 	echo "Scheduling VPN Client connection $VPN_NO updating..."
-# 	[ -z "$VPN_NO" ] || [ -z "$VPNPROT" ] || [ -z "$VPNTYPE" ] && errorcheck
-# 	[ -z "$CRU_MINUTE" ] || [ -z "$CRU_HOUR" ] || [ -z "$CRU_DAYNUMBERS" ] && errorcheck
-# 	# add new cru entry
-# 	if cru l | grep "${SCRIPT_NAME}${VPN_NO}" >/dev/null 2>&1; then
-# 		# replace existing
-# 		cru d ${SCRIPT_NAME}${VPN_NO}
-# 		cru a ${SCRIPT_NAME}${VPN_NO} "${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh $SCRIPT_REPO/$SCRIPT_NAME setcron ${VPN_NO} ${VPNPROT} ${VPNTYPE}"
-# 	else
-# 		# or add new if not exist
-# 		cru a ${SCRIPT_NAME}${VPN_NO} "${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh $SCRIPT_REPO/$SCRIPT_NAME setcron ${VPN_NO} ${VPNPROT} ${VPNTYPE}"
-# 	fi
-# 	# add persistent cru entry to /jffs/scripts/services-start for restarts
-# 	if cat /jffs/scripts/services-start | grep "${SCRIPT_NAME}${VPN_NO}" >/dev/null 2>&1; then
-# 		# remove and replace existing
-# 		sed -i "/${SCRIPT_NAME}${VPN_NO}/d" /jffs/scripts/services-start
-# 		echo "cru a ${SCRIPT_NAME}${VPN_NO} \"${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh $SCRIPT_REPO/$SCRIPT_NAME setcron ${VPN_NO} ${VPNPROT} ${VPNTYPE}\"" >> /jffs/scripts/services-start
-# 	else
-# 		# or add new if not exist
-# 		echo "cru a ${SCRIPT_NAME}${VPN_NO} \"${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh $SCRIPT_REPO/$SCRIPT_NAME setcron ${VPN_NO} ${VPNPROT} ${VPNTYPE}\"" >> /jffs/scripts/services-start
-# 	fi
-# 	echo "complete"
-# }
-#
+
 # delCRONentry(){
 # 	echo "removing VPN Client connection $VPN_NO schedule entry..."
 # 	[ -z "$VPN_NO" ] || [ -z "$SCRIPT_NAME" ] && errorcheck
@@ -429,21 +404,48 @@ UpdateVPNConfig(){
 	fi
 }
 
-# ScheduleVPN(){
-# 	VPN_NO="$1"
-# 	CRU_MINUTE="$3"
-# 	CRU_HOUR="$4"
-# 	CRU_DAYNUMBERS="$5"
-#
-# 	# default options 5:25am on Mondays and Thursdays
-# 	[ -z "$CRU_MINUTE" ] && CRU_MINUTE=25
-# 	[ -z "$CRU_HOUR" ] && CRU_HOUR=5
-# 	[ -z "$CRU_DAYNUMBERS" ] && CRU_DAYNUMBERS=1,4
-#
-# 	logger -st "$SCRIPT_NAME addon" "Configuring scheduled update to recommended NordVPN server (VPNClient$VPN_NO)..."
-# 	setCRONentry
-# 	logger -st "$SCRIPT_NAME addon" "Scheduling complete (VPNClient$VPN_NO - type $VPNTYPE)"
-# }
+ScheduleVPN(){
+	VPN_NO="$1"
+	VPN_PROT="$2"
+	VPN_PROT_SHORT="$(echo "$VPN_PROT" | cut -f2 -d'_')"
+	VPN_TYPE="$3"
+	VPN_TYPE_SHORT="$(echo "$VPN_TYPE" | cut -f2 -d'_')"
+	CRU_DAYNUMBERS="$4"
+	CRU_HOURS="$5"
+	CRU_MINUTES="$6"
+	
+	Print_Output "true" "Configuring scheduled update for VPN Client $VPN_NO" "$PASS"
+	
+	# add new cru entry
+	if cru l | grep -q "$SCRIPT_NAME$VPN_NO"; then
+		cru d "$SCRIPT_NAME""_VPN""$VPN_NO"
+	fi
+	
+	cru a "$SCRIPT_NAME""_VPN""$VPN_NO" "$CRU_MINUTES $CRU_HOURS * * $CRU_DAYNUMBERS /jffs/scripts/$SCRIPT_NAME updatevpn $VPN_NO $VPN_PROT $VPN_TYPE"
+	
+	# add persistent cru entry to /jffs/scripts/services-start for restarts
+	if [ -f /jffs/scripts/services-start ]; then
+		sed -i "/$SCRIPT_NAME""_VPN""$VPN_NO/d" /jffs/scripts/services-start
+		echo "cru a $SCRIPT_NAME""_VPN""$VPN_NO \"$CRU_MINUTES $CRU_HOURS * * $CRU_DAYNUMBERS /jffs/scripts/$SCRIPT_NAME updatevpn $VPN_NO $VPN_PROT $VPN_TYPE\" #$SCRIPT_NAME" >> /jffs/scripts/services-start
+	else
+		echo "#!/bin/sh" >> /jffs/scripts/services-start
+		echo "cru a $SCRIPT_NAME""_VPN""$VPN_NO \"$CRU_MINUTES $CRU_HOURS * * $CRU_DAYNUMBERS /jffs/scripts/$SCRIPT_NAME updatevpn $VPN_NO $VPN_PROT $VPN_TYPE\" #$SCRIPT_NAME" >> /jffs/scripts/services-start
+		chmod 755 /jffs/scripts/services-start
+	fi
+	
+	#shellcheck disable=SC2018
+	#shellcheck disable=SC2019
+	VPN_PROT_SHORT="$(echo "$VPN_PROT_SHORT" | tr "a-z" "A-Z")"
+	if [ "$VPN_TYPE_SHORT" = "p2p" ]; then
+		#shellcheck disable=SC2018
+		#shellcheck disable=SC2019
+		VPN_TYPE_SHORT="$(echo "$VPN_TYPE_SHORT" | tr "a-z" "A-Z")"
+	else
+		VPN_TYPE_SHORT="$(echo "$VPN_TYPE_SHORT" | awk '{print toupper(substr($0,0,1))tolower(substr($0,2))}')"
+	fi
+	Print_Output "true" "Scheduled update created for VPN Client $VPN_NO ($VPN_TYPE_SHORT $VPN_PROT_SHORT)" "$PASS"
+}
+
 #
 # CancelVPN(){
 # 	[ -z "$1" ] && errorcheck
@@ -881,10 +883,7 @@ Menu_ScheduleVPN(){
 	
 	if SetVPNParameters; then
 			SetScheduleParameters
-			echo "$GLOBAL_CRU_DAYNUMBERS"
-			echo "$GLOBAL_CRU_HOURS"
-			echo "$GLOBAL_CRU_MINS"
-			#ScheduleVPN "$GLOBAL_VPN_NO" "$GLOBAL_VPN_PROT" "$GLOBAL_VPN_TYPE" "$GLOBAL_CRU_DAYNUMBERS" "$GLOBAL_CRU_HOURS" "$GLOBAL_CRU_MINS"
+			ScheduleVPN "$GLOBAL_VPN_NO" "$GLOBAL_VPN_PROT" "$GLOBAL_VPN_TYPE" "$GLOBAL_CRU_DAYNUMBERS" "$GLOBAL_CRU_HOURS" "$GLOBAL_CRU_MINS"
 	else
 		Print_Output "true" "VPN client update scheduling cancelled" "$WARN"
 	fi
