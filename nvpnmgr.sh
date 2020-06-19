@@ -362,7 +362,7 @@ UpdateVPNConfig(){
 	[ -z "$OVPN_IP" ] && Print_Output "true" "Could not determine IP for recommended VPN server" "$ERR" && return 1
 	OVPN_HOSTNAME="$(getHostname "$vJSON")"
 	[ -z "$OVPN_HOSTNAME" ] && Print_Output "true" "Could not determine hostname for recommended VPN server" "$ERR" && return 1
-	OVPN_HOSTNAME_SHORT="$(echo "$OVPN_HOSTNAME" | cut -f1 -d'.' | tr "[a-z]" "[A-Z]")"
+	OVPN_HOSTNAME_SHORT="$(echo "$OVPN_HOSTNAME" | cut -f1 -d'.' | tr "a-z" "A-Z")"
 	OVPNFILE="$OVPN_HOSTNAME.$VPN_PROT_SHORT.ovpn"
 	OVPN_DETAIL="$(getOVPNcontents "$OVPNFILE" "$VPN_PROT_SHORT")"
 	[ -z "$OVPN_DETAIL" ] && Print_Output "true" "Error downloading VPN server ovpn file" "$ERR" && return 1
@@ -379,9 +379,9 @@ UpdateVPNConfig(){
 	if [ "$OVPN_IP" != "$EXISTING_IP" ]; then
 		Print_Output "true" "Updating VPN Client $VPN_NO to recommended NordVPN server" "$PASS"
 		
-		VPN_PROT_SHORT="$(echo "$VPN_PROT_SHORT" | tr "[a-z]" "[A-Z]")"
+		VPN_PROT_SHORT="$(echo "$VPN_PROT_SHORT" | tr "a-z" "A-Z")"
 		if [ "$VPN_TYPE_SHORT" = "p2p" ]; then
-			VPN_TYPE_SHORT="$(echo "$VPN_TYPE_SHORT" | tr "[a-z]" "[A-Z]")"
+			VPN_TYPE_SHORT="$(echo "$VPN_TYPE_SHORT" | tr "a-z" "A-Z")"
 		else
 			VPN_TYPE_SHORT="$(echo $VPN_TYPE_SHORT | awk '{print toupper(substr($0,0,1))tolower(substr($0,2))}')"
 		fi
