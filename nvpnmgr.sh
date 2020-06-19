@@ -354,7 +354,7 @@ UpdateVPNConfig(){
 	VPN_PROT_SHORT="$(echo "$VPN_PROT" | cut -f2 -d'_')"
 	VPN_TYPE="$3"
 	VPN_TYPE_SHORT="$(echo "$VPN_TYPE" | cut -f2 -d'_')"
-	Print_Output "true" "Updating VPN Client $VPN_NO to recommended NordVPN server" "$PASS"
+	Print_Output "true" "Retrieving recommended VPN server using NordVPN API" "$PASS"
 	
 	vJSON="$(getRecommended "$VPN_TYPE" "$VPN_PROT")"
 	[ -z "$vJSON" ] && Print_Output "true" "Error contacting NordVPN API" "$ERR" && return 1
@@ -362,6 +362,7 @@ UpdateVPNConfig(){
 	[ -z "$OVPN_IP" ] && Print_Output "true" "Could not determine IP for recommended VPN server" "$ERR" && return 1
 	OVPN_HOSTNAME="$(getHostname "$vJSON")"
 	[ -z "$OVPN_HOSTNAME" ] && Print_Output "true" "Could not determine hostname for recommended VPN server" "$ERR" && return 1
+	OVPN_HOSTNAME_SHORT="$(echo "$OVPN_HOSTNAME" | cut -f1 -d'.' | tr "[a-z]" "[A-Z]")"
 	OVPNFILE="$OVPN_HOSTNAME.$VPN_PROT_SHORT.ovpn"
 	OVPN_DETAIL="$(getOVPNcontents "$OVPNFILE" "$VPN_PROT_SHORT")"
 	[ -z "$OVPN_DETAIL" ] && Print_Output "true" "Error downloading VPN server ovpn file" "$ERR" && return 1
@@ -376,10 +377,20 @@ UpdateVPNConfig(){
 	
 	# check that new VPN server IP is different
 	if [ "$OVPN_IP" != "$EXISTING_IP" ]; then
+		Print_Output "true" "Updating VPN Client $VPN_NO to recommended NordVPN server" "$PASS"
+		
+		VPN_PROT_SHORT="$(echo "$VPN_PROT_SHORT" | tr "[a-z]" "[A-Z]")"
+		if [ "$VPN_TYPE_SHORT" = "p2p" ]; then
+			VPN_TYPE_SHORT="$(echo "$VPN_TYPE_SHORT" | tr "[a-z]" "[A-Z]")"
+		else
+			VPN_TYPE_SHORT="$(echo $VPN_TYPE_SHORT | awk '{print toupper(substr($0,0,1))tolower(substr($0,2))}')"
+		fi
+		
 		nvram set vpn_client"$VPN_NO"_addr="$OVPN_IP"
 		#shellcheck disable=SC2140
-		nvram set vpn_client"$VPN_NO"_desc="$OVPN_HOSTNAME-$VPN_TYPE_SHORT-$VPN_PROT_SHORT"
+		nvram set vpn_client"$VPN_NO"_desc="NordVPN $OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT"
 		nvram commit
+		
 		echo "$CLIENT_CA" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_ca
 		echo "$CRT_CLIENT_STATIC" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_static
 		# restart if connected - 2 is "connected"
@@ -388,7 +399,7 @@ UpdateVPNConfig(){
 			sleep 3
 			service start_vpnclient"$VPN_NO" >/dev/null 2>&1
 		fi
-		Print_Output "true" "VPN Client $VPN_NO updated successfully" "$PASS"
+		Print_Output "true" "VPN Client $VPN_NO updated successfully ($OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT)" "$PASS"
 	else
 		Print_Output "true" "VPN Client $VPN_NO is already using the recommended server" "$WARN"
 	fi
@@ -756,9 +767,8 @@ Menu_UpdateVPN(){
 	
 	if SetVPNParameters; then
 		UpdateVPNConfig "$GLOBAL_VPN_NO" "$GLOBAL_VPN_PROT" "$GLOBAL_VPN_TYPE"
-		printf "VPN update complete (VPN Client %s)\\n" "$GLOBAL_VPN_NO"
 	else
-		printf "VPN client update cancelled\\n"
+		Print_Output "true" "VPN client update cancelled" "$WARN"
 	fi
 	Clear_Lock
 }
