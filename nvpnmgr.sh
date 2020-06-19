@@ -208,6 +208,22 @@ Update_File(){
 	fi
 }
 
+Download_File(){
+	/usr/sbin/curl -fsL --retry 3 "$1" -o "$2"
+}
+
+Validate_Number(){
+	if [ "$2" -eq "$2" ] 2>/dev/null; then
+		return 0
+	else
+		formatted="$(echo "$1" | sed -e 's/|/ /g')"
+		if [ -z "$3" ]; then
+			Print_Output "false" "$formatted - $2 is not a number" "$ERR"
+		fi
+		return 1
+	fi
+}
+
 Create_Dirs(){
 	if [ ! -d "$SCRIPT_DIR" ]; then
 		mkdir -p "$SCRIPT_DIR"
