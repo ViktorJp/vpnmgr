@@ -749,7 +749,7 @@ MainMenu(){
 	printf "e.    Exit %s\\n\\n" "$SCRIPT_NAME"
 	printf "z.    Uninstall %s\\n" "$SCRIPT_NAME"
 	printf "\\n"
-	printf "\\e[1m##########################################################\\e[0m\\n"
+	printf "\\e[1m#########################################################\\e[0m\\n"
 	printf "\\n"
 	
 	while true; do
@@ -856,7 +856,7 @@ Menu_UpdateVPN(){
 	printf "    - protocol to use (pick from list)\\n"
 	printf "    - type of VPN to use (pick from list)\\n"
 	printf "\\n"
-	printf "\\e[1m############################################################\\e[0m\\n"
+	printf "\\e[1m#########################################################\\e[0m\\n"
 	
 	if SetVPNParameters; then
 		UpdateVPNConfig "$GLOBAL_VPN_NO" "$GLOBAL_VPN_PROT" "$GLOBAL_VPN_TYPE"
@@ -877,7 +877,7 @@ Menu_ScheduleVPN(){
 	printf "    - hour(s) to update [0-23]\\n"
 	printf "    - minute(s) to update [0-59]\\n"
 	printf "\\n"
-	printf "\\e[1m############################################################\\e[0m\\n"
+	printf "\\e[1m#########################################################\\e[0m\\n"
 	
 	if SetVPNParameters; then
 			SetScheduleParameters
