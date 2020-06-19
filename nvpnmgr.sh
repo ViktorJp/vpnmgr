@@ -38,10 +38,6 @@ readonly WARN="\\e[33m"
 readonly PASS="\\e[32m"
 ### End of output format variables ###
 
-# Load standard variables and helper script
-#shellcheck disable=SC1091
-. /usr/sbin/helper.sh
-
 # $1 = print to syslog, $2 = message to print, $3 = log level
 Print_Output(){
 	if [ "$1" = "true" ]; then
@@ -325,8 +321,6 @@ getConnectState(){
 # 		# or add new if not exist
 # 		echo "cru a ${SCRIPT_NAME}${VPN_NO} \"${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS} sh $SCRIPT_REPO/$SCRIPT_NAME setcron ${VPN_NO} ${VPNPROT} ${VPNTYPE}\"" >> /jffs/scripts/services-start
 # 	fi
-# 	am_settings_set nvpn_cron${VPN_NO} 1
-# 	am_settings_set nvpn_cronstr${VPN_NO} "${CRU_MINUTE} ${CRU_HOUR} * * ${CRU_DAYNUMBERS}"
 # 	echo "complete"
 # }
 #
@@ -343,8 +337,6 @@ getConnectState(){
 # 		# remove and replace existing
 # 		sed -i "/${SCRIPT_NAME}${VPN_NO}/d" /jffs/scripts/services-start
 # 	fi
-# 	am_settings_set nvpn_cron${VPN_NO}
-# 	am_settings_set nvpn_cronstr${VPN_NO}
 # 	echo "complete"
 # }
 
