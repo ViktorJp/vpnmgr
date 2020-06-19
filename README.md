@@ -11,6 +11,8 @@ Automatically update VPN client configuration to recommended NordVPN server on A
 
 A NordVPN account is required to establish a connection.
 
+![Menu UI](https://puu.sh/FYhid/a20aeed21d.png)
+
 ## Supported firmware versions
 You must be running firmware Merlin 384.15/384.13_4 or Fork 43E5 (or later) [Asuswrt-Merlin](https://asuswrt.lostrealm.ca/)
 
