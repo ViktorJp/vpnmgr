@@ -317,26 +317,22 @@ getCRONentry(){
 # }
 
 ListVPNClients(){
-	printf "VPN Client List:\\n\\n"
+	printf "VPN client List:\\n\\n"
 	for i in 1 2 3 4 5; do
-		VPN_CLIENTDESC="$(nvram get vpn_client"$i"_desc | grep "NordVPN")"
-		if [ -n "$VPN_CLIENTDESC" ]; then
-			CONNECTSTATE=""
-			SCHEDULESTATE=""
-			if [ "$(getConnectState "$i")" = "2" ]; then
-				CONNECTSTATE="Active"
-			else
-				CONNECTSTATE="Inactive"
-			fi
-			if ! cru l | grep -q "#$SCRIPT_NAME$i"; then
-				SCHEDULESTATE="Unscheduled"
-			else
-				SCHEDULESTATE="Scheduled"
-			fi
-			printf "%s.    %s (%s and %s)\\n" "$i" "$VPN_CLIENTDESC" "$CONNECTSTATE" "$SCHEDULESTATE"
+		VPN_CLIENTDESC="$(nvram get vpn_client"$i"_desc)"
+		CONNECTSTATE=""
+		SCHEDULESTATE=""
+		if [ "$(getConnectState "$i")" = "2" ]; then
+			CONNECTSTATE="Active"
 		else
-			printf "%s.    No NordVPN entry found\\n" "$i"
+			CONNECTSTATE="Inactive"
 		fi
+		if ! cru l | grep -q "#$SCRIPT_NAME""_VPN""$i#"; then
+			SCHEDULESTATE="Unscheduled"
+		else
+			SCHEDULESTATE="Scheduled"
+		fi
+		printf "%s.    %s (%s and %s)\\n" "$i" "$VPN_CLIENTDESC" "$CONNECTSTATE" "$SCHEDULESTATE"
 	done
 	printf "\\n"
 }
