@@ -268,11 +268,6 @@ getHostname(){
 	echo "$1" | jq -e '.[].hostname // empty' | tr -d '"'
 }
 
-# use to create content of OVPNFILE variable
-getOVPNFilename(){
-	echo "$1.$2.ovpn"
-}
-
 # use to create content of OVPN_DETAIL variable
 getOVPNcontents(){
 	/usr/sbin/curl -fsL --retry 3 "https://downloads.nordcdn.com/configs/files/ovpn_$2/servers/$1"
@@ -301,43 +296,6 @@ getServerIP(){
 # use to create content of CONNECTSTATE variable - set to 2 if the VPN is connected
 getConnectState(){
 	nvram get vpn_client"$1"_state
-}
-
-# configure VPN
-setVPN(){
-	VPN_NO="$1"
-	VPN_PROT="$2"
-	echo "updating VPN Client connection $VPN_NO now..."
-	
-	vJSON="$(getRecommended "$VPN_NO" "$VPN_PROT")"
-	OVPN_IP="$(getIP "$vJSON")"
-	OVPN_HOSTNAME="$(getHostname "$vJSON")"
-	OVPNFILE="$(getOVPNFilename "$OVPN_HOSTNAME" "$(echo "$VPN_PROT" | cut -f2 -d'_')")"
-	OVPN_DETAIL="$(getOVPNcontents "$OVPNFILE" "$(echo "$VPN_PROT" | cut -f2 -d'_')")"
-	CLIENT_CA="$(getClientCA "$OVPN_DETAIL")"
-	CRT_CLIENT_STATIC="$(getClientCRT "$OVPN_DETAIL")"
-	EXISTING_IP="$(getServerIP "$VPN_NO")"
-	CONNECTSTATE="$(getConnectState "$VPN_NO")"
-	
-	[ -z "$OVPN_IP" ] || [ -z "$OVPN_HOSTNAME" ] || [ -z "$CLIENT_CA" ] || [ -z "$CRT_CLIENT_STATIC" ] || [ -z "$CONNECTSTATE" ] && errorcheck
-	# check that new VPN server IP is different
-	if [ "$OVPN_IP" != "$EXISTING_IP" ]; then
-		echo "changing VPN Client connection $VPN_NO to $OVPN_HOSTNAME"
-		nvram set vpn_client"$VPN_NO"_addr="$OVPN_IP"
-		nvram set vpn_client"$VPN_NO"_desc="$OVPN_HOSTNAME"
-		echo "$CLIENT_CA" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_ca
-		echo "$CRT_CLIENT_STATIC" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_static
-		nvram commit
-		# restart if connected - 2 is "connected"
-		if [ "$CONNECTSTATE" = "2" ]; then
-			service stop_vpnclient"$VPN_NO"
-			sleep 3
-			service start_vpnclient"$VPN_NO"
-		fi
-		echo "complete"
-	else
-		echo "recommended server for VPN Client connection $VPN_NO is already the recommended server - $OVPN_HOSTNAME"
-	fi
 }
 
 # getCRONentry(){
@@ -393,10 +351,47 @@ setVPN(){
 UpdateVPNConfig(){
 	VPN_NO="$1"
 	VPN_PROT="$2"
+	VPN_PROT_SHORT="$(echo "$VPN_PROT" | cut -f2 -d'_')"
 	VPN_TYPE="$3"
-	logger -st "$SCRIPT_NAME" "Updating to recommended NordVPN server (VPNClient$VPN_NO)..."
-	setVPN "$VPN_NO" "$VPN_PROT"
-	logger -st "$SCRIPT_NAME" "Update complete (VPNClient$VPN_NO - protocol $VPN_PROT - type $VPN_TYPE)"
+	VPN_TYPE_SHORT="$(echo "$VPN_TYPE" | cut -f2 -d'_')"
+	Print_Output "true" "Updating VPN Client $VPN_NO to recommended NordVPN server" "$PASS"
+	
+	vJSON="$(getRecommended "$VPN_TYPE" "$VPN_PROT")"
+	[ -z "$vJSON" ] && Print_Output "true" "Error contacting NordVPN API" "$ERR" && return 1
+	OVPN_IP="$(getIP "$vJSON")"
+	[ -z "$OVPN_IP" ] && Print_Output "true" "Could not determine IP for recommended VPN server" "$ERR" && return 1
+	OVPN_HOSTNAME="$(getHostname "$vJSON")"
+	[ -z "$OVPN_HOSTNAME" ] && Print_Output "true" "Could not determine hostname for recommended VPN server" "$ERR" && return 1
+	OVPNFILE="$OVPN_HOSTNAME.$VPN_PROT_SHORT.ovpn"
+	OVPN_DETAIL="$(getOVPNcontents "$OVPNFILE" "$VPN_PROT_SHORT")"
+	[ -z "$OVPN_DETAIL" ] && Print_Output "true" "Error downloading VPN server ovpn file" "$ERR" && return 1
+	CLIENT_CA="$(getClientCA "$OVPN_DETAIL")"
+	[ -z "$CLIENT_CA" ] && Print_Output "true" "Error determing VPN server Certificate Authority certificate" "$ERR" && return 1
+	CRT_CLIENT_STATIC="$(getClientCRT "$OVPN_DETAIL")"
+	[ -z "$CRT_CLIENT_STATIC" ] && Print_Output "true" "Error determing VPN client certificate" "$ERR" && return 1
+	EXISTING_IP="$(getServerIP "$VPN_NO")"
+	[ -z "$EXISTING_IP" ] && Print_Output "true" "Error retrieving IP of current VPN server" "$ERR" && return 1
+	CONNECTSTATE="$(getConnectState "$VPN_NO")"
+	[ -z "$CONNECTSTATE" ] && Print_Output "true" "Error retrieving VPN client connection state" "$ERR" && return 1
+	
+	# check that new VPN server IP is different
+	if [ "$OVPN_IP" != "$EXISTING_IP" ]; then
+		nvram set vpn_client"$VPN_NO"_addr="$OVPN_IP"
+		#shellcheck disable=SC2140
+		nvram set vpn_client"$VPN_NO"_desc="$OVPN_HOSTNAME-$VPN_TYPE_SHORT-$VPN_PROT_SHORT"
+		nvram commit
+		echo "$CLIENT_CA" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_ca
+		echo "$CRT_CLIENT_STATIC" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_static
+		# restart if connected - 2 is "connected"
+		if [ "$CONNECTSTATE" = "2" ]; then
+			service stop_vpnclient"$VPN_NO"
+			sleep 3
+			service start_vpnclient"$VPN_NO"
+		fi
+		Print_Output "true" "VPN Client $VPN_NO updated successfully" "$PASS"
+	else
+		Print_Output "true" "VPN Client $VPN_NO is already using the recommended server" "$WARN"
+	fi
 }
 
 # ScheduleVPN(){
