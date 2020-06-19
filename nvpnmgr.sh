@@ -316,7 +316,6 @@ setVPN(){
 	OVPN_DETAIL="$(getOVPNcontents "$OVPNFILE" "$(echo "$VPN_PROT" | cut -f2 -d'_')")"
 	CLIENT_CA="$(getClientCA "$OVPN_DETAIL")"
 	CRT_CLIENT_STATIC="$(getClientCRT "$OVPN_DETAIL")"
-	EXISTING_NAME="$(getConnName "$VPN_NO")"
 	EXISTING_IP="$(getServerIP "$VPN_NO")"
 	CONNECTSTATE="$(getConnectState "$VPN_NO")"
 	
@@ -763,7 +762,7 @@ Menu_UpdateVPN(){
 	
 	UpdateVPNConfig "$GLOBAL_VPN_NO" "$GLOBAL_VPN_PROT" "$GLOBAL_VPN_TYPE"
 	
-	printf "VPN update complete (%s)\\n" "$VPNTYPE"
+	printf "VPN update complete (VPN Client %s)\\n" "$GLOBAL_VPN_NO"
 	Clear_Lock
 }
 
