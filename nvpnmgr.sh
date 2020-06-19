@@ -973,7 +973,8 @@ case "$1" in
 		exit 0
 	;;
 	updatevpn)
-		UpdateVPNConfig "$1" "$2" "$3"
+		UpdateVPNConfig "$2" "$3" "$4"
+		exit 0
 	;;
 	develop)
 		Check_Lock
