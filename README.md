@@ -11,8 +11,6 @@ Originally developed by [@h0me5k1n](https://github.com/h0me5k1n/asusmerlin-nvpnm
 
 A NordVPN account is required to establish a connection.
 
-A VPN connection with the string "NordVPN" needs to exist in 1 of the 5 VPN client configurations on the router for the script to successfully run (install possible as long as the above prerequisites are in place). Configure this initially using the information from NordVPN about configuring the connection. Future executions of the script will also use the required naming convention.
-
 ## Supported firmware versions
 You must be running firmware Merlin 384.15/384.13_4 or Fork 43E5 (or later) [Asuswrt-Merlin](https://asuswrt.lostrealm.ca/)
 

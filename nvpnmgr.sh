@@ -290,18 +290,6 @@ getConnName(){
 	nvram get vpn_client"$1"_desc
 }
 
-# EXISTING_NAME check - it must contain "NordVPN"
-checkConnName(){
-	EXISTING_NAME="$(getConnName)"
-	STR_COMPARE="NordVPN"
-	if [ "$EXISTING_NAME" != "Client $1" ]; then
-		if echo "$EXISTING_NAME" | grep -v "$STR_COMPARE" >/dev/null 2>&1; then
-			logger -st "$SCRIPT_NAME addon" "decription must contain NordVPN (VPNClient$1)..."
-			errorcheck
-		fi
-	fi
-}
-
 # use to create content of EXISTING_IP variable
 getServerIP(){
 	nvram get vpn_client"$1"_addr
@@ -427,7 +415,6 @@ listEntries(){
 
 UpdateVPN(){
 	VPN_NO="$1"
-	checkConnName "$VPN_NO"
 	logger -st "$SCRIPT_NAME addon" "Updating to recommended NordVPN server (VPNClient$VPN_NO)..."
 	setVPN "$VPN_NO"
 	logger -st "$SCRIPT_NAME addon" "Update complete (VPNClient$VPN_NO - server $OVPN_HOSTNAME - type $VPNTYPE)"
@@ -435,7 +422,6 @@ UpdateVPN(){
 
 # ScheduleVPN(){
 # 	VPN_NO="$1"
-# 	checkConnName "$VPN_NO"
 # 	CRU_MINUTE="$3"
 # 	CRU_HOUR="$4"
 # 	CRU_DAYNUMBERS="$5"
@@ -451,7 +437,6 @@ UpdateVPN(){
 # }
 #
 # CancelVPN(){
-# 	checkConnName
 # 	[ -z "$1" ] && errorcheck
 # 	logger -st "$SCRIPT_NAME addon" "Removing scheduled update to recommended NordVPN server (VPNClient$1)..."
 # 	delCRONentry
