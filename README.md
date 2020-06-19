@@ -5,9 +5,9 @@
 ## v0.0.1
 ### Updated on 2020-06-18
 ## About
-Automatically update VPN client configuration to recommended NordVPN server on Asus Merlin router firmware.
-
 Originally developed by [@h0me5k1n](https://github.com/h0me5k1n/asusmerlin-nvpnmgr)
+
+Automatically update VPN client configuration to recommended NordVPN server on Asus Merlin router firmware.
 
 A NordVPN account is required to establish a connection.
 
@@ -49,9 +49,6 @@ Further reading about scripts is available here: [AsusWRT-Merlin User-scripts](h
 ## To Do (from [@h0me5k1n](https://github.com/h0me5k1n/asusmerlin-nvpnmgr))
 Possible enhancements (when I get round to it!):
 
--   create menu entry validation
 -   query available protocols via NordVPN api
 -   handle all protocols
--   write options to temp nvram (I haven't figured out how a web page passes parameters to an addon script. This might be needed instead of passing them from the page. e.g. page write temp nvram entries that are used by the script and then discarded?!?)
--   create web page for UI (I need help with this!)
--   test web page functions
+-   create web page for UI
