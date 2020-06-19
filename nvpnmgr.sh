@@ -271,6 +271,21 @@ getOVPNcontents(){
 	/usr/sbin/curl -fsL --retry 3 "https://downloads.nordcdn.com/configs/files/ovpn_$2/servers/$1"
 }
 
+# use to create content of OVPN_PORT variable
+getPort(){
+	echo "$1" | grep "^remote " | cut -f3 -d' '
+}
+
+# use to create content of OVPN_CIPHER variable
+getCipher(){
+	echo "$1" | grep "^cipher " | cut -f2 -d' '
+}
+
+# use to create content of OVPN_AUTHDIGEST variable
+getAuthDigest(){
+	echo "$1" | grep "^auth " | cut -f2 -d' '
+}
+
 # use to create content of CLIENT_CA variable
 getClientCA(){
 	echo "$1" | awk '/<ca>/{flag=1;next}/<\/ca>/{flag=0}flag' | sed '/^#/ d'
@@ -317,6 +332,7 @@ ListVPNClients(){
 	printf "\\n"
 }
 
+#shellcheck disable=SC2140
 UpdateVPNConfig(){
 	VPN_NO="$1"
 	VPN_PROT="$2"
@@ -337,14 +353,18 @@ UpdateVPNConfig(){
 	OVPNFILE="$OVPN_HOSTNAME.$VPN_PROT_SHORT.ovpn"
 	OVPN_DETAIL="$(getOVPNcontents "$OVPNFILE" "$VPN_PROT_SHORT")"
 	[ -z "$OVPN_DETAIL" ] && Print_Output "true" "Error downloading VPN server ovpn file" "$ERR" && return 1
+	OVPN_PORT="$(getPort "$OVPN_DETAIL")"
+	[ -z "$OVPN_PORT" ] && Print_Output "true" "Error determining port for recommended VPN server" "$ERR" && return 1
+	OVPN_CIPHER="$(getCipher "$OVPN_DETAIL")"
+	[ -z "$OVPN_CIPHER" ] && Print_Output "true" "Error determining cipher for recommended VPN server" "$ERR" && return 1
+	OVPN_AUTHDIGEST="$(getAuthDigest "$OVPN_DETAIL")"
+	[ -z "$OVPN_AUTHDIGEST" ] && Print_Output "true" "Error determining auth digest for recommended VPN server" "$ERR" && return 1
 	CLIENT_CA="$(getClientCA "$OVPN_DETAIL")"
 	[ -z "$CLIENT_CA" ] && Print_Output "true" "Error determing VPN server Certificate Authority certificate" "$ERR" && return 1
 	CRT_CLIENT_STATIC="$(getClientCRT "$OVPN_DETAIL")"
 	[ -z "$CRT_CLIENT_STATIC" ] && Print_Output "true" "Error determing VPN client certificate" "$ERR" && return 1
 	EXISTING_IP="$(getServerIP "$VPN_NO")"
-	[ -z "$EXISTING_IP" ] && Print_Output "true" "Error retrieving IP of current VPN server" "$ERR" && return 1
 	CONNECTSTATE="$(getConnectState "$VPN_NO")"
-	[ -z "$CONNECTSTATE" ] && Print_Output "true" "Error retrieving VPN client connection state" "$ERR" && return 1
 	
 	if [ "$OVPN_IP" != "$EXISTING_IP" ]; then
 		Print_Output "true" "Updating VPN client $VPN_NO to recommended NordVPN server" "$PASS"
@@ -361,8 +381,39 @@ UpdateVPNConfig(){
 		fi
 		
 		nvram set vpn_client"$VPN_NO"_addr="$OVPN_IP"
-		#shellcheck disable=SC2140
+		nvram set vpn_client"$VPN_NO"_port="$OVPN_PORT"
+		if [ "$VPN_PROT_SHORT" = "TCP" ]; then
+			nvram set vpn_client"$VPN_NO"_proto="tcp-client"
+		elif [ "$VPN_PROT_SHORT" = "UDP" ]; then
+			nvram set vpn_client"$VPN_NO"_proto="udp"
+		fi
 		nvram set vpn_client"$VPN_NO"_desc="NordVPN $OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT"
+		
+		nvram set vpn_client"$VPN_NO"_adns="3"
+		nvram set vpn_client"$VPN_NO"_cipher="$OVPN_CIPHER"
+		nvram set vpn_client"$VPN_NO"_comp="-1"
+		nvram set vpn_client"$VPN_NO"_connretry="-1"
+		nvram set vpn_client"$VPN_NO"_crypt="tls"
+		nvram set vpn_client"$VPN_NO"_digest="$OVPN_AUTHDIGEST"
+		nvram set vpn_client"$VPN_NO"_enforce="1"
+		nvram set vpn_client"$VPN_NO"_fw="1"
+		nvram set vpn_client"$VPN_NO"_hmac="1"
+		nvram set vpn_client"$VPN_NO"_if="tun"
+		nvram set vpn_client"$VPN_NO"_nat="1"
+		nvram set vpn_client"$VPN_NO"_ncp_ciphers="AES-256-GCM:AES-128-GCM:AES-256-CBC:AES-128-CBC"
+		nvram set vpn_client"$VPN_NO"_ncp_enable="1"
+		nvram set vpn_client"$VPN_NO"_reneg="0"
+		nvram set vpn_client"$VPN_NO"_tlsremote="0"
+		nvram set vpn_client"$VPN_NO"_userauth="1"
+		nvram set vpn_client"$VPN_NO"_useronly="0"
+		
+		if [ "$(/bin/uname -m)" = "aarch64" ]; then
+			nvram set vpn_client"$VPN_NO"_cust2="cmVtb3RlLXJhbmRvbQp0dW4tbXR1IDE1MDAKdHVuLW10dS1leHRyYSAzMgptc3NmaXggMTQ1MApwaW5nIDE1CnBpbmctcmVzdGFydCAwCnBpbmctdGltZXItcmVtCnJlbW90ZS1jZXJ0LXRscyBzZXJ2ZXIKcGVyc2lzdC1rZXkKcGVyc2lzdC10dW4KcmVuZWctc2VjIDAKZGlzYWJsZS1vY2MKbXV0ZS1yZXBsYXktd2FybmluZ3MKYXV0aC1"
+			nvram set vpn_client"$VPN_NO"_cust21="ub2NhY2hlCnNuZGJ1ZiA1MjQyODgKcmN2YnVmIDUyNDI4OApwdXNoICJzbmRidWYgNTI0Mjg4IgpwdXNoICJyY3ZidWYgNTI0Mjg4IgpwdWxsLWZpbHRlciBpZ25vcmUgImF1dGgtdG9rZW4iCnB1bGwtZmlsdGVyIGlnbm9yZSAiaWZjb25maWctaXB2NiIKcHVsbC1maWx0ZXIgaWdub3JlICJyb3V0ZS1pcHY2Ig=="
+		else
+			nvram set vpn_client"$VPN_NO"_cust2="cmVtb3RlLXJhbmRvbQp0dW4tbXR1IDE1MDAKdHVuLW10dS1leHRyYSAzMgptc3NmaXggMTQ1MApwaW5nIDE1CnBpbmctcmVzdGFydCAwCnBpbmctdGltZXItcmVtCnJlbW90ZS1jZXJ0LXRscyBzZXJ2ZXIKcGVyc2lzdC1rZXkKcGVyc2lzdC10dW4KcmVuZWctc2VjIDAKZGlzYWJsZS1vY2MKbXV0ZS1yZXBsYXktd2FybmluZ3MKYXV0aC1ub2NhY2hlCnNuZGJ1ZiA1MjQyODgKcmN2YnVmIDUyNDI4OApwdXNoICJzbmRidWYgNTI0Mjg4IgpwdXNoICJyY3ZidWYgNTI0Mjg4IgpwdWxsLWZpbHRlciBpZ25vcmUgImF1dGgtdG9rZW4iCnB1bGwtZmlsdGVyIGlnbm9yZSAiaWZjb25maWctaXB2NiIKcHVsbC1maWx0ZXIgaWdub3JlICJyb3V0ZS1pcHY2Ig=="
+		fi
+		
 		nvram commit
 		
 		echo "$CLIENT_CA" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_ca
