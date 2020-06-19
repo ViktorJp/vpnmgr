@@ -348,6 +348,31 @@ getConnectState(){
 # 	echo "complete"
 # }
 
+ListVPNClients(){
+	printf "VPN Client List:\\n\\n"
+	for i in 1 2 3 4 5; do
+		VPN_CLIENTDESC="$(nvram get vpn_client"$i"_desc | grep "NordVPN")"
+		if [ -n "$VPN_CLIENTDESC" ]; then
+			CONNECTSTATE=""
+			SCHEDULESTATE=""
+			if [ "$(getConnectState "$i")" = "2" ]; then
+				CONNECTSTATE="Active"
+			else
+				CONNECTSTATE="Inactive"
+			fi
+			if ! cru l | grep -q "#$SCRIPT_NAME$i"; then
+				SCHEDULESTATE="Unscheduled"
+			else
+				SCHEDULESTATE="Scheduled"
+			fi
+			printf "%s.    %s (%s and %s)\\n" "$i" "$VPN_CLIENTDESC" "$CONNECTSTATE" "$SCHEDULESTATE"
+		else
+			printf "%s.    No NordVPN entry found\\n" "$i"
+		fi
+	done
+	printf "\\n"
+}
+
 UpdateVPNConfig(){
 	VPN_NO="$1"
 	VPN_PROT="$2"
@@ -620,7 +645,7 @@ ScriptHeader(){
 }
 
 MainMenu(){
-	printf "1.    Check for available NordVPN VPN client configurations\\n"
+	printf "1.    List VPN client configurations\\n"
 	printf "2.    Update a VPN client configuration now\\n"
 	printf "3.    Schedule a VPN client configuration update\\n"
 	printf "d.    Delete a scheduled VPN client configuration update\\n\\n"
@@ -737,37 +762,17 @@ MainMenu(){
 
 Menu_ListVPN(){
 	ScriptHeader
-	printf "VPN Client List:\\n\\n"
-	for i in 1 2 3 4 5; do
-		VPN_CLIENTDESC="$(nvram get vpn_client"$i"_desc | grep "NordVPN")"
-		if [ -n "$VPN_CLIENTDESC" ]; then
-			CONNECTSTATE=""
-			SCHEDULESTATE=""
-			if [ "$(getConnectState "$i")" = "2" ]; then
-				CONNECTSTATE="Active"
-			else
-				CONNECTSTATE="Inactive"
-			fi
-			if ! cru l | grep -q "#$SCRIPT_NAME$i"; then
-				SCHEDULESTATE="Unscheduled"
-			else
-				SCHEDULESTATE="Scheduled"
-			fi
-			printf "%s.    %s (%s and %s)\\n" "$i" "$VPN_CLIENTDESC" "$CONNECTSTATE" "$SCHEDULESTATE"
-		else
-			printf "%s.    No NordVPN entry found\\n" "$i"
-		fi
-	done
-	printf "\\n"
+	ListVPNClients
 	Clear_Lock
 }
 
 Menu_UpdateVPN(){
 	ScriptHeader
-	printf "    Choose options as follows:\\n"
-	printf "        - VPN client [1-5]\\n"
-	printf "        - protocol to use (pick from list)\\n"
-	printf "        - type of VPN to use (pick from list)\\n"
+	ListVPNClients
+	printf "Choose options as follows:\\n"
+	printf "    - VPN client [1-5]\\n"
+	printf "    - protocol to use (pick from list)\\n"
+	printf "    - type of VPN to use (pick from list)\\n"
 	printf "\\n"
 	printf "\\e[1m############################################################\\e[0m\\n"
 	
