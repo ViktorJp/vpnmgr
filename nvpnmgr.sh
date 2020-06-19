@@ -252,7 +252,7 @@ Create_Symlinks(){
 
 # use to create content of vJSON variable
 getRecommended(){
-	curl -s "https://api.nordvpn.com/v1/servers/recommendations?filters\[servers_groups\]\[identifier\]=$VPNTYPE&filters\[servers_technologies\]\[identifier\]=${VPNPROT}&limit=1" || errorcheck
+	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/recommendations?filters\[servers_groups\]\[identifier\]=$1&filters\[servers_technologies\]\[identifier\]=$2&limit=1"
 }
 
 # use to create content of OVPN_IP variable
@@ -272,7 +272,7 @@ getOVPNFilename(){
 
 # use to create content of OVPN_DETAIL variable
 getOVPNcontents(){
-	curl -s "https://downloads.nordcdn.com/configs/files/ovpn_$2/servers/$1" || errorcheck
+	/usr/sbin/curl -fsL --retry 3 "https://downloads.nordcdn.com/configs/files/ovpn_$2/servers/$1"
 }
 
 # use to create content of CLIENT_CA variable
