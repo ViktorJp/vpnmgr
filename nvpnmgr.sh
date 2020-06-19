@@ -438,7 +438,6 @@ SetVPNParameters(){
 	vpnnum=""
 	vpnprot=""
 	vpntype=""
-	ScriptHeader
 	
 	while true; do
 		printf "\\n\\e[1mPlease enter the VPN client number (1-5):\\e[0m    "
@@ -624,7 +623,6 @@ MainMenu(){
 				printf "\\n"
 				if Check_Lock "menu"; then
 					Menu_ListVPN
-					printf "\\n"
 				fi
 				PressEnter
 				break
@@ -633,7 +631,6 @@ MainMenu(){
 				printf "\\n"
 				if Check_Lock "menu"; then
 					Menu_UpdateVPN
-					printf "\\n"
 				fi
 				PressEnter
 				break
@@ -744,6 +741,7 @@ Menu_ListVPN(){
 			printf "%s.    No NordVPN entry found\\n" "$i"
 		fi
 	done
+	printf "\\n"
 	Clear_Lock
 }
 
