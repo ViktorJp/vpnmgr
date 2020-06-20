@@ -20,6 +20,7 @@ readonly SCRIPT_VERSION="v0.0.2"
 readonly SCRIPT_BRANCH="develop"
 readonly SCRIPT_REPO="https://raw.githubusercontent.com/jackyaz/""$SCRIPT_NAME""/""$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
+readonly SCRIPT_CONF="$SCRIPT_DIR/config"
 readonly SCRIPT_WEBPAGE_DIR="$(readlink /www/user)"
 readonly SCRIPT_WEB_DIR="$SCRIPT_WEBPAGE_DIR/$SCRIPT_NAME"
 readonly SHARED_DIR="/jffs/addons/shared-jy"
@@ -333,6 +334,29 @@ Create_Symlinks(){
 	
 	if [ ! -d "$SHARED_WEB_DIR" ]; then
 		ln -s "$SHARED_DIR" "$SHARED_WEB_DIR" 2>/dev/null
+	fi
+}
+
+Conf_Exists(){
+	if [ -f "$SCRIPT_CONF" ]; then
+		dos2unix "$SCRIPT_CONF"
+		chmod 0644 "$SCRIPT_CONF"
+		sed -i -e 's/"//g' "$SCRIPT_CONF"
+		return 0
+	else
+		for i in 1 2 3 4 5; do
+			{
+				echo "##### VPN Client $i #####"
+				echo "vpn$i""_protocol=UDP"
+				echo "vpn$i""_type=Standard"
+				echo "vpn$i""_schenabled=false"
+				echo "vpn$i""_schdays=*"
+				echo "vpn$i""_schhours=0"
+				echo "vpn$i""_schmins=0"
+				echo "#########################"
+			} >> "$SCRIPT_CONF"
+		done
+		return 1
 	fi
 }
 
@@ -1133,6 +1157,7 @@ Menu_Install(){
 	fi
 	
 	Create_Dirs
+	Conf_Exists
 	Create_Symlinks
 	
 	Update_File "nvpnmgr_www.asp"
@@ -1144,6 +1169,7 @@ Menu_Install(){
 
 Menu_Startup(){
 	Create_Dirs
+	Conf_Exists
 	Set_Version_Custom_Settings "local"
 	Create_Symlinks
 	Auto_Startup create 2>/dev/null
@@ -1177,6 +1203,7 @@ Menu_Uninstall(){
 
 if [ -z "$1" ]; then
 	Create_Dirs
+	Conf_Exists
 	Set_Version_Custom_Settings "local"
 	Create_Symlinks
 	Shortcut_nvpnmgr create
