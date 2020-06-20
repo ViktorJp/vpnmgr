@@ -394,7 +394,7 @@ getConnectState(){
 }
 
 ListVPNClients(){
-	printf "VPN client List:\\n\\n"
+	printf "VPN client list:\\n\\n"
 	for i in 1 2 3 4 5; do
 		VPN_CLIENTDESC="$(nvram get vpn_client"$i"_desc)"
 		CONNECTSTATE=""
