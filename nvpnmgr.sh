@@ -411,7 +411,29 @@ UpdateVPNConfig(){
 			nvram set vpn_client"$VPN_NO"_cust2="cmVtb3RlLXJhbmRvbQp0dW4tbXR1IDE1MDAKdHVuLW10dS1leHRyYSAzMgptc3NmaXggMTQ1MApwaW5nIDE1CnBpbmctcmVzdGFydCAwCnBpbmctdGltZXItcmVtCnJlbW90ZS1jZXJ0LXRscyBzZXJ2ZXIKcGVyc2lzdC1rZXkKcGVyc2lzdC10dW4KcmVuZWctc2VjIDAKZGlzYWJsZS1vY2MKbXV0ZS1yZXBsYXktd2FybmluZ3MKYXV0aC1"
 			nvram set vpn_client"$VPN_NO"_cust21="ub2NhY2hlCnNuZGJ1ZiA1MjQyODgKcmN2YnVmIDUyNDI4OApwdXNoICJzbmRidWYgNTI0Mjg4IgpwdXNoICJyY3ZidWYgNTI0Mjg4IgpwdWxsLWZpbHRlciBpZ25vcmUgImF1dGgtdG9rZW4iCnB1bGwtZmlsdGVyIGlnbm9yZSAiaWZjb25maWctaXB2NiIKcHVsbC1maWx0ZXIgaWdub3JlICJyb3V0ZS1pcHY2Ig=="
 		else
-			nvram set vpn_client"$VPN_NO"_cust2="cmVtb3RlLXJhbmRvbQp0dW4tbXR1IDE1MDAKdHVuLW10dS1leHRyYSAzMgptc3NmaXggMTQ1MApwaW5nIDE1CnBpbmctcmVzdGFydCAwCnBpbmctdGltZXItcmVtCnJlbW90ZS1jZXJ0LXRscyBzZXJ2ZXIKcGVyc2lzdC1rZXkKcGVyc2lzdC10dW4KcmVuZWctc2VjIDAKZGlzYWJsZS1vY2MKbXV0ZS1yZXBsYXktd2FybmluZ3MKYXV0aC1ub2NhY2hlCnNuZGJ1ZiA1MjQyODgKcmN2YnVmIDUyNDI4OApwdXNoICJzbmRidWYgNTI0Mjg4IgpwdXNoICJyY3ZidWYgNTI0Mjg4IgpwdWxsLWZpbHRlciBpZ25vcmUgImF1dGgtdG9rZW4iCnB1bGwtZmlsdGVyIGlnbm9yZSAiaWZjb25maWctaXB2NiIKcHVsbC1maWx0ZXIgaWdub3JlICJyb3V0ZS1pcHY2Ig=="
+			nvram set vpn_client"$VPN_NO"_cust2='remote-random
+tun-mtu 1500
+tun-mtu-extra 32
+mssfix 1450
+ping 15
+ping-restart 0
+ping-timer-rem
+explicit-exit-notify 3
+remote-cert-tls server
+persist-key
+persist-tun
+reneg-sec 0
+fast-io
+disable-occ
+mute-replay-warnings
+auth-nocache
+sndbuf 524288
+rcvbuf 524288
+push "sndbuf 524288"
+push "rcvbuf 524288"
+pull-filter ignore "auth-token"
+pull-filter ignore "ifconfig-ipv6"
+pull-filter ignore "route-ipv6"'
 		fi
 		
 		nvram commit
