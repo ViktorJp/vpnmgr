@@ -334,6 +334,11 @@ ListVPNClients(){
 
 #shellcheck disable=SC2140
 UpdateVPNConfig(){
+	ISUNATTENDED=""
+	if [ "$1" = "unattended" ]; then
+		ISUNATTENDED="true"
+		shift
+	fi
 	VPN_NO="$1"
 	VPN_PROT="$2"
 	VPN_PROT_SHORT="$(echo "$VPN_PROT" | cut -f2 -d'_')"
@@ -436,6 +441,32 @@ push "rcvbuf 524288"
 pull-filter ignore "auth-token"
 pull-filter ignore "ifconfig-ipv6"
 pull-filter ignore "route-ipv6"'
+		fi
+		
+		if [ "$ISUNATTENDED" = "true" ]; then
+			if [ -z "$(nvram get vpn_client"$VPN_NO"_username)" ]; then
+				Print_Output "true" "No username set for VPN client $VPN_NO" "$WARN"
+			fi
+			
+			if [ -z "$(nvram get vpn_client"$VPN_NO"_password)" ]; then
+				Print_Output "true" "No password set for VPN client $VPN_NO" "$WARN"
+			fi
+		else
+			if [ -z "$(nvram get vpn_client"$VPN_NO"_username)" ]; then
+				printf "\\n\\e[1mNo username set for VPN client $VPN_NO\\e[0m\\n"
+				printf "Please enter username:    "
+				read -r "vpnusn"
+				nvram set vpn_client"$VPN_NO"_username="$vpnusn"
+				printf "\\n"
+			fi
+			
+			if [ -z "$(nvram get vpn_client"$VPN_NO"_password)" ]; then
+				printf "\\n\\e[1mNo password set for VPN client $VPN_NO\\e[0m\\n"
+				printf "Please enter password:    "
+				read -r "vpnpwd"
+				nvram set vpn_client"$VPN_NO"_password="$vpnpwd"
+				printf "\\n"
+			fi
 		fi
 		
 		nvram commit
@@ -1062,7 +1093,7 @@ case "$1" in
 		exit 0
 	;;
 	updatevpn)
-		UpdateVPNConfig "$2" "$3" "$4"
+		UpdateVPNConfig "unattended" "$2" "$3" "$4"
 		exit 0
 	;;
 	develop)
