@@ -7,7 +7,7 @@
 ## About
 Originally developed by [@h0me5k1n](https://github.com/h0me5k1n/asusmerlin-nvpnmgr)
 
-Automatically update VPN client configuration to recommended NordVPN server on Asus Merlin router firmware.
+Automatically update VPN Client configuration to recommended NordVPN server on AsusWRT-Merlin
 
 A NordVPN account is required to establish a connection.
 
