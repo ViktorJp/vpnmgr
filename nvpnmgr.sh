@@ -13,6 +13,10 @@
 ##                forked from h0me5k1n                 ##
 #########################################################
 
+######            Shellcheck directives        ######
+# shellcheck disable=SC2018
+# shellcheck disable=SC2019
+#####################################################
 
 ### Start of script variables ###
 readonly SCRIPT_NAME="nvpnmgr"
