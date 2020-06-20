@@ -522,20 +522,13 @@ UpdateVPNConfig(){
 		nvram set vpn_client"$VPN_NO"_userauth="1"
 		nvram set vpn_client"$VPN_NO"_useronly="0"
 		
-		if [ "$(/bin/uname -m)" = "aarch64" ]; then
-			nvram set vpn_client"$VPN_NO"_cust2="cmVtb3RlLXJhbmRvbQp0dW4tbXR1IDE1MDAKdHVuLW10dS1leHRyYSAzMgptc3NmaXggMTQ1MApwaW5nIDE1CnBpbmctcmVzdGFydCAwCnBpbmctdGltZXItcmVtCnJlbW90ZS1jZXJ0LXRscyBzZXJ2ZXIKcGVyc2lzdC1rZXkKcGVyc2lzdC10dW4KcmVuZWctc2VjIDAKZGlzYWJsZS1vY2MKbXV0ZS1yZXBsYXktd2FybmluZ3MKYXV0aC1"
-			nvram set vpn_client"$VPN_NO"_cust21="ub2NhY2hlCnNuZGJ1ZiA1MjQyODgKcmN2YnVmIDUyNDI4OApwdXNoICJzbmRidWYgNTI0Mjg4IgpwdXNoICJyY3ZidWYgNTI0Mjg4IgpwdWxsLWZpbHRlciBpZ25vcmUgImF1dGgtdG9rZW4iCnB1bGwtZmlsdGVyIGlnbm9yZSAiaWZjb25maWctaXB2NiIKcHVsbC1maWx0ZXIgaWdub3JlICJyb3V0ZS1pcHY2Ig=="
-		elif [ "$(uname -o)" = "ASUSWRT-Merlin" ]; then
-			nvram set vpn_client"$VPN_NO"_cust2="cmVtb3RlLXJhbmRvbQp0dW4tbXR1IDE1MDAKdHVuLW10dS1leHRyYSAzMgptc3NmaXggMTQ1MApwaW5nIDE1CnBpbmctcmVzdGFydCAwCnBpbmctdGltZXItcmVtCnJlbW90ZS1jZXJ0LXRscyBzZXJ2ZXIKcGVyc2lzdC1rZXkKcGVyc2lzdC10dW4KcmVuZWctc2VjIDAKZGlzYWJsZS1vY2MKbXV0ZS1yZXBsYXktd2FybmluZ3MKYXV0aC1ub2NhY2hlCnNuZGJ1ZiA1MjQyODgKcmN2YnVmIDUyNDI4OApwdXNoICJzbmRidWYgNTI0Mjg4IgpwdXNoICJyY3ZidWYgNTI0Mjg4IgpwdWxsLWZpbHRlciBpZ25vcmUgImF1dGgtdG9rZW4iCnB1bGwtZmlsdGVyIGlnbm9yZSAiaWZjb25maWctaXB2NiIKcHVsbC1maWx0ZXIgaWdub3JlICJyb3V0ZS1pcHY2Ig=="
-		else
-			nvram set vpn_client"$VPN_NO"_custom='remote-random
+		vpncustomoptions='remote-random
 tun-mtu 1500
 tun-mtu-extra 32
 mssfix 1450
 ping 15
 ping-restart 0
 ping-timer-rem
-explicit-exit-notify 3
 remote-cert-tls server
 persist-key
 persist-tun
@@ -551,6 +544,22 @@ push "rcvbuf 524288"
 pull-filter ignore "auth-token"
 pull-filter ignore "ifconfig-ipv6"
 pull-filter ignore "route-ipv6"'
+
+	if [ "$VPN_PROT_SHORT" = "UDP" ]; then
+		vpncustomoptions="$vpncustomoptions
+explicit-exit-notify 3"
+	fi
+		
+		vpncustomoptionsbase64="$(echo "$vpncustomoptions" | openssl base64 -A)"
+		
+		if [ "$(/bin/uname -m)" = "aarch64" ]; then
+			nvram set vpn_client"$VPN_NO"_cust2="$(echo "$vpncustomoptionsbase64" | cut -c0-255)"
+			nvram set vpn_client"$VPN_NO"_cust21="$(echo "$vpncustomoptionsbase64" | cut -c256-510)"
+			nvram set vpn_client"$VPN_NO"_cust22="$(echo "$vpncustomoptionsbase64" | cut -c511-765)"
+		elif [ "$(uname -o)" = "ASUSWRT-Merlin" ]; then
+			nvram set vpn_client"$VPN_NO"_cust2="$vpncustomoptionsbase64"
+		else
+			nvram set vpn_client"$VPN_NO"_custom="$vpncustomoptions"
 		fi
 		
 		if [ "$ISUNATTENDED" = "true" ]; then
