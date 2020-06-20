@@ -550,7 +550,7 @@ pull-filter ignore "route-ipv6"'
 explicit-exit-notify 3"
 	fi
 		
-		vpncustomoptionsbase64="$(echo "$vpncustomoptions" | openssl base64 -A)"
+		vpncustomoptionsbase64="$(echo "$vpncustomoptions" | head -c -1 | openssl base64 -A)"
 		
 		if [ "$(/bin/uname -m)" = "aarch64" ]; then
 			nvram set vpn_client"$VPN_NO"_cust2="$(echo "$vpncustomoptionsbase64" | cut -c0-255)"
