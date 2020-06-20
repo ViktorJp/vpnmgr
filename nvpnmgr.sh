@@ -29,6 +29,9 @@ readonly SHARED_WEB_DIR="$SCRIPT_WEBPAGE_DIR/shared-jy"
 GLOBAL_VPN_NO=""
 GLOBAL_VPN_PROT=""
 GLOBAL_VPN_TYPE=""
+GLOBAL_CRU_DAYNUMBERS=""
+GLOBAL_CRU_HOURS=""
+GLOBAL_CRU_MINS=""
 ### End of script variables ###
 
 ### Start of output format variables ###
