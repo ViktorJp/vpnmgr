@@ -385,6 +385,11 @@ UpdateVPNConfig(){
 			VPN_TYPE_SHORT="$(echo "$VPN_TYPE_SHORT" | awk '{print toupper(substr($0,0,1))tolower(substr($0,2))}')"
 		fi
 		
+		if [ -z "$(nvram get vpn_client"$VPN_NO"_addr)" ]; then
+			nvram set vpn_client"$VPN_NO"_adns="3"
+			nvram set vpn_client"$VPN_NO"_enforce="1"
+		fi
+		
 		nvram set vpn_client"$VPN_NO"_addr="$OVPN_IP"
 		nvram set vpn_client"$VPN_NO"_port="$OVPN_PORT"
 		if [ "$VPN_PROT_SHORT" = "TCP" ]; then
@@ -394,13 +399,11 @@ UpdateVPNConfig(){
 		fi
 		nvram set vpn_client"$VPN_NO"_desc="NordVPN $OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT"
 		
-		nvram set vpn_client"$VPN_NO"_adns="3"
 		nvram set vpn_client"$VPN_NO"_cipher="$OVPN_CIPHER"
 		nvram set vpn_client"$VPN_NO"_comp="-1"
 		nvram set vpn_client"$VPN_NO"_connretry="-1"
 		nvram set vpn_client"$VPN_NO"_crypt="tls"
 		nvram set vpn_client"$VPN_NO"_digest="$OVPN_AUTHDIGEST"
-		nvram set vpn_client"$VPN_NO"_enforce="1"
 		nvram set vpn_client"$VPN_NO"_fw="1"
 		nvram set vpn_client"$VPN_NO"_hmac="1"
 		nvram set vpn_client"$VPN_NO"_if="tun"
