@@ -449,10 +449,15 @@ UpdateVPNConfig(){
 		shift
 	fi
 	VPN_NO="$1"
-	VPN_PROT="$2"
-	VPN_PROT_SHORT="$(echo "$VPN_PROT" | cut -f2 -d'_')"
-	VPN_TYPE="$3"
-	VPN_TYPE_SHORT="$(echo "$VPN_TYPE" | cut -f2 -d'_')"
+	VPN_PROT_SHORT="$(grep "vpn""$VPN_NO""_protocol" "$SCRIPT_CONF" | cut -f2 -d"=")"
+	VPN_PROT="openvpn_""$(echo "$VPN_PROT_SHORT" | tr "A-Z" "a-z")"
+	VPN_TYPE_SHORT="$(grep "vpn""$VPN_NO""_type" "$SCRIPT_CONF" | cut -f2 -d"=")"
+	VPN_TYPE=""
+	if [ "$VPN_TYPE_SHORT" = "Double" ]; then
+		VPN_TYPE="legacy_""$(echo "$VPN_TYPE_SHORT" | tr "A-Z" "a-z")""_vpn"
+	else
+		VPN_TYPE="legacy_""$(echo "$VPN_TYPE_SHORT" | tr "A-Z" "a-z")"
+	fi
 	Print_Output "true" "Retrieving recommended VPN server using NordVPN API" "$PASS"
 	
 	vJSON="$(getRecommended "$VPN_TYPE" "$VPN_PROT")"
@@ -464,8 +469,8 @@ UpdateVPNConfig(){
 	#shellcheck disable=SC2018
 	#shellcheck disable=SC2019
 	OVPN_HOSTNAME_SHORT="$(echo "$OVPN_HOSTNAME" | cut -f1 -d'.' | tr "a-z" "A-Z")"
-	OVPNFILE="$OVPN_HOSTNAME.$VPN_PROT_SHORT.ovpn"
-	OVPN_DETAIL="$(getOVPNcontents "$OVPNFILE" "$VPN_PROT_SHORT")"
+	OVPNFILE="$OVPN_HOSTNAME.$(echo "$VPN_PROT" | cut -f2 -d"_").ovpn"
+	OVPN_DETAIL="$(getOVPNcontents "$OVPNFILE" "$(echo "$VPN_PROT" | cut -f2 -d"_")")"
 	[ -z "$OVPN_DETAIL" ] && Print_Output "true" "Error downloading VPN server ovpn file" "$ERR" && return 1
 	OVPN_PORT="$(getPort "$OVPN_DETAIL")"
 	[ -z "$OVPN_PORT" ] && Print_Output "true" "Error determining port for recommended VPN server" "$ERR" && return 1
@@ -482,17 +487,6 @@ UpdateVPNConfig(){
 	
 	if [ "$OVPN_IP" != "$EXISTING_IP" ]; then
 		Print_Output "true" "Updating VPN client $VPN_NO to recommended NordVPN server" "$PASS"
-		
-		#shellcheck disable=SC2018
-		#shellcheck disable=SC2019
-		VPN_PROT_SHORT="$(echo "$VPN_PROT_SHORT" | tr "a-z" "A-Z")"
-		if [ "$VPN_TYPE_SHORT" = "p2p" ]; then
-			#shellcheck disable=SC2018
-			#shellcheck disable=SC2019
-			VPN_TYPE_SHORT="$(echo "$VPN_TYPE_SHORT" | tr "a-z" "A-Z")"
-		else
-			VPN_TYPE_SHORT="$(echo "$VPN_TYPE_SHORT" | awk '{print toupper(substr($0,0,1))tolower(substr($0,2))}')"
-		fi
 		
 		if [ -z "$(nvram get vpn_client"$VPN_NO"_addr)" ]; then
 			nvram set vpn_client"$VPN_NO"_adns="3"
@@ -599,13 +593,9 @@ pull-filter ignore "route-ipv6"'
 
 ScheduleVPN(){
 	VPN_NO="$1"
-	VPN_PROT="$2"
-	VPN_PROT_SHORT="$(echo "$VPN_PROT" | cut -f2 -d'_')"
-	VPN_TYPE="$3"
-	VPN_TYPE_SHORT="$(echo "$VPN_TYPE" | cut -f2 -d'_')"
-	CRU_DAYNUMBERS="$4"
-	CRU_HOURS="$5"
-	CRU_MINUTES="$6"
+	CRU_DAYNUMBERS="$(grep "vpn""$VPN_NO""_schdays" "$SCRIPT_CONF" | cut -f2 -d"=" | sed 's/Sun/0/;s/Mon/1/;s/Tues/2/;s/Wed/3/;s/Thurs/4/;s/Fri/5/;s/Sat/6/;')"
+	CRU_HOURS="$(grep "vpn""$VPN_NO""_schhours" "$SCRIPT_CONF" | cut -f2 -d"=")"
+	CRU_MINUTES="$(grep "vpn""$VPN_NO""_schmins" "$SCRIPT_CONF" | cut -f2 -d"=")"
 	
 	Print_Output "true" "Configuring scheduled update for VPN client $VPN_NO" "$PASS"
 	
@@ -613,28 +603,18 @@ ScheduleVPN(){
 		cru d "$SCRIPT_NAME""_VPN""$VPN_NO"
 	fi
 	
-	cru a "$SCRIPT_NAME""_VPN""$VPN_NO" "$CRU_MINUTES $CRU_HOURS * * $CRU_DAYNUMBERS /jffs/scripts/$SCRIPT_NAME updatevpn $VPN_NO $VPN_PROT $VPN_TYPE"
+	cru a "$SCRIPT_NAME""_VPN""$VPN_NO" "$CRU_MINUTES $CRU_HOURS * * $CRU_DAYNUMBERS /jffs/scripts/$SCRIPT_NAME updatevpn $VPN_NO"
 	
 	if [ -f /jffs/scripts/services-start ]; then
 		sed -i "/$SCRIPT_NAME""_VPN""$VPN_NO/d" /jffs/scripts/services-start
-		echo "cru a $SCRIPT_NAME""_VPN""$VPN_NO \"$CRU_MINUTES $CRU_HOURS * * $CRU_DAYNUMBERS /jffs/scripts/$SCRIPT_NAME updatevpn $VPN_NO $VPN_PROT $VPN_TYPE\" # $SCRIPT_NAME" >> /jffs/scripts/services-start
+		echo "cru a $SCRIPT_NAME""_VPN""$VPN_NO \"$CRU_MINUTES $CRU_HOURS * * $CRU_DAYNUMBERS /jffs/scripts/$SCRIPT_NAME updatevpn $VPN_NO\" # $SCRIPT_NAME" >> /jffs/scripts/services-start
 	else
 		echo "#!/bin/sh" >> /jffs/scripts/services-start
-		echo "cru a $SCRIPT_NAME""_VPN""$VPN_NO \"$CRU_MINUTES $CRU_HOURS * * $CRU_DAYNUMBERS /jffs/scripts/$SCRIPT_NAME updatevpn $VPN_NO $VPN_PROT $VPN_TYPE\" # $SCRIPT_NAME" >> /jffs/scripts/services-start
+		echo "cru a $SCRIPT_NAME""_VPN""$VPN_NO \"$CRU_MINUTES $CRU_HOURS * * $CRU_DAYNUMBERS /jffs/scripts/$SCRIPT_NAME updatevpn $VPN_NO\" # $SCRIPT_NAME" >> /jffs/scripts/services-start
 		chmod 755 /jffs/scripts/services-start
 	fi
 	
-	#shellcheck disable=SC2018
-	#shellcheck disable=SC2019
-	VPN_PROT_SHORT="$(echo "$VPN_PROT_SHORT" | tr "a-z" "A-Z")"
-	if [ "$VPN_TYPE_SHORT" = "p2p" ]; then
-		#shellcheck disable=SC2018
-		#shellcheck disable=SC2019
-		VPN_TYPE_SHORT="$(echo "$VPN_TYPE_SHORT" | tr "a-z" "A-Z")"
-	else
-		VPN_TYPE_SHORT="$(echo "$VPN_TYPE_SHORT" | awk '{print toupper(substr($0,0,1))tolower(substr($0,2))}')"
-	fi
-	Print_Output "true" "Scheduled update created for VPN client $VPN_NO ($VPN_TYPE_SHORT $VPN_PROT_SHORT)" "$PASS"
+	Print_Output "true" "Scheduled update created for VPN client $VPN_NO" "$PASS"
 }
 
 CancelScheduleVPN(){
@@ -655,6 +635,9 @@ CancelScheduleVPN(){
 		if grep -q "$SCRIPT_NAME""_VPN""$VPN_NO" /jffs/scripts/services-start; then
 			sed -i "/$SCRIPT_NAME""_VPN""$VPN_NO/d" /jffs/scripts/services-start
 		fi
+		
+		sed -i 's/^vpn'"$VPN_NO"'_schenabled.*$/vpn'"$VPN_NO"'_schenabled=false/' "$SCRIPT_CONF"
+		
 		Print_Output "true" "Scheduled update cancelled for VPN client $VPN_NO" "$PASS"
 	else
 		printf "\\n"
@@ -782,39 +765,25 @@ SetVPNParameters(){
 
 SetScheduleParameters(){
 	exitmenu=""
+	vpnnum=""
 	crudays=""
 	cruhours=""
 	crumins=""
 	
 	while true; do
-		printf "\\n\\e[1mPlease choose which day(s) to update VPN configuration (0-6, * for every day, or comma separated days):\\e[0m    "
-		read -r "day_choice"
+		printf "\\n\\e[1mPlease enter the VPN client number (1-5):\\e[0m    "
+		read -r "vpn_choice"
 		
-		if [ "$day_choice" = "e" ]; then
+		if [ "$vpn_choice" = "e" ]; then
 			exitmenu="exit"
 			break
-		elif [ "$day_choice" = "*" ]; then
-			crudays="$day_choice"
-			printf "\\n"
-			break
+		elif ! Validate_Number "" "$vpn_choice" "silent"; then
+			printf "\\n\\e[31mPlease enter a valid number (1-5)\\e[0m\\n"
 		else
-			crudaystmp="$(echo "$day_choice" | sed "s/,/ /g")"
-			crudaysvalidated="true"
-			for i in $crudaystmp; do
-				if ! Validate_Number "" "$i" "silent"; then
-					printf "\\n\\e[31mPlease enter a valid number (0-6) or comma separated values\\e[0m\\n"
-					crudaysvalidated="false"
-					break
-				else
-					if [ "$i" -lt 0 ] || [ "$i" -gt 6 ]; then
-						printf "\\n\\e[31mPlease enter a number between 0 and 6 or comma separated values\\e[0m\\n"
-						crudaysvalidated="false"
-						break
-					fi
-				fi
-			done
-			if [ "$crudaysvalidated" = "true" ]; then
-				crudays="$day_choice"
+			if [ "$vpn_choice" -lt 1 ] || [ "$vpn_choice" -gt 5 ]; then
+				printf "\\n\\e[31mPlease enter a number between 1 and 5\\e[0m\\n"
+			else
+				vpnnum="$vpn_choice"
 				printf "\\n"
 				break
 			fi
@@ -823,7 +792,44 @@ SetScheduleParameters(){
 	
 	if [ "$exitmenu" != "exit" ]; then
 		while true; do
-			printf "\\n\\e[1mPlease choose which hour(s) to update VPN configuration (0-23, * for every day, or comma separated hours):\\e[0m    "
+			printf "\\n\\e[1mPlease choose which day(s) to update VPN configuration (0-6, * for every day, or comma separated days):\\e[0m    "
+			read -r "day_choice"
+			
+			if [ "$day_choice" = "e" ]; then
+				exitmenu="exit"
+				break
+			elif [ "$day_choice" = "*" ]; then
+				crudays="$day_choice"
+				printf "\\n"
+				break
+			else
+				crudaystmp="$(echo "$day_choice" | sed "s/,/ /g")"
+				crudaysvalidated="true"
+				for i in $crudaystmp; do
+					if ! Validate_Number "" "$i" "silent"; then
+						printf "\\n\\e[31mPlease enter a valid number (0-6) or comma separated values\\e[0m\\n"
+						crudaysvalidated="false"
+						break
+					else
+						if [ "$i" -lt 0 ] || [ "$i" -gt 6 ]; then
+							printf "\\n\\e[31mPlease enter a number between 0 and 6 or comma separated values\\e[0m\\n"
+							crudaysvalidated="false"
+							break
+						fi
+					fi
+				done
+				if [ "$crudaysvalidated" = "true" ]; then
+					crudays="$day_choice"
+					printf "\\n"
+					break
+				fi
+			fi
+		done
+	fi
+		
+	if [ "$exitmenu" != "exit" ]; then
+		while true; do
+			printf "\\n\\e[1mPlease choose which hour(s) to update VPN configuration (0-23, * for every hour, or comma separated hours):\\e[0m    "
 			read -r "hour_choice"
 			
 			if [ "$hour_choice" = "e" ]; then
@@ -860,7 +866,7 @@ SetScheduleParameters(){
 	
 	if [ "$exitmenu" != "exit" ]; then
 		while true; do
-			printf "\\n\\e[1mPlease choose which minutes(s) to update VPN configuration (0-59, * for every day, or comma separated minutes):\\e[0m    "
+			printf "\\n\\e[1mPlease choose which minutes(s) to update VPN configuration (0-59, * for every minute, or comma separated minutes):\\e[0m    "
 			read -r "min_choice"
 			
 			if [ "$min_choice" = "e" ]; then
@@ -896,6 +902,7 @@ SetScheduleParameters(){
 	fi
 	
 	if [ "$exitmenu" != "exit" ]; then
+		GLOBAL_VPN_NO="$vpnnum"
 		GLOBAL_CRU_DAYNUMBERS="$crudays"
 		GLOBAL_CRU_HOURS="$cruhours"
 		GLOBAL_CRU_MINS="$crumins"
@@ -1043,7 +1050,17 @@ Menu_UpdateVPN(){
 	printf "\\e[1m#########################################################\\e[0m\\n"
 	
 	if SetVPNParameters; then
-		UpdateVPNConfig "$GLOBAL_VPN_NO" "$GLOBAL_VPN_PROT" "$GLOBAL_VPN_TYPE"
+		VPN_PROT_SHORT="$(echo "$(echo "$GLOBAL_VPN_PROT" | cut -f2 -d'_')" | tr "a-z" "A-Z")"
+		VPN_TYPE_SHORT="$(echo "$GLOBAL_VPN_TYPE" | cut -f2 -d'_')"
+		if [ "$VPN_TYPE_SHORT" = "p2p" ]; then
+			VPN_TYPE_SHORT="$(echo "$VPN_TYPE_SHORT" | tr "a-z" "A-Z")"
+		else
+			VPN_TYPE_SHORT="$(echo "$VPN_TYPE_SHORT" | awk '{print toupper(substr($0,0,1))tolower(substr($0,2))}')"
+		fi
+		
+		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_protocol.*$/vpn'"$GLOBAL_VPN_NO"'_protocol='"$VPN_PROT_SHORT"'/' "$SCRIPT_CONF"
+		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_type.*$/vpn'"$GLOBAL_VPN_NO"'_type='"$VPN_TYPE_SHORT"'/' "$SCRIPT_CONF"
+		UpdateVPNConfig "$GLOBAL_VPN_NO"
 	else
 		printf "\\n"
 		Print_Output "true" "VPN client update cancelled" "$WARN"
@@ -1056,17 +1073,18 @@ Menu_ScheduleVPN(){
 	ListVPNClients
 	printf "Choose options as follows:\\n"
 	printf "    - VPN client [1-5]\\n"
-	printf "    - protocol to use (pick from list)\\n"
-	printf "    - type of VPN to use (pick from list)\\n"
 	printf "    - day(s) to update [0-6]\\n"
 	printf "    - hour(s) to update [0-23]\\n"
 	printf "    - minute(s) to update [0-59]\\n"
 	printf "\\n"
 	printf "\\e[1m#########################################################\\e[0m\\n"
 	
-	if SetVPNParameters; then
-			SetScheduleParameters
-			ScheduleVPN "$GLOBAL_VPN_NO" "$GLOBAL_VPN_PROT" "$GLOBAL_VPN_TYPE" "$GLOBAL_CRU_DAYNUMBERS" "$GLOBAL_CRU_HOURS" "$GLOBAL_CRU_MINS"
+	if SetScheduleParameters; then
+		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_schenabled.*$/vpn'"$GLOBAL_VPN_NO"'_schenabled=true/' "$SCRIPT_CONF"
+		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_schdays.*$/vpn'"$GLOBAL_VPN_NO"'_schdays='"$(echo "$GLOBAL_CRU_DAYNUMBERS" | sed 's/0/Sun/;s/1/Mon/;s/2/Tues/;s/3/Wed/;s/4/Thurs/;s/5/Fri/;s/6/Sat/;')"'/' "$SCRIPT_CONF"
+		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_schhours.*$/vpn'"$GLOBAL_VPN_NO"'_schhours='"$GLOBAL_CRU_HOURS"'/' "$SCRIPT_CONF"
+		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_schmins.*$/vpn'"$GLOBAL_VPN_NO"'_schmins='"$GLOBAL_CRU_MINS"'/' "$SCRIPT_CONF"
+		ScheduleVPN "$GLOBAL_VPN_NO"
 	else
 		printf "\\n"
 		Print_Output "true" "VPN client update scheduling cancelled" "$WARN"
@@ -1219,7 +1237,7 @@ case "$1" in
 		exit 0
 	;;
 	updatevpn)
-		UpdateVPNConfig "unattended" "$2" "$3" "$4"
+		UpdateVPNConfig "unattended" "$2"
 		exit 0
 	;;
 	startup)
