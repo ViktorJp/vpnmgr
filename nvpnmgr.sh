@@ -154,6 +154,7 @@ Update_Version(){
 		Update_File "shared-jy.tar.gz"
 		
 		if [ "$isupdate" != "false" ]; then
+			Update_File "nvpnmgr_www.asp"
 			/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output "true" "$SCRIPT_NAME successfully updated"
 			chmod 0755 /jffs/scripts/"$SCRIPT_NAME"
 			Clear_Lock
@@ -173,6 +174,7 @@ Update_Version(){
 		serverver=$(/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep "SCRIPT_VERSION=" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 		Print_Output "true" "Downloading latest version ($serverver) of $SCRIPT_NAME" "$PASS"
 		Update_File "shared-jy.tar.gz"
+		Update_File "nvpnmgr_www.asp"
 		/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output "true" "$SCRIPT_NAME successfully updated"
 		chmod 0755 /jffs/scripts/"$SCRIPT_NAME"
 		Clear_Lock
@@ -204,6 +206,18 @@ Update_File(){
 				Print_Output "true" "New version of $1 downloaded" "$PASS"
 			fi
 		fi
+	elif [ "$1" = "nvpnmgr_www.asp" ]; then
+		tmpfile="/tmp/$1"
+		Download_File "$SCRIPT_REPO/$1" "$tmpfile"
+		if ! diff -q "$tmpfile" "$SCRIPT_DIR/$1" >/dev/null 2>&1; then
+			Get_WebUI_Page "$SCRIPT_DIR/$1"
+			sed -i "\\~$MyPage~d" /tmp/menuTree.js
+			rm -f "$SCRIPT_WEBPAGE_DIR/$MyPage" 2>/dev/null
+			Download_File "$SCRIPT_REPO/$1" "$SCRIPT_DIR/$1"
+			Print_Output "true" "New version of $1 downloaded" "$PASS"
+			Mount_WebUI
+		fi
+		rm -f "$tmpfile"
 	else
 		return 1
 	fi
@@ -211,6 +225,41 @@ Update_File(){
 
 Download_File(){
 	/usr/sbin/curl -fsL --retry 3 "$1" -o "$2"
+}
+
+Get_WebUI_Page () {
+	for i in 1 2 3 4 5 6 7 8 9 10; do
+		page="$SCRIPT_WEBPAGE_DIR/user$i.asp"
+		if [ ! -f "$page" ] || [ "$(md5sum < "$1")" = "$(md5sum < "$page")" ]; then
+			MyPage="user$i.asp"
+			return
+		fi
+	done
+	MyPage="none"
+}
+
+Mount_WebUI(){
+	Get_WebUI_Page "$SCRIPT_DIR/nvpnmgr_www.asp"
+	if [ "$MyPage" = "none" ]; then
+		Print_Output "true" "Unable to mount $SCRIPT_NAME WebUI page, exiting" "$CRIT"
+		exit 1
+	fi
+	Print_Output "true" "Mounting $SCRIPT_NAME WebUI page as $MyPage" "$PASS"
+	cp -f "$SCRIPT_DIR/nvpnmgr_www.asp" "$SCRIPT_WEBPAGE_DIR/$MyPage"
+	echo "NordVPN Manager" > "$SCRIPT_WEBPAGE_DIR/$(echo $MyPage | cut -f1 -d'.').title"
+	
+	if [ "$(uname -o)" = "ASUSWRT-Merlin" ]; then
+		if [ ! -f "/tmp/menuTree.js" ]; then
+			cp -f "/www/require/modules/menuTree.js" "/tmp/"
+		fi
+		
+		sed -i "\\~$MyPage~d" /tmp/menuTree.js
+		
+		sed -i "/url: \"Advanced_OpenVPNClient_Content.asp\", tabName:/a {url: \"$MyPage\", tabName: \"NordVPN Manager\"}," /tmp/menuTree.js
+		
+		umount /www/require/modules/menuTree.js 2>/dev/null
+		mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
+	fi
 }
 
 Validate_Number(){
@@ -1047,6 +1096,7 @@ Menu_Install(){
 	Create_Dirs
 	Create_Symlinks
 	
+	Update_File "nvpnmgr_www.asp"
 	Update_File "shared-jy.tar.gz"
 	
 	Shortcut_nvpnmgr create
