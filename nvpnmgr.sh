@@ -411,7 +411,7 @@ UpdateVPNConfig(){
 			nvram set vpn_client"$VPN_NO"_cust2="cmVtb3RlLXJhbmRvbQp0dW4tbXR1IDE1MDAKdHVuLW10dS1leHRyYSAzMgptc3NmaXggMTQ1MApwaW5nIDE1CnBpbmctcmVzdGFydCAwCnBpbmctdGltZXItcmVtCnJlbW90ZS1jZXJ0LXRscyBzZXJ2ZXIKcGVyc2lzdC1rZXkKcGVyc2lzdC10dW4KcmVuZWctc2VjIDAKZGlzYWJsZS1vY2MKbXV0ZS1yZXBsYXktd2FybmluZ3MKYXV0aC1"
 			nvram set vpn_client"$VPN_NO"_cust21="ub2NhY2hlCnNuZGJ1ZiA1MjQyODgKcmN2YnVmIDUyNDI4OApwdXNoICJzbmRidWYgNTI0Mjg4IgpwdXNoICJyY3ZidWYgNTI0Mjg4IgpwdWxsLWZpbHRlciBpZ25vcmUgImF1dGgtdG9rZW4iCnB1bGwtZmlsdGVyIGlnbm9yZSAiaWZjb25maWctaXB2NiIKcHVsbC1maWx0ZXIgaWdub3JlICJyb3V0ZS1pcHY2Ig=="
 		else
-			nvram set vpn_client"$VPN_NO"_cust2='remote-random
+			nvram set vpn_client"$VPN_NO"_custom='remote-random
 tun-mtu 1500
 tun-mtu-extra 32
 mssfix 1450
