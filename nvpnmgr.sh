@@ -1054,7 +1054,7 @@ Menu_UpdateVPN(){
 	printf "\\e[1m#########################################################\\e[0m\\n"
 	
 	if SetVPNParameters; then
-		VPN_PROT_SHORT="$(echo "$(echo "$GLOBAL_VPN_PROT" | cut -f2 -d'_')" | tr "a-z" "A-Z")"
+		VPN_PROT_SHORT="$(echo "$GLOBAL_VPN_PROT" | cut -f2 -d'_' | tr "a-z" "A-Z")"
 		VPN_TYPE_SHORT="$(echo "$GLOBAL_VPN_TYPE" | cut -f2 -d'_')"
 		if [ "$VPN_TYPE_SHORT" = "p2p" ]; then
 			VPN_TYPE_SHORT="$(echo "$VPN_TYPE_SHORT" | tr "a-z" "A-Z")"
