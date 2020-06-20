@@ -453,7 +453,7 @@ pull-filter ignore "route-ipv6"'
 			fi
 		else
 			if [ -z "$(nvram get vpn_client"$VPN_NO"_username)" ]; then
-				printf "\\n\\e[1mNo username set for VPN client $VPN_NO\\e[0m\\n"
+				printf "\\n\\e[1mNo username set for VPN client %s\\e[0m\\n" "$VPN_NO"
 				printf "Please enter username:    "
 				read -r "vpnusn"
 				nvram set vpn_client"$VPN_NO"_username="$vpnusn"
@@ -461,7 +461,7 @@ pull-filter ignore "route-ipv6"'
 			fi
 			
 			if [ -z "$(nvram get vpn_client"$VPN_NO"_password)" ]; then
-				printf "\\n\\e[1mNo password set for VPN client $VPN_NO\\e[0m\\n"
+				printf "\\n\\e[1mNo password set for VPN client %s\\e[0m\\n" "$VPN_NO"
 				printf "Please enter password:    "
 				read -r "vpnpwd"
 				nvram set vpn_client"$VPN_NO"_password="$vpnpwd"
