@@ -111,6 +111,11 @@ thead.collapsible-jquery {
 .SettingsTable .invalid {
   background-color: darkred !important;
 }
+
+.SettingsTable .disabled {
+  background-color: #CCCCCC !important;
+  color: #888888 !important;
+}
 </style>
 <script language="JavaScript" type="text/javascript" src="/ext/shared-jy/jquery.js"></script>
 <script language="JavaScript" type="text/javascript" src="/state.js"></script>
@@ -153,6 +158,31 @@ function SettingHint(hintid) {
 	if(hintid == 5) hinttext="Hour(s) of day to check for new recommended server (* for all, 0-23. Comma separate for multiple hours.)";
 	if(hintid == 6) hinttext="Minute(s) of hour to check for new recommended server (* for all, 0-59. Comma separate for multiple minutes.)";
 	return overlib(hinttext, HAUTO, VAUTO);
+}
+
+function ScheduleOptionsEnableDisable(forminput){
+	var inputname = forminput.name;
+	var inputvalue = forminput.value;
+	var prefix = inputname.substring(0,inputname.lastIndexOf('_'));
+	
+	if(inputvalue == "false"){
+		$j('input[name='+prefix+'_schhours]').addClass("disabled");
+		$j('input[name='+prefix+'_schhours]').prop("disabled",true);
+		$j('input[name='+prefix+'_schmins]').addClass("disabled");
+		$j('input[name='+prefix+'_schmins]').prop("disabled",true);
+		for (var i = 0; i < daysofweek.length; i++) {
+			$j('#'+prefix+'_'+daysofweek[i].toLowerCase()).prop("disabled",true);
+		}
+	}
+	else if(inputvalue == "true"){
+		$j('input[name='+prefix+'_schhours]').removeClass("disabled");
+		$j('input[name='+prefix+'_schhours]').prop("disabled",false);
+		$j('input[name='+prefix+'_schmins]').removeClass("disabled");
+		$j('input[name='+prefix+'_schmins]').prop("disabled",false);
+		for (var i = 0; i < daysofweek.length; i++) {
+			$j('#'+prefix+'_'+daysofweek[i].toLowerCase()).prop("disabled",false);
+		}
+	}
 }
 
 function Validate_Schedule(forminput,hoursmins){
@@ -243,6 +273,10 @@ function get_conf_file(){
 				for (var i = 0; i < 30; i++) {
 					if(window["nvpnmgr_settings"][i][0].indexOf("schdays") == -1){
 						eval("document.form.nvpnmgr_"+window["nvpnmgr_settings"][i][0]).value = window["nvpnmgr_settings"][i][1];
+						if(window["nvpnmgr_settings"][i][0].indexOf("schenabled") != -1){
+							console.log("#nvpnmgr_"+window["nvpnmgr_settings"][i][0].replace("_schenabled","")+"_"+window["nvpnmgr_settings"][i][1])
+							ScheduleOptionsEnableDisable($j("#nvpnmgr_"+window["nvpnmgr_settings"][i][0].replace("_schenabled","")+"_"+window["nvpnmgr_settings"][i][1])[0]);
+						}
 					}
 					else {
 						if(window["nvpnmgr_settings"][i][1] == "*"){
@@ -343,7 +377,7 @@ function BuildConfigTable(prefix,title){
 	
 	/* SCHEDULE ENABLED */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(3);">Scheduled update?</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" name="nvpnmgr_'+prefix+'_schenabled" id="nvpnmgr_'+prefix+'_true" class="input" value="true"><label for="nvpnmgr_'+prefix+'_true">Yes</label><input autocomplete="off" autocapitalize="off" type="radio" name="nvpnmgr_'+prefix+'_schenabled" id="nvpnmgr_'+prefix+'_false" class="input" value="false" checked><label for="nvpnmgr_'+prefix+'_false">No</label></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(3);">Scheduled update?</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" onchange="ScheduleOptionsEnableDisable(this)" name="nvpnmgr_'+prefix+'_schenabled" id="nvpnmgr_'+prefix+'_true" class="input" value="true"><label for="nvpnmgr_'+prefix+'_true">Yes</label><input autocomplete="off" autocapitalize="off" type="radio"  onchange="ScheduleOptionsEnableDisable(this)" name="nvpnmgr_'+prefix+'_schenabled" id="nvpnmgr_'+prefix+'_false" class="input" value="false" checked><label for="nvpnmgr_'+prefix+'_false">No</label></td>';
 	charthtml+='</tr>';
 	
 	/* SCHEDULE DAYS */
@@ -360,12 +394,12 @@ function BuildConfigTable(prefix,title){
 	
 	/* SCHEDULE HOURS */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(5);">Schedule Hours</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="text" class="input_32_table" name="nvpnmgr_'+prefix+'_schhours" value="*" onblur="Validate_Schedule(this,\'hours\')" /></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(5);">Schedule Hours</a></td><td class="settingvalue"><input data-lpignore="true" autocomplete="off" autocapitalize="off" type="text" class="input_32_table" name="nvpnmgr_'+prefix+'_schhours" value="*" onblur="Validate_Schedule(this,\'hours\')" /></td>';
 	charthtml+='</tr>';
 	
 	/* SCHEDULE MINS */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(6);">Schedule Minutes</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="text" class="input_32_table" name="nvpnmgr_'+prefix+'_schmins" value="*" onblur="Validate_Schedule(this,\'mins\')" /></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(6);">Schedule Minutes</a></td><td class="settingvalue"><input data-lpignore="true" autocomplete="off" autocapitalize="off" type="text" class="input_32_table" name="nvpnmgr_'+prefix+'_schmins" value="*" onblur="Validate_Schedule(this,\'mins\')" /></td>';
 	charthtml+='</tr>';
 	
 	charthtml+='</table>';
