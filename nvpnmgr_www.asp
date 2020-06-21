@@ -240,11 +240,24 @@ function get_conf_file(){
 					$j("#table_buttons").before(BuildConfigTable("vpn"+vpnno,"VPN Client "+vpnno));
 				}
 				for (var i = 0; i < 30; i++) {
-					if(eval("document.form.nvpnmgr_"+window["nvpnmgr_settings"][i][0]).value.indexOf("schdays") == -1){
+					if(window["nvpnmgr_settings"][i][0].indexOf("schdays") == -1){
 						eval("document.form.nvpnmgr_"+window["nvpnmgr_settings"][i][0]).value = window["nvpnmgr_settings"][i][1];
 					}
+					else {
+						var daysofweek = ["Mon","Tues","Wed","Thurs","Fri","Sat","Sun"];
+						if(window["nvpnmgr_settings"][i][1] == "*"){
+							for (var i2 = 0; i2 < daysofweek.length; i2++) {
+								$j("#nvpnmgr_"+window["nvpnmgr_settings"][i][0].substring(0,nvpnmgr_settings[i][0].indexOf('_'))+"_"+daysofweek[i2].toLowerCase()).prop("checked",true);
+							}
+						}
+						else {
+							var schdayarray = window["nvpnmgr_settings"][i][1].split(',');
+							for (var i2 = 0; i2 < schdayarray.length; i2++) {
+								$j("#nvpnmgr_"+window["nvpnmgr_settings"][i][0].substring(0,nvpnmgr_settings[i][0].indexOf('_'))+"_"+schdayarray[i2].toLowerCase()).prop("checked",true);
+							}
+						}
+					}
 				}
-				
 				
 				AddEventHandlers();
 			}
