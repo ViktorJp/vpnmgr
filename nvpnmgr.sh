@@ -681,6 +681,11 @@ explicit-exit-notify 3"
 ManageVPN(){
 	VPN_NO="$1"
 	
+	if [ -z "$(nvram get vpn_client"$VPN_NO"_username)" ] && [ -z "$(nvram get vpn_client"$VPN_NO"_password)" ]; then
+		Print_Output "true" "No username or password set for VPN client $VPN_NO, cannot enable management" "$ERR"
+		return 1
+	fi
+	
 	if [ "$(grep "vpn""$VPN_NO""_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
 		printf "\\n"
 		Print_Output "true" "VPN client $VPN_NO is already managed by $SCRIPT_NAME" "$WARN"
@@ -693,11 +698,11 @@ ManageVPN(){
 
 UnmanageVPN(){
 	VPN_NO="$1"
-	CancelScheduleVPN "$VPN_NO"
 	
 	if [ "$(grep "vpn""$VPN_NO""_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
 		Print_Output "true" "Removing management of VPN client $VPN_NO" "$PASS"
 		sed -i 's/^vpn'"$VPN_NO"'_managed.*$/vpn'"$VPN_NO"'_managed=false/' "$SCRIPT_CONF"
+		CancelScheduleVPN "$VPN_NO"
 		Print_Output "true" "Management of VPN client $VPN_NO successfully removed" "$PASS"
 	elif [ "$(grep "vpn""$VPN_NO""_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
 		printf "\\n"
