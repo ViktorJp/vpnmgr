@@ -424,7 +424,7 @@ Conf_Exists(){
 				echo "vpn$i""_schenabled=false"
 				echo "vpn$i""_schdays=*"
 				echo "vpn$i""_schhours=0"
-				echo "vpn$i""_schmins=0"
+				echo "vpn$i""_schmins=$i"
 				echo "#########################"
 			} >> "$SCRIPT_CONF"
 		done
