@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.com/jackyaz/nvpnmgr.svg?branch=master)](https://travis-ci.com/jackyaz/nvpnmgr)
 
 ## v0.0.2
-### Updated on 2020-06-20
+### Updated on 2020-06-21
 ## About
 Originally developed by [@h0me5k1n](https://github.com/h0me5k1n/asusmerlin-nvpnmgr)
 
@@ -47,10 +47,3 @@ If this is the first time you are using scripts, don't panic! In your router's W
 Further reading about scripts is available here: [AsusWRT-Merlin User-scripts](https://github.com/RMerl/asuswrt-merlin/wiki/User-scripts)
 
 ![WebUI enable scripts](https://puu.sh/A3wnG/00a43283ed.png)
-
-## To Do (from [@h0me5k1n](https://github.com/h0me5k1n/asusmerlin-nvpnmgr))
-Possible enhancements (when I get round to it!):
-
--   query available protocols via NordVPN api
--   handle all protocols
--   create web page for UI
