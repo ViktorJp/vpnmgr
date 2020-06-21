@@ -223,17 +223,17 @@ function get_conf_file(){
 			setTimeout("get_conf_file();", 1000);
 		},
 		success: function(data){
-			var settings=data.split("\n");
+			var settings = data.split("\n");
 			settings.reverse();
 			settings = settings.filter(Boolean);
-			var settingcount=settings.length;
+			var settingcount = settings.length;
 			window["nvpnmgr_settings"] = new Array();
 			for (var i = 0; i < settingcount; i++) {
 				var commentstart=settings[i].indexOf("#");
 				if (commentstart != -1){
 					continue
 				}
-				var setting=settings[i].split("=");
+				var setting = settings[i].split("=");
 				window["nvpnmgr_settings"].unshift(setting);
 				}
 				for (var vpnno = 1; vpnno < 6; vpnno++){
