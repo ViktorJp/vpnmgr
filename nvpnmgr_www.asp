@@ -242,9 +242,12 @@ function get_conf_file(){
 				for (var vpnno = 1; vpnno < 6; vpnno++){
 					$j("#table_buttons").before(BuildConfigTable("vpn"+vpnno,"VPN Client "+vpnno));
 				}
-				//for (var i = 0; i < 5*x; i++) {
-				//	eval("document.form.nvpnmgr_"+window["nvpnmgr_settings"][i][0].toLowerCase()).value = window["nvpnmgr_settings"][i][1];
-				//}
+				for (var i = 0; i < 30; i++) {
+					if(eval("document.form.nvpnmgr_"+window["nvpnmgr_settings"][i][0]).value.indexOf("schdays") == -1){
+						eval("document.form.nvpnmgr_"+window["nvpnmgr_settings"][i][0]).value = window["nvpnmgr_settings"][i][1];
+					}
+				}
+				
 				
 				AddEventHandlers();
 			}
@@ -275,29 +278,25 @@ function reload() {
 }
 
 function applyRule() {
-	if(Validate_All()){
-		document.getElementById('amng_custom').value = JSON.stringify($j('form').serializeObject())
+	//if(Validate_All()){
+		document.getElementById('amng_custom').value = JSON.stringify($j('form').serializeObject());
 		var action_script_tmp = "start_nvpnmgr";
 		document.form.action_script.value = action_script_tmp;
 		var restart_time = 30;
 		document.form.action_wait.value = restart_time;
-		showLoading();
-		document.form.submit();
-	}
-	else{
-		return false;
-	}
+		//showLoading();
+		//document.form.submit();
+	//}
+	//else{
+	//	return false;
+	//}
 }
 
 function initial(){
 	SetCurrentPage();
 	LoadCustomSettings();
 	show_menu();
-	//get_conf_file();
-	for (var vpnno = 1; vpnno < 6; vpnno++){
-		$j("#table_buttons").before(BuildConfigTable("vpn"+vpnno,"VPN Client "+vpnno));
-	}
-	AddEventHandlers();
+	get_conf_file();
 	ScriptUpdateLayout();
 }
 
