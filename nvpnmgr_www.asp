@@ -127,6 +127,7 @@ thead.collapsible-jquery {
 <script>
 var $j=jQuery.noConflict();
 var custom_settings;
+var daysofweek = ["Mon","Tues","Wed","Thurs","Fri","Sat","Sun"];
 
 function LoadCustomSettings(){
 	custom_settings = <% get_custom_settings(); %>;
@@ -244,7 +245,6 @@ function get_conf_file(){
 						eval("document.form.nvpnmgr_"+window["nvpnmgr_settings"][i][0]).value = window["nvpnmgr_settings"][i][1];
 					}
 					else {
-						var daysofweek = ["Mon","Tues","Wed","Thurs","Fri","Sat","Sun"];
 						if(window["nvpnmgr_settings"][i][1] == "*"){
 							for (var i2 = 0; i2 < daysofweek.length; i2++) {
 								$j("#nvpnmgr_"+window["nvpnmgr_settings"][i][0].substring(0,nvpnmgr_settings[i][0].indexOf('_'))+"_"+daysofweek[i2].toLowerCase()).prop("checked",true);
