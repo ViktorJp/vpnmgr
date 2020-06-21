@@ -112,14 +112,16 @@ thead.collapsible-jquery {
   background-color: darkred !important;
 }
 </style>
-<script language="JavaScript" type="text/javascript" src="/js/jquery.js"></script>
+<script language="JavaScript" type="text/javascript" src="/ext/shared-jy/jquery.js"></script>
 <script language="JavaScript" type="text/javascript" src="/state.js"></script>
 <script language="JavaScript" type="text/javascript" src="/general.js"></script>
 <script language="JavaScript" type="text/javascript" src="/popup.js"></script>
 <script language="JavaScript" type="text/javascript" src="/help.js"></script>
+<script language="JavaScript" type="text/javascript" src="/ext/shared-jy/detect.js"></script>
 <script language="JavaScript" type="text/javascript" src="/tmhist.js"></script>
 <script language="JavaScript" type="text/javascript" src="/tmmenu.js"></script>
 <script language="JavaScript" type="text/javascript" src="/client_function.js"></script>
+<script language="JavaScript" type="text/javascript" src="/ext/shared-jy/validator.js"></script>
 <script language="JavaScript" type="text/javascript" src="/validator.js"></script>
 <script language="JavaScript" type="text/javascript" src="/base64.js"></script>
 <script>
@@ -158,11 +160,40 @@ function YazHint(hintid) {
 	return overlib(hinttext, HAUTO, VAUTO);
 }
 
-function Validate_VPNClientNo(forminput){
+function Validate_Schedule(forminput,hoursmins){
 	var inputname = forminput.name;
-	var inputvalue = forminput.value*1;
+	var inputvalues = forminput.value.split(',');
+	var upperlimit = 0;
 	
-	if(inputvalue > 5 || inputvalue < 1){
+	if(hoursmins == "hours"){
+		upperlimit = 23;
+	}
+	else if (hoursmins == "mins"){
+		upperlimit = 59;
+	}
+	
+	var validationfailed = "false";
+	for(var i=0; i < inputvalues.length; i++){
+		if(inputvalues[i] == "*" && i != 0){
+			validationfailed = "true";
+		}
+		else if(inputvalues[i] == "*" && i == 0){
+			validationfailed = "false";
+		}
+		else if(inputvalues[i] == ""){
+			validationfailed = "true";
+		}
+		else if(! isNaN(inputvalues[i]*1)){
+			if((inputvalues[i]*1) > upperlimit || (inputvalues[i]*1) < 0){
+				validationfailed = "true";
+			}
+		}
+		else{
+			validationfailed = "true";
+		}
+	}
+	
+	if(validationfailed == "true"){
 		$j(forminput).addClass("invalid");
 		return false;
 	}
@@ -174,10 +205,9 @@ function Validate_VPNClientNo(forminput){
 
 function Validate_All(){
 	var validationfailed = false;
-	for(var i=0; i < bands; i++){
-		for(var i2=1; i2 < 4; i2++){
-			if(! Validate_VPNClientNo(eval("document.form.nvpnmgr_wl"+i+i2+"_vpnclientnumber"))){validationfailed=true;}
-		}
+	for(var i=0; i < 6; i++){
+		if(! Validate_Schedule(eval("document.form.nvpnmgr_vpn"+i+"_schhours"),"hours")){validationfailed=true;}
+		if(! Validate_Schedule(eval("document.form.nvpnmgr_vpn"+i+"_schmins"),"mins")){validationfailed=true;}
 	}
 	if(validationfailed){
 		alert("Validation for some fields failed. Please correct invalid values and try again.");
@@ -320,12 +350,12 @@ function BuildConfigTable(prefix,title){
 	
 	/* SCHEDULE HOURS */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="YazHint(5);">Schedule Hours</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="text" class="input_32_table" name="nvpnmgr_'+prefix+'_schhours" value="*" onblur="Validate_VPNClientNo(this)" /></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="YazHint(5);">Schedule Hours</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="text" class="input_32_table" name="nvpnmgr_'+prefix+'_schhours" value="*" onblur="Validate_Schedule(this,\'hours\')" /></td>';
 	charthtml+='</tr>';
 	
 	/* SCHEDULE MINS */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="YazHint(6);">Schedule Minutes</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="text" class="input_32_table" name="nvpnmgr_'+prefix+'_schmins" value="*" onblur="Validate_VPNClientNo(this)" /></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="YazHint(6);">Schedule Minutes</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="text" class="input_32_table" name="nvpnmgr_'+prefix+'_schmins" value="*" onblur="Validate_Schedule(this,\'mins\')" /></td>';
 	charthtml+='</tr>';
 	
 	charthtml+='</table>';
