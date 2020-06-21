@@ -418,6 +418,7 @@ Conf_Exists(){
 		for i in 1 2 3 4 5; do
 			{
 				echo "##### VPN Client $i #####"
+				echo "vpn$i""_managed=false"
 				echo "vpn$i""_protocol=UDP"
 				echo "vpn$i""_type=Standard"
 				echo "vpn$i""_schenabled=false"
