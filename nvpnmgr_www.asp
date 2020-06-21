@@ -138,7 +138,7 @@ function LoadCustomSettings(){
 	custom_settings = <% get_custom_settings(); %>;
 	for (var prop in custom_settings) {
 		if (Object.prototype.hasOwnProperty.call(custom_settings, prop)) {
-			if(prop.indexOf("nvpnmgr") != -1 && prop.indexOf("nvpnmgr_version") == -1){
+			if(prop.indexOf("nvpnmgr") != -1 && prop.indexOf("version") == -1){
 				eval("delete custom_settings."+prop)
 			}
 		}
@@ -233,7 +233,7 @@ function Validate_Schedule(forminput,hoursmins){
 
 function Validate_All(){
 	var validationfailed = false;
-	for(var i=0; i < 6; i++){
+	for(var i=1; i < 6; i++){
 		if(! Validate_Schedule(eval("document.form.nvpnmgr_vpn"+i+"_schhours"),"hours")){validationfailed=true;}
 		if(! Validate_Schedule(eval("document.form.nvpnmgr_vpn"+i+"_schmins"),"mins")){validationfailed=true;}
 	}
@@ -274,7 +274,6 @@ function get_conf_file(){
 					if(window["nvpnmgr_settings"][i][0].indexOf("schdays") == -1){
 						eval("document.form.nvpnmgr_"+window["nvpnmgr_settings"][i][0]).value = window["nvpnmgr_settings"][i][1];
 						if(window["nvpnmgr_settings"][i][0].indexOf("schenabled") != -1){
-							console.log("#nvpnmgr_"+window["nvpnmgr_settings"][i][0].replace("_schenabled","")+"_"+window["nvpnmgr_settings"][i][1])
 							ScheduleOptionsEnableDisable($j("#nvpnmgr_"+window["nvpnmgr_settings"][i][0].replace("_schenabled","")+"_"+window["nvpnmgr_settings"][i][1])[0]);
 						}
 					}
@@ -322,18 +321,19 @@ function reload() {
 }
 
 function applyRule() {
-	//if(Validate_All()){
+	if(Validate_All()){
+		$j('[name*=_sch]').prop("disabled",false);
 		document.getElementById('amng_custom').value = JSON.stringify($j('form').serializeObject());
 		var action_script_tmp = "start_nvpnmgr";
 		document.form.action_script.value = action_script_tmp;
-		var restart_time = 30;
+		var restart_time = 5;
 		document.form.action_wait.value = restart_time;
-		//showLoading();
-		//document.form.submit();
-	//}
-	//else{
-	//	return false;
-	//}
+		showLoading();
+		document.form.submit();
+	}
+	else {
+		return false;
+	}
 }
 
 function initial(){
@@ -437,15 +437,26 @@ $j.fn.serializeObject = function(){
 	var o = custom_settings;
 	var a = this.serializeArray();
 	$j.each(a, function() {
-		if (o[this.name] !== undefined && this.name.indexOf("nvpnmgr") != -1 && this.name.indexOf("_version_") == -1) {
+		if (o[this.name] !== undefined && this.name.indexOf("nvpnmgr") != -1 && this.name.indexOf("version") == -1 && this.name.indexOf("schdays") == -1) {
 			if (!o[this.name].push) {
 				o[this.name] = [o[this.name]];
 			}
 			o[this.name].push(this.value || '');
-		} else if (this.name.indexOf("nvpnmgr") != -1 && this.name.indexOf("_version_") == -1){
+		} else if (this.name.indexOf("nvpnmgr") != -1 && this.name.indexOf("version") == -1 && this.name.indexOf("schdays") == -1){
 			o[this.name] = this.value || '';
 		}
 	});
+	for(var i=1; i < 6; i++){
+		var schdays = [];
+		$j.each($j("input[name='nvpnmgr_vpn"+i+"_schdays']:checked"), function(){
+			schdays.push($j(this).val());
+		});
+		var schdaysstring = schdays.join(",");
+		if(schdaysstring == "Mon,Tues,Wed,Thurs,Fri,Sat,Sun"){
+			schdaysstring = "*";
+		}
+		o["nvpnmgr_vpn"+i+"_schdays"] = schdaysstring;
+	}
 	return o;
 };
 
