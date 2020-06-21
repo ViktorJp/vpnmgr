@@ -132,7 +132,7 @@ function LoadCustomSettings(){
 	custom_settings = <% get_custom_settings(); %>;
 	for (var prop in custom_settings) {
 		if (Object.prototype.hasOwnProperty.call(custom_settings, prop)) {
-			if(prop.indexOf("nvpnmgr") != -1){
+			if(prop.indexOf("nvpnmgr") != -1 && prop.indexOf("nvpnmgr_version") == -1){
 				eval("delete custom_settings."+prop)
 			}
 		}
@@ -298,6 +298,7 @@ function initial(){
 		$j("#table_buttons").before(BuildConfigTable("vpn"+vpnno,"VPN Client "+vpnno));
 	}
 	AddEventHandlers();
+	ScriptUpdateLayout();
 }
 
 function BuildConfigTable(prefix,title){
@@ -393,17 +394,67 @@ $j.fn.serializeObject = function(){
 	var o = custom_settings;
 	var a = this.serializeArray();
 	$j.each(a, function() {
-		if (o[this.name] !== undefined && this.name.indexOf("nvpnmgr") != -1) {
+		if (o[this.name] !== undefined && this.name.indexOf("nvpnmgr") != -1 && this.name.indexOf("_version_") == -1) {
 			if (!o[this.name].push) {
 				o[this.name] = [o[this.name]];
 			}
 			o[this.name].push(this.value || '');
-		} else if (this.name.indexOf("nvpnmgr") != -1){
+		} else if (this.name.indexOf("nvpnmgr") != -1 && this.name.indexOf("_version_") == -1){
 			o[this.name] = this.value || '';
 		}
 	});
 	return o;
 };
+
+function ScriptUpdateLayout(){
+	var localver = GetVersionNumber("local");
+	var serverver = GetVersionNumber("server");
+	$j("#scripttitle").text($j("#scripttitle").text()+" - "+localver);
+	$j("#nvpnmgr_version_local").text(localver);
+	
+	if (localver != serverver && serverver != "N/A"){
+		$j("#nvpnmgr_version_server").text("Updated version available: "+serverver);
+		showhide("btnChkUpdate", false);
+		showhide("nvpnmgr_version_server", true);
+		showhide("btnDoUpdate", true);
+	}
+}
+
+function CheckUpdate(){
+	var action_script_tmp = "start_nvpnmgrcheckupdate";
+	document.form.action_script.value = action_script_tmp;
+	var restart_time = 10;
+	document.form.action_wait.value = restart_time;
+	showLoading();
+	document.form.submit();
+}
+
+function DoUpdate(){
+	var action_script_tmp = "start_nvpnmgrdoupdate";
+	document.form.action_script.value = action_script_tmp;
+	var restart_time = 20;
+	document.form.action_wait.value = restart_time;
+	showLoading();
+	document.form.submit();
+}
+
+function GetVersionNumber(versiontype)
+{
+	var versionprop;
+	if(versiontype == "local"){
+		versionprop = custom_settings.nvpnmgr_version_local;
+	}
+	else if(versiontype == "server"){
+		versionprop = custom_settings.nvpnmgr_version_server;
+	}
+	
+	if(typeof versionprop == 'undefined' || versionprop == null){
+		return "N/A";
+	}
+	else {
+		return versionprop;
+	}
+}
 
 </script>
 </head>
@@ -443,9 +494,28 @@ $j.fn.serializeObject = function(){
 <tr>
 <td bgcolor="#4D595D" colspan="3" valign="top">
 <div>&nbsp;</div>
-<div class="formfonttitle" id="scripttitle" style="text-align:center;">nvpnmgr - v0.0.2</div>
+<div class="formfonttitle" id="scripttitle" style="text-align:center;">nvpnmgr</div>
 <div style="margin:10px 0 10px 5px;" class="splitLine"></div>
 <div class="formfontdesc">Automatically update VPN Client configuration to recommended NordVPN server on AsusWRT-Merlin</div>
+<table width="100%" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#6b8fa3" class="FormTable" style="border:0px;" id="table_scripttools">
+<thead class="collapsible-jquery" id="scripttools">
+<tr><td colspan="2">Script Utilities (click to expand/collapse)</td></tr>
+</thead>
+<div class="collapsiblecontent">
+<tr>
+<th width="20%">Version information</th>
+<td>
+<span id="nvpnmgr_version_local" style="color:#FFFFFF;"></span>
+&nbsp;&nbsp;&nbsp;
+<span id="nvpnmgr_version_server" style="display:none;">Update version</span>
+&nbsp;&nbsp;&nbsp;
+<input type="button" class="button_gen" onclick="CheckUpdate();" value="Check" id="btnChkUpdate">
+<input type="button" class="button_gen" onclick="DoUpdate();" value="Update" id="btnDoUpdate" style="display:none;">
+&nbsp;&nbsp;&nbsp;
+</td>
+</tr>
+</div>
+</table>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable" style="border:0px;" id="table_buttons">
 <tr class="apply_gen" valign="top" height="35px">
 <td style="background-color:rgb(77, 89, 93);border:0px;">
