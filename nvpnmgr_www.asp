@@ -326,7 +326,7 @@ function applyRule() {
 		document.getElementById('amng_custom').value = JSON.stringify($j('form').serializeObject());
 		var action_script_tmp = "start_nvpnmgr";
 		document.form.action_script.value = action_script_tmp;
-		var restart_time = 5;
+		var restart_time = 30;
 		document.form.action_wait.value = restart_time;
 		showLoading();
 		document.form.submit();
