@@ -174,11 +174,14 @@ function Validate_Schedule(forminput,hoursmins){
 	
 	var validationfailed = "false";
 	for(var i=0; i < inputvalues.length; i++){
-		if(inputvalues[i] == "*" && i != 0){
+		if(inputvalues[i] == "*" && i == 0){
+			validationfailed = "false";
+		}
+		else if(inputvalues[i] == "*" && i != 0){
 			validationfailed = "true";
 		}
-		else if(inputvalues[i] == "*" && i == 0){
-			validationfailed = "false";
+		else if(inputvalues[0] == "*" && i > 0){
+			validationfailed = "true";
 		}
 		else if(inputvalues[i] == ""){
 			validationfailed = "true";
