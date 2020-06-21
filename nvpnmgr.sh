@@ -266,6 +266,42 @@ Auto_Startup(){
 	esac
 }
 
+Auto_ServiceEvent(){
+	case $1 in
+		create)
+			if [ -f /jffs/scripts/service-event ]; then
+				STARTUPLINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/service-event)
+				# shellcheck disable=SC2016
+				STARTUPLINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME service_event"' "$1" "$2" &'' # '"$SCRIPT_NAME" /jffs/scripts/service-event)
+				
+				if [ "$STARTUPLINECOUNT" -gt 1 ] || { [ "$STARTUPLINECOUNTEX" -eq 0 ] && [ "$STARTUPLINECOUNT" -gt 0 ]; }; then
+					sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/service-event
+				fi
+				
+				if [ "$STARTUPLINECOUNTEX" -eq 0 ]; then
+					# shellcheck disable=SC2016
+					echo "/jffs/scripts/$SCRIPT_NAME service_event"' "$1" "$2" &'' # '"$SCRIPT_NAME" >> /jffs/scripts/service-event
+				fi
+			else
+				echo "#!/bin/sh" > /jffs/scripts/service-event
+				echo "" >> /jffs/scripts/service-event
+				# shellcheck disable=SC2016
+				echo "/jffs/scripts/$SCRIPT_NAME service_event"' "$1" "$2" &'' # '"$SCRIPT_NAME" >> /jffs/scripts/service-event
+				chmod 0755 /jffs/scripts/service-event
+			fi
+		;;
+		delete)
+			if [ -f /jffs/scripts/service-event ]; then
+				STARTUPLINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/service-event)
+				
+				if [ "$STARTUPLINECOUNT" -gt 0 ]; then
+					sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/service-event
+				fi
+			fi
+		;;
+	esac
+}
+
 Download_File(){
 	/usr/sbin/curl -fsL --retry 3 "$1" -o "$2"
 }
@@ -1192,6 +1228,8 @@ Menu_Install(){
 	Create_Dirs
 	Conf_Exists
 	Create_Symlinks
+	Auto_Startup create 2>/dev/null
+	Auto_ServiceEvent create 2>/dev/null
 	
 	Update_File "nvpnmgr_www.asp"
 	Update_File "shared-jy.tar.gz"
@@ -1206,6 +1244,7 @@ Menu_Startup(){
 	Set_Version_Custom_Settings "local"
 	Create_Symlinks
 	Auto_Startup create 2>/dev/null
+	Auto_ServiceEvent create 2>/dev/null
 	Shortcut_nvpnmgr create
 	Mount_WebUI
 	Clear_Lock
@@ -1224,6 +1263,9 @@ Menu_ForceUpdate(){
 Menu_Uninstall(){
 	Print_Output "true" "Removing $SCRIPT_NAME..." "$PASS"
 	
+	Auto_Startup delete 2>/dev/null
+	Auto_ServiceEvent delete 2>/dev/null
+	
 	rm -rf "$SCRIPT_WEB_DIR" 2>/dev/null
 	rm -rf "$SCRIPT_DIR" 2>/dev/null
 	
@@ -1239,6 +1281,8 @@ if [ -z "$1" ]; then
 	Conf_Exists
 	Set_Version_Custom_Settings "local"
 	Create_Symlinks
+	Auto_Startup create 2>/dev/null
+	Auto_ServiceEvent create 2>/dev/null
 	Shortcut_nvpnmgr create
 	ScriptHeader
 	MainMenu
@@ -1258,6 +1302,24 @@ case "$1" in
 	startup)
 		Check_Lock
 		Menu_Startup
+		exit 0
+	;;
+	service_event)
+		if [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME" ]; then
+			#Check_Lock
+			#Menu_GenerateStats "webui"
+			exit 0
+		elif [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME""checkupdate" ]; then
+			Check_Lock
+			updatecheckresult="$(Update_Check)"
+			Clear_Lock
+			exit 0
+		elif [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME""doupdate" ]; then
+			Check_Lock
+			Update_Version "force" "unattended"
+			Clear_Lock
+			exit 0
+		fi
 		exit 0
 	;;
 	develop)
