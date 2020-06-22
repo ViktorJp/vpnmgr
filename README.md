@@ -2,16 +2,18 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/50f9c2244ef74cefb3da37448dd69848)](https://www.codacy.com/manual/jackyaz/nvpnmgr?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jackyaz/nvpnmgr&amp;utm_campaign=Badge_Grade)
 [![Build Status](https://travis-ci.com/jackyaz/nvpnmgr.svg?branch=master)](https://travis-ci.com/jackyaz/nvpnmgr)
 
-## v0.0.1
-### Updated on 2020-06-18
+## v0.9.9
+### Updated on 2020-06-22
 ## About
 Originally developed by [@h0me5k1n](https://github.com/h0me5k1n/asusmerlin-nvpnmgr)
 
-Automatically update VPN client configuration to recommended NordVPN server on Asus Merlin router firmware.
+Automatically update VPN Client configuration to recommended NordVPN server on AsusWRT-Merlin
 
 A NordVPN account is required to establish a connection.
 
-![Menu UI](https://puu.sh/FYhid/a20aeed21d.png)
+![Menu UI](https://puu.sh/FZhMO/6ce55ca358.png)
+
+![Web UI](https://puu.sh/FZhMt/2b17558b53.png)
 
 ## Supported firmware versions
 You must be running firmware Merlin 384.15/384.13_4 or Fork 43E5 (or later) [Asuswrt-Merlin](https://asuswrt.lostrealm.ca/)
@@ -47,10 +49,3 @@ If this is the first time you are using scripts, don't panic! In your router's W
 Further reading about scripts is available here: [AsusWRT-Merlin User-scripts](https://github.com/RMerl/asuswrt-merlin/wiki/User-scripts)
 
 ![WebUI enable scripts](https://puu.sh/A3wnG/00a43283ed.png)
-
-## To Do (from [@h0me5k1n](https://github.com/h0me5k1n/asusmerlin-nvpnmgr))
-Possible enhancements (when I get round to it!):
-
--   query available protocols via NordVPN api
--   handle all protocols
--   create web page for UI
