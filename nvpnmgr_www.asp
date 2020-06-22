@@ -151,13 +151,45 @@ function SettingHint(hintid) {
 		tag_name[i].onmouseout=nd;
 	}
 	hinttext="My text goes here";
-	if(hintid == 1) hinttext="Protocol to use for VPN server";
-	if(hintid == 2) hinttext="Type of NordVPN server to use";
-	if(hintid == 3) hinttext="Automatically update VPN to new NordVPN recommended server";
-	if(hintid == 4) hinttext="Day(s) of week to check for new recommended server";
-	if(hintid == 5) hinttext="Hour(s) of day to check for new recommended server (* for all, 0-23. Comma separate for multiple hours.)";
-	if(hintid == 6) hinttext="Minute(s) of hour to check for new recommended server (* for all, 0-59. Comma separate for multiple minutes.)";
+	if(hintid == 1) hinttext="Manage VPN client using nvpnmgr";
+	if(hintid == 2) hinttext="Protocol to use for VPN server";
+	if(hintid == 3) hinttext="Type of NordVPN server to use";
+	if(hintid == 4) hinttext="Automatically update VPN to new NordVPN recommended server";
+	if(hintid == 5) hinttext="Day(s) of week to check for new recommended server";
+	if(hintid == 6) hinttext="Hour(s) of day to check for new recommended server (* for all, 0-23. Comma separate for multiple hours.)";
+	if(hintid == 7) hinttext="Minute(s) of hour to check for new recommended server (* for all, 0-59. Comma separate for multiple minutes.)";
 	return overlib(hinttext, HAUTO, VAUTO);
+}
+
+function OptionsEnableDisable(forminput){
+	var inputname = forminput.name;
+	var inputvalue = forminput.value;
+	var prefix = inputname.substring(0,inputname.lastIndexOf('_'));
+	
+	if(inputvalue == "false"){
+		$j('input[name='+prefix+'_protocol]').prop("disabled",true);
+		$j('input[name='+prefix+'_type]').prop("disabled",true);
+		$j('input[name='+prefix+'_schenabled]').prop("disabled",true);
+		$j('input[name='+prefix+'_schhours]').addClass("disabled");
+		$j('input[name='+prefix+'_schhours]').prop("disabled",true);
+		$j('input[name='+prefix+'_schmins]').addClass("disabled");
+		$j('input[name='+prefix+'_schmins]').prop("disabled",true);
+		for (var i = 0; i < daysofweek.length; i++) {
+			$j('#'+prefix+'_'+daysofweek[i].toLowerCase()).prop("disabled",true);
+		}
+	}
+	else if(inputvalue == "true"){
+		$j('input[name='+prefix+'_protocol]').prop("disabled",false);
+		$j('input[name='+prefix+'_type]').prop("disabled",false);
+		$j('input[name='+prefix+'_schenabled]').prop("disabled",false);
+		$j('input[name='+prefix+'_schhours]').removeClass("disabled");
+		$j('input[name='+prefix+'_schhours]').prop("disabled",false);
+		$j('input[name='+prefix+'_schmins]').removeClass("disabled");
+		$j('input[name='+prefix+'_schmins]').prop("disabled",false);
+		for (var i = 0; i < daysofweek.length; i++) {
+			$j('#'+prefix+'_'+daysofweek[i].toLowerCase()).prop("disabled",false);
+		}
+	}
 }
 
 function ScheduleOptionsEnableDisable(forminput){
@@ -270,11 +302,14 @@ function get_conf_file(){
 				for (var vpnno = 1; vpnno < 6; vpnno++){
 					$j("#table_buttons").before(BuildConfigTable("vpn"+vpnno,"VPN Client "+vpnno));
 				}
-				for (var i = 0; i < 30; i++) {
+				for (var i = 0; i < 35; i++) {
 					if(window["nvpnmgr_settings"][i][0].indexOf("schdays") == -1){
 						eval("document.form.nvpnmgr_"+window["nvpnmgr_settings"][i][0]).value = window["nvpnmgr_settings"][i][1];
+						if(window["nvpnmgr_settings"][i][0].indexOf("managed") != -1){
+							OptionsEnableDisable($j("#nvpnmgr_"+window["nvpnmgr_settings"][i][0].replace("_managed","")+"_man_"+window["nvpnmgr_settings"][i][1])[0]);
+						}
 						if(window["nvpnmgr_settings"][i][0].indexOf("schenabled") != -1){
-							ScheduleOptionsEnableDisable($j("#nvpnmgr_"+window["nvpnmgr_settings"][i][0].replace("_schenabled","")+"_"+window["nvpnmgr_settings"][i][1])[0]);
+							ScheduleOptionsEnableDisable($j("#nvpnmgr_"+window["nvpnmgr_settings"][i][0].replace("_schenabled","")+"_sch_"+window["nvpnmgr_settings"][i][1])[0]);
 						}
 					}
 					else {
@@ -322,7 +357,7 @@ function reload() {
 
 function applyRule() {
 	if(Validate_All()){
-		$j('[name*=_sch]').prop("disabled",false);
+		$j('[name*=nvpnmgr_]').prop("disabled",false);
 		document.getElementById('amng_custom').value = JSON.stringify($j('form').serializeObject());
 		var action_script_tmp = "start_nvpnmgr";
 		document.form.action_script.value = action_script_tmp;
@@ -365,24 +400,29 @@ function BuildConfigTable(prefix,title){
 	charthtml+='<td class="settingname">Description</a></td><td class="settingvalue"><span id="nvpnmgr_'+prefix+'_desc" style="color:#ffffff;">'+$j('input[name='+prefix+'_desc]').val()+'</span></td>';
 	charthtml+='</tr>';
 	
+	/* MANAGEMENT ENABLED */
+	charthtml+='<tr>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(1);">Managed by nvpnmgr?</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" onchange="OptionsEnableDisable(this)" name="nvpnmgr_'+prefix+'_managed" id="nvpnmgr_'+prefix+'_man_true" class="input" value="true"><label for="nvpnmgr_'+prefix+'_man_true">Yes</label><input autocomplete="off" autocapitalize="off" type="radio"  onchange="OptionsEnableDisable(this)" name="nvpnmgr_'+prefix+'_managed" id="nvpnmgr_'+prefix+'_man_false" class="input" value="false" checked><label for="nvpnmgr_'+prefix+'_man_false">No</label></td>';
+	charthtml+='</tr>';
+	
 	/* PROTOCOL */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(1);">Protocol</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" name="nvpnmgr_'+prefix+'_protocol" id="nvpnmgr_'+prefix+'_tcp" class="input" value="TCP"><label for="nvpnmgr_'+prefix+'_tcp">TCP</label><input autocomplete="off" autocapitalize="off" type="radio" name="nvpnmgr_'+prefix+'_protocol" id="nvpnmgr_'+prefix+'_udp" class="input" value="UDP" checked><label for="nvpnmgr_'+prefix+'_udp">UDP</label></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(2);">Protocol</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" name="nvpnmgr_'+prefix+'_protocol" id="nvpnmgr_'+prefix+'_tcp" class="input" value="TCP"><label for="nvpnmgr_'+prefix+'_tcp">TCP</label><input autocomplete="off" autocapitalize="off" type="radio" name="nvpnmgr_'+prefix+'_protocol" id="nvpnmgr_'+prefix+'_udp" class="input" value="UDP" checked><label for="nvpnmgr_'+prefix+'_udp">UDP</label></td>';
 	charthtml+='</tr>';
 	
 	/* TYPE */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(2);">Type</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" name="nvpnmgr_'+prefix+'_type" id="nvpnmgr_'+prefix+'_standard" class="input" value="Standard" checked><label for="nvpnmgr_'+prefix+'_standard">Standard</label><input autocomplete="off" autocapitalize="off" type="radio" name="nvpnmgr_'+prefix+'_type" for="nvpnmgr_'+prefix+'_double" class="input" value="Double"><label for="nvpnmgr_'+prefix+'_double">Double</label><input autocomplete="off" autocapitalize="off" type="radio" name="nvpnmgr_'+prefix+'_type" id="nvpnmgr_'+prefix+'_p2p" class="input" value="P2P"><label for="nvpnmgr_'+prefix+'_p2p">P2P</label></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(3);">Type</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" name="nvpnmgr_'+prefix+'_type" id="nvpnmgr_'+prefix+'_standard" class="input" value="Standard" checked><label for="nvpnmgr_'+prefix+'_standard">Standard</label><input autocomplete="off" autocapitalize="off" type="radio" name="nvpnmgr_'+prefix+'_type" for="nvpnmgr_'+prefix+'_double" class="input" value="Double"><label for="nvpnmgr_'+prefix+'_double">Double</label><input autocomplete="off" autocapitalize="off" type="radio" name="nvpnmgr_'+prefix+'_type" id="nvpnmgr_'+prefix+'_p2p" class="input" value="P2P"><label for="nvpnmgr_'+prefix+'_p2p">P2P</label></td>';
 	charthtml+='</tr>';
 	
 	/* SCHEDULE ENABLED */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(3);">Scheduled update?</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" onchange="ScheduleOptionsEnableDisable(this)" name="nvpnmgr_'+prefix+'_schenabled" id="nvpnmgr_'+prefix+'_true" class="input" value="true"><label for="nvpnmgr_'+prefix+'_true">Yes</label><input autocomplete="off" autocapitalize="off" type="radio"  onchange="ScheduleOptionsEnableDisable(this)" name="nvpnmgr_'+prefix+'_schenabled" id="nvpnmgr_'+prefix+'_false" class="input" value="false" checked><label for="nvpnmgr_'+prefix+'_false">No</label></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(4);">Scheduled update?</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" onchange="ScheduleOptionsEnableDisable(this)" name="nvpnmgr_'+prefix+'_schenabled" id="nvpnmgr_'+prefix+'_sch_true" class="input" value="true"><label for="nvpnmgr_'+prefix+'_sch_true">Yes</label><input autocomplete="off" autocapitalize="off" type="radio"  onchange="ScheduleOptionsEnableDisable(this)" name="nvpnmgr_'+prefix+'_schenabled" id="nvpnmgr_'+prefix+'_sch_false" class="input" value="false" checked><label for="nvpnmgr_'+prefix+'_sch_false">No</label></td>';
 	charthtml+='</tr>';
 	
 	/* SCHEDULE DAYS */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(4);">Schedule Days</a></td><td class="settingvalue">';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(5);">Schedule Days</a></td><td class="settingvalue">';
 	charthtml+='<input autocomplete="off" autocapitalize="off" type="checkbox" name="nvpnmgr_'+prefix+'_schdays" id="nvpnmgr_'+prefix+'_mon" class="input" value="Mon"><label for="nvpnmgr_'+prefix+'_mon">Mon</label>';
 	charthtml+='<input autocomplete="off" autocapitalize="off" type="checkbox" name="nvpnmgr_'+prefix+'_schdays" id="nvpnmgr_'+prefix+'_tues" class="input" value="Tues"><label for="nvpnmgr_'+prefix+'_tues">Tues</label>';
 	charthtml+='<input autocomplete="off" autocapitalize="off" type="checkbox" name="nvpnmgr_'+prefix+'_schdays" id="nvpnmgr_'+prefix+'_wed" class="input" value="Wed"><label for="nvpnmgr_'+prefix+'_wed">Wed</label>';
@@ -394,12 +434,12 @@ function BuildConfigTable(prefix,title){
 	
 	/* SCHEDULE HOURS */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(5);">Schedule Hours</a></td><td class="settingvalue"><input data-lpignore="true" autocomplete="off" autocapitalize="off" type="text" class="input_32_table" name="nvpnmgr_'+prefix+'_schhours" value="*" onblur="Validate_Schedule(this,\'hours\')" /></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(6);">Schedule Hours</a></td><td class="settingvalue"><input data-lpignore="true" autocomplete="off" autocapitalize="off" type="text" class="input_32_table" name="nvpnmgr_'+prefix+'_schhours" value="*" onblur="Validate_Schedule(this,\'hours\')" /></td>';
 	charthtml+='</tr>';
 	
 	/* SCHEDULE MINS */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(6);">Schedule Minutes</a></td><td class="settingvalue"><input data-lpignore="true" autocomplete="off" autocapitalize="off" type="text" class="input_32_table" name="nvpnmgr_'+prefix+'_schmins" value="*" onblur="Validate_Schedule(this,\'mins\')" /></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(7);">Schedule Minutes</a></td><td class="settingvalue"><input data-lpignore="true" autocomplete="off" autocapitalize="off" type="text" class="input_32_table" name="nvpnmgr_'+prefix+'_schmins" value="*" onblur="Validate_Schedule(this,\'mins\')" /></td>';
 	charthtml+='</tr>';
 	
 	charthtml+='</table>';
