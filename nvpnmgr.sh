@@ -1450,6 +1450,19 @@ case "$1" in
 		if [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME" ]; then
 			Check_Lock
 			Conf_FromSettings
+			for i in 1 2 3 4 5; do
+				if [ "$(grep "vpn""$i""_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
+					ManageVPN "$i"
+					if [ "$(grep "vpn""$i""_schenabled" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
+						ScheduleVPN "$i"
+					elif [ "$(grep "vpn""$i""_schenabled" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+						CancelScheduleVPN "$i"
+					fi
+					UpdateVPNConfig "unattended" "$i"
+				elif [ "$(grep "vpn""$i""_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+					UnmanageVPN "$i"
+				fi
+			done
 			Clear_Lock
 			exit 0
 		elif [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME""checkupdate" ]; then
