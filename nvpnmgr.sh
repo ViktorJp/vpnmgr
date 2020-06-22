@@ -509,10 +509,10 @@ ListVPNClients(){
 		else
 			CONNECTSTATE="Inactive"
 		fi
-		if ! cru l | grep -q "#$SCRIPT_NAME""_VPN""$i#"; then
-			SCHEDULESTATE="Unscheduled"
-		else
+		if [ "$(grep "vpn""$i""_schenabled" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
 			SCHEDULESTATE="Scheduled"
+		elif [ "$(grep "vpn""$i""_schenabled" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+			SCHEDULESTATE="Unscheduled"
 		fi
 		printf "%s.    %s (%s, %s and %s)\\n" "$i" "$VPN_CLIENTDESC" "$MANAGEDSTATE" "$CONNECTSTATE" "$SCHEDULESTATE"
 	done
