@@ -571,11 +571,6 @@ UpdateVPNConfig(){
 			nvram set vpn_client"$VPN_NO"_enforce="1"
 		fi
 		
-		if [ -z "$(nvram get vpn_client"$VPN_NO"_addr)" ]; then
-			nvram set vpn_client"$VPN_NO"_adns="3"
-			nvram set vpn_client"$VPN_NO"_enforce="1"
-		fi
-		
 		nvram set vpn_client"$VPN_NO"_addr="$OVPN_IP"
 		nvram set vpn_client"$VPN_NO"_port="$OVPN_PORT"
 		if [ "$VPN_PROT_SHORT" = "TCP" ]; then
