@@ -37,6 +37,8 @@ GLOBAL_VPN_TYPE=""
 GLOBAL_CRU_DAYNUMBERS=""
 GLOBAL_CRU_HOURS=""
 GLOBAL_CRU_MINS=""
+GLOBAL_COUNTRY_NAME=""
+GLOBAL_COUNTRY_ID=""
 ### End of script variables ###
 
 ### Start of output format variables ###
@@ -449,14 +451,22 @@ getRecommended(){
 	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/recommendations?filters\[servers_groups\]\[identifier\]=$1&filters\[servers_technologies\]\[identifier\]=$2&limit=1"
 }
 
+getCountries(){
+	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/countries?limit=16384" | jq -r '.[] | .name'
+}
+
+getCountryID(){
+	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/countries?limit=16384" | jq -r '.[] | select(.name=="'"$1"'") | .id'
+}
+
 # use to create content of OVPN_IP variable
 getIP(){
-	echo "$1" | jq -e '.[].station // empty' | tr -d '"'
+	echo "$1" | jq -r -e '.[].station // empty'
 }
 
 # use to create content of OVPN_HOSTNAME variable
 getHostname(){
-	echo "$1" | jq -e '.[].hostname // empty' | tr -d '"'
+	echo "$1" | jq -r -e '.[].hostname // empty'
 }
 
 # use to create content of OVPN_DETAIL variable
@@ -836,6 +846,9 @@ SetVPNParameters(){
 	vpnnum=""
 	vpnprot=""
 	vpntype=""
+	choosecountry=""
+	countryname=""
+	countryid=""
 	
 	while true; do
 		printf "\\n\\e[1mPlease enter the VPN client number (1-5):\\e[0m    "
@@ -924,9 +937,66 @@ SetVPNParameters(){
 	fi
 	
 	if [ "$exitmenu" != "exit" ]; then
+		while true; do
+			printf "\\n\\e[1mWould you like to select a country (y/n)?\\e[0m    "
+			read -r "country_select"
+			
+			if [ "$country_select" = "e" ]; then
+				exitmenu="exit"
+				break
+			elif [ "$country_select" = "n" ] || [ "$country_select" = "N" ]; then
+				choosecountry="false"
+				break
+			elif [ "$country_select" = "y" ] || [ "$country_select" = "Y" ]; then
+				choosecountry="true"
+				break
+			else
+				printf "\\n\\e[31mPlease enter y or n\\e[0m\\n"
+			fi
+		done
+	fi
+	
+	if [ "$choosecountry" = "true" ]; then
+		LISTCOUNTRIES="$(getCountries)"
+		COUNTCOUNTRIES="$(echo "$LISTCOUNTRIES" | wc -l)"
+		while true; do
+			printf "\\n\\e[1mPlease select a country:\\e[0m\\n"
+			COUNTER="1"
+			#shellcheck disable=SC2039
+			IFS=$'\n'
+			for COUNTRY in $LISTCOUNTRIES; do
+				printf "    %s. %s\\n" "$COUNTER" "$COUNTRY"
+				COUNTER=$((COUNTER+1))
+			done
+			unset IFS
+			
+			printf "Choose an option:    "
+			read -r "country_choice"
+			
+			if [ "$country_choice" = "e" ]; then
+				exitmenu="exit"
+				break
+			elif ! Validate_Number "" "$country_choice" "silent"; then
+				printf "\\n\\e[31mPlease enter a valid number (1-$COUNTCOUNTRIES)\\e[0m\\n"
+			else
+				if [ "$country_choice" -lt 1 ] || [ "$country_choice" -gt "$COUNTCOUNTRIES" ]; then
+					printf "\\n\\e[31mPlease enter a number between 1 and $COUNTCOUNTRIES\\e[0m\\n"
+				else
+					countryname="$(echo "$LISTCOUNTRIES" | sed -n "$country_choice"p)"
+					countryid="$(getCountryID "$countryname")"
+					printf "\\n"
+					break
+				fi
+			fi
+		done
+	fi
+	
+	if [ "$exitmenu" != "exit" ]; then
 		GLOBAL_VPN_NO="$vpnnum"
 		GLOBAL_VPN_PROT="$vpnprot"
 		GLOBAL_VPN_TYPE="$vpntype"
+		GLOBAL_COUNTRY_NAME="$countryname"
+		GLOBAL_COUNTRY_ID="$countryid"
 		return 0
 	else
 		return 1
@@ -1256,6 +1326,8 @@ Menu_UpdateVPN(){
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_managed.*$/vpn'"$GLOBAL_VPN_NO"'_managed=true/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_protocol.*$/vpn'"$GLOBAL_VPN_NO"'_protocol='"$VPN_PROT_SHORT"'/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_type.*$/vpn'"$GLOBAL_VPN_NO"'_type='"$VPN_TYPE_SHORT"'/' "$SCRIPT_CONF"
+		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_countryname.*$/vpn'"$GLOBAL_VPN_NO"'_countryname='"$GLOBAL_COUNTRY_NAME"'/' "$SCRIPT_CONF"
+		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_countryid.*$/vpn'"$GLOBAL_VPN_NO"'_countryid='"$GLOBAL_COUNTRY_ID"'/' "$SCRIPT_CONF"
 		UpdateVPNConfig "$GLOBAL_VPN_NO"
 	else
 		printf "\\n"
