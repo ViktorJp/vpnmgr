@@ -39,6 +39,8 @@ GLOBAL_CRU_HOURS=""
 GLOBAL_CRU_MINS=""
 GLOBAL_COUNTRY_NAME=""
 GLOBAL_COUNTRY_ID=""
+GLOBAL_CITY_NAME=""
+GLOBAL_CTIY_ID=""
 ### End of script variables ###
 
 ### Start of output format variables ###
@@ -864,6 +866,7 @@ SetVPNParameters(){
 	vpntype=""
 	countrydata=""
 	choosecountry=""
+	choosecity=""
 	countryname=""
 	countryid="0"
 	cityname=""
@@ -1009,6 +1012,67 @@ SetVPNParameters(){
 				fi
 			fi
 		done
+	
+		if [ "$exitmenu" != "exit" ]; then
+			citycount="$(getCityCount "$countrydata" "$countryname")"
+			if [ "$citycount" -eq "1" ]; then
+				cityname="$(getCityNames "$countrydata" "$countryname")"
+				cityid="$(getCityID "$countrydata" "$countryname" "$cityname")"
+			elif [ "$citycount" -gt "1" ]; then
+				while true; do
+					printf "\\n\\e[1mWould you like to select a city (y/n)?\\e[0m    "
+					read -r "city_select"
+					
+					if [ "$city_select" = "e" ]; then
+						exitmenu="exit"
+						break
+					elif [ "$city_select" = "n" ] || [ "$city_select" = "N" ]; then
+						choosecity="false"
+						break
+					elif [ "$city_select" = "y" ] || [ "$city_select" = "Y" ]; then
+						choosecity="true"
+						break
+					else
+						printf "\\n\\e[31mPlease enter y or n\\e[0m\\n"
+					fi
+				done
+			fi
+		fi
+		
+		if [ "$choosecity" = "true" ]; then
+			LISTCITIES="$(getCityNames "$countrydata" "$countryname")"
+			COUNTCITIES="$(echo "$LISTCITIES" | wc -l)"
+			while true; do
+				printf "\\n\\e[1mPlease select a city:\\e[0m\\n"
+				COUNTER="1"
+				#shellcheck disable=SC2039
+				IFS=$'\n'
+				for CITY in $LISTCITIES; do
+					printf "    %s. %s\\n" "$COUNTER" "$CITY"
+					COUNTER=$((COUNTER+1))
+				done
+				unset IFS
+				
+				printf "Choose an option:    "
+				read -r "city_choice"
+				
+				if [ "$city_choice" = "e" ]; then
+					exitmenu="exit"
+					break
+				elif ! Validate_Number "" "$city_choice" "silent"; then
+					printf "\\n\\e[31mPlease enter a valid number (1-%s)\\e[0m\\n" "$COUNTCITIES"
+				else
+					if [ "$city_choice" -lt 1 ] || [ "$city_choice" -gt "$COUNTCITIES" ]; then
+						printf "\\n\\e[31mPlease enter a number between 1 and %s\\e[0m\\n" "$COUNTCITIES"
+					else
+						cityname="$(echo "$LISTCITIES" | sed -n "$city_choice"p)"
+						cityid="$(getCityID "$countrydata" "$countryname" "$cityname")"
+						printf "\\n"
+						break
+					fi
+				fi
+			done
+		fi
 	fi
 	
 	if [ "$exitmenu" != "exit" ]; then
@@ -1017,6 +1081,8 @@ SetVPNParameters(){
 		GLOBAL_VPN_TYPE="$vpntype"
 		GLOBAL_COUNTRY_NAME="$countryname"
 		GLOBAL_COUNTRY_ID="$countryid"
+		GLOBAL_CITY_NAME="$cityname"
+		GLOBAL_CTIY_ID="$cityid"
 		return 0
 	else
 		return 1
@@ -1348,6 +1414,8 @@ Menu_UpdateVPN(){
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_type.*$/vpn'"$GLOBAL_VPN_NO"'_type='"$VPN_TYPE_SHORT"'/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_countryname.*$/vpn'"$GLOBAL_VPN_NO"'_countryname='"$GLOBAL_COUNTRY_NAME"'/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_countryid.*$/vpn'"$GLOBAL_VPN_NO"'_countryid='"$GLOBAL_COUNTRY_ID"'/' "$SCRIPT_CONF"
+		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_cityname.*$/vpn'"$GLOBAL_VPN_NO"'_cityname='"$GLOBAL_CITY_NAME"'/' "$SCRIPT_CONF"
+		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_cityid.*$/vpn'"$GLOBAL_VPN_NO"'_cityid='"$GLOBAL_CTIY_ID"'/' "$SCRIPT_CONF"
 		UpdateVPNConfig "$GLOBAL_VPN_NO"
 	else
 		printf "\\n"
