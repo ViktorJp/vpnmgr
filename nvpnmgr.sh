@@ -862,6 +862,7 @@ SetVPNParameters(){
 	vpnnum=""
 	vpnprot=""
 	vpntype=""
+	countrydata=""
 	choosecountry=""
 	countryname=""
 	countryid="0"
@@ -975,7 +976,8 @@ SetVPNParameters(){
 	fi
 	
 	if [ "$choosecountry" = "true" ]; then
-		LISTCOUNTRIES="$(getCountries)"
+		countrydata="$(getCountryData)"
+		LISTCOUNTRIES="$(getCountryNames "$countrydata")"
 		COUNTCOUNTRIES="$(echo "$LISTCOUNTRIES" | wc -l)"
 		while true; do
 			printf "\\n\\e[1mPlease select a country:\\e[0m\\n"
@@ -1001,7 +1003,7 @@ SetVPNParameters(){
 					printf "\\n\\e[31mPlease enter a number between 1 and %s\\e[0m\\n" "$COUNTCOUNTRIES"
 				else
 					countryname="$(echo "$LISTCOUNTRIES" | sed -n "$country_choice"p)"
-					countryid="$(getCountryID "$countryname")"
+					countryid="$(getCountryID "$countrydata" "$countryname")"
 					printf "\\n"
 					break
 				fi
