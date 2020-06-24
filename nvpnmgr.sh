@@ -977,10 +977,10 @@ SetVPNParameters(){
 				exitmenu="exit"
 				break
 			elif ! Validate_Number "" "$country_choice" "silent"; then
-				printf "\\n\\e[31mPlease enter a valid number (1-$COUNTCOUNTRIES)\\e[0m\\n"
+				printf "\\n\\e[31mPlease enter a valid number (1-%s)\\e[0m\\n" "$COUNTCOUNTRIES"
 			else
 				if [ "$country_choice" -lt 1 ] || [ "$country_choice" -gt "$COUNTCOUNTRIES" ]; then
-					printf "\\n\\e[31mPlease enter a number between 1 and $COUNTCOUNTRIES\\e[0m\\n"
+					printf "\\n\\e[31mPlease enter a number between 1 and %s\\e[0m\\n" "$COUNTCOUNTRIES"
 				else
 					countryname="$(echo "$LISTCOUNTRIES" | sed -n "$country_choice"p)"
 					countryid="$(getCountryID "$countryname")"
