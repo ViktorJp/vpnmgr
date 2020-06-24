@@ -451,12 +451,28 @@ getRecommended(){
 	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/recommendations?filters\[servers_groups\]\[identifier\]=$1&filters\[servers_technologies\]\[identifier\]=$2&limit=1"
 }
 
-getCountries(){
-	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/countries?limit=16384" | jq -r '.[] | .name'
+getCountryData(){
+	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/countries?limit=16384" | jq -r '.[]'
+}
+
+getCountryNames(){
+	echo "$1" | jq -r '.name'
 }
 
 getCountryID(){
-	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/countries?limit=16384" | jq -r '.[] | select(.name=="'"$1"'") | .id'
+	echo "$1" | jq -r 'select(.name=="'"$2"'") | .id'
+}
+
+getCityCount(){
+	echo "$1" | jq -r 'select(.name=="'"$2"'") | .cities | length'
+}
+
+getCityNames(){
+	echo "$1" | jq -r 'select(.name=="'"$2"'") | .cities[] | .name'
+}
+
+getCityID(){
+	echo "$1" | jq -r 'select(.name=="'"$2"'") | .cities[] | select(.name=="'"$3"'") | .id'
 }
 
 # use to create content of OVPN_IP variable
