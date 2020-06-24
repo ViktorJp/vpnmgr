@@ -419,8 +419,8 @@ Conf_Exists(){
 			for i in 1 2 3 4 5; do
 				sed -i '/^vpn'"$i"'_schmins=.*/a vpn'"$i"'_cityid=0' "$SCRIPT_CONF"
 				sed -i '/^vpn'"$i"'_schmins=.*/a vpn'"$i"'_countryid=0' "$SCRIPT_CONF"
-				sed -i '/^vpn'"$i"'_schmins=.*/a vpn'"$i"'_cityname=0' "$SCRIPT_CONF"
-				sed -i '/^vpn'"$i"'_schmins=.*/a vpn'"$i"'_countryname=0' "$SCRIPT_CONF"
+				sed -i '/^vpn'"$i"'_schmins=.*/a vpn'"$i"'_cityname=' "$SCRIPT_CONF"
+				sed -i '/^vpn'"$i"'_schmins=.*/a vpn'"$i"'_countryname=' "$SCRIPT_CONF"
 			done
 		fi
 		return 0
@@ -435,8 +435,8 @@ Conf_Exists(){
 				echo "vpn$i""_schdays=*"
 				echo "vpn$i""_schhours=0"
 				echo "vpn$i""_schmins=$i"
-				echo "vpn$i""_countryname=0"
-				echo "vpn$i""_cityname=0"
+				echo "vpn$i""_countryname="
+				echo "vpn$i""_cityname="
 				echo "vpn$i""_countryid=0"
 				echo "vpn$i""_cityid=0"
 				echo "#########################"
@@ -847,8 +847,10 @@ SetVPNParameters(){
 	vpnprot=""
 	vpntype=""
 	choosecountry=""
-	countryname="0"
+	countryname=""
 	countryid="0"
+	cityname=""
+	cityid="0"
 	
 	while true; do
 		printf "\\n\\e[1mPlease enter the VPN client number (1-5):\\e[0m    "
