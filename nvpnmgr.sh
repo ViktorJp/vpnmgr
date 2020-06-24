@@ -847,8 +847,8 @@ SetVPNParameters(){
 	vpnprot=""
 	vpntype=""
 	choosecountry=""
-	countryname=""
-	countryid=""
+	countryname="0"
+	countryid="0"
 	
 	while true; do
 		printf "\\n\\e[1mPlease enter the VPN client number (1-5):\\e[0m    "
