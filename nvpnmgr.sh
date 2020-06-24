@@ -413,6 +413,14 @@ Conf_Exists(){
 		dos2unix "$SCRIPT_CONF"
 		chmod 0644 "$SCRIPT_CONF"
 		sed -i -e 's/"//g' "$SCRIPT_CONF"
+		if [ "$(wc -l < "$SCRIPT_CONF")" -eq 45 ]; then
+			for i in 1 2 3 4 5; do
+				sed -i '/^vpn'"$i"'_schmins=.*/a vpn'"$i"'_cityid=0' "$SCRIPT_CONF"
+				sed -i '/^vpn'"$i"'_schmins=.*/a vpn'"$i"'_countryid=0' "$SCRIPT_CONF"
+				sed -i '/^vpn'"$i"'_schmins=.*/a vpn'"$i"'_cityname=0' "$SCRIPT_CONF"
+				sed -i '/^vpn'"$i"'_schmins=.*/a vpn'"$i"'_countryname=0' "$SCRIPT_CONF"
+			done
+		fi
 		return 0
 	else
 		for i in 1 2 3 4 5; do
@@ -425,6 +433,10 @@ Conf_Exists(){
 				echo "vpn$i""_schdays=*"
 				echo "vpn$i""_schhours=0"
 				echo "vpn$i""_schmins=$i"
+				echo "vpn$i""_countryname=0"
+				echo "vpn$i""_cityname=0"
+				echo "vpn$i""_countryid=0"
+				echo "vpn$i""_cityid=0"
 				echo "#########################"
 			} >> "$SCRIPT_CONF"
 		done
