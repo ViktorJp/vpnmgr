@@ -459,7 +459,7 @@ getRecommended(){
 }
 
 getCountryData(){
-	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/countries?limit=16384" | jq -r '.[]'
+	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/countries" | jq -r '.[]'
 }
 
 getCountryNames(){
