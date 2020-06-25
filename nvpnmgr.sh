@@ -448,9 +448,14 @@ Conf_Exists(){
 	fi
 }
 
-# use to create content of vJSON variable
+# use to create content of vJSON variable; $1 VPN type, $2 VPN protocol, $3 country id
 getRecommended(){
-	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/recommendations?filters\[servers_groups\]\[identifier\]=$1&filters\[servers_technologies\]\[identifier\]=$2&limit=1"
+	curlstring="https://api.nordvpn.com/v1/servers/recommendations?filters\[servers_groups\]\[identifier\]=$1&filters\[servers_technologies\]\[identifier\]=$2"
+	if [ "$3" != "0" ]; then
+		curlstring="$curlstring&filters\[country_id\]=$3"
+	fi
+	curlstring="$curlstring&limit=1"
+	/usr/sbin/curl -fsL --retry 3 "$curlstring"
 }
 
 getCountryData(){
@@ -576,9 +581,13 @@ UpdateVPNConfig(){
 	else
 		VPN_TYPE="legacy_""$(echo "$VPN_TYPE_SHORT" | tr "A-Z" "a-z")"
 	fi
-	Print_Output "true" "Retrieving recommended VPN server using NordVPN API" "$PASS"
+	VPN_COUNTRYID="$(grep "vpn""$VPN_NO""_countryid" "$SCRIPT_CONF" | cut -f2 -d"=")"
+	VPN_COUNTRYNAME="$(grep "vpn""$VPN_NO""_countryname" "$SCRIPT_CONF" | cut -f2 -d"=")"
+	[ -z "$VPN_COUNTRYNAME" ] && VPN_COUNTRYNAME="None specified"
+	Print_Output "true" "Retrieving recommended VPN server using NordVPN API with below parameters" "$PASS"
+	Print_Output "true" "Protocol: $VPN_PROT_SHORT - Type: $VPN_TYPE_SHORT - Country: $VPN_COUNTRYNAME" "$PASS"
 	
-	vJSON="$(getRecommended "$VPN_TYPE" "$VPN_PROT")"
+	vJSON="$(getRecommended "$VPN_TYPE" "$VPN_PROT" "$VPN_COUNTRYID")"
 	[ -z "$vJSON" ] && Print_Output "true" "Error contacting NordVPN API" "$ERR" && return 1
 	OVPN_IP="$(getIP "$vJSON")"
 	[ -z "$OVPN_IP" ] && Print_Output "true" "Could not determine IP for recommended VPN server" "$ERR" && return 1
