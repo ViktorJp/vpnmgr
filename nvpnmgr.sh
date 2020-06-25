@@ -458,6 +458,10 @@ getRecommendedServers(){
 	/usr/sbin/curl -fsL --retry 3 "$curlstring" | jq -r -e '.[] // empty'
 }
 
+getServersforCity(){
+	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/recommendations?filters\[servers_groups\]\[identifier\]=$1&filters\[servers_technologies\]\[identifier\]=$2&filters\[country_id\]=$3&limit=2500" | jq -r -e ' [ .[] | select(.locations[].country.city.id=='"$4"')][0] // empty'
+}
+
 getCountryData(){
 	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/countries" | jq -r -e '.[] // empty'
 }
@@ -559,7 +563,12 @@ ListVPNClients(){
 		elif [ "$(grep "vpn""$i""_schenabled" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
 			SCHEDULESTATE="Unscheduled"
 		fi
+		COUNTRYNAME="$(grep "vpn""$i""_countryname" "$SCRIPT_CONF" | cut -f2 -d"=")"
+		[ -z "$COUNTRYNAME" ] && COUNTRYNAME="None"
+		CITYNAME="$(grep "vpn""$i""_cityname" "$SCRIPT_CONF" | cut -f2 -d"=")"
+		[ -z "$CITYNAME" ] && CITYNAME="None"
 		printf "%s.    %s (%s, %s and %s)\\n" "$i" "$VPN_CLIENTDESC" "$MANAGEDSTATE" "$CONNECTSTATE" "$SCHEDULESTATE"
+		printf "      Chosen country: %s - Preferred city: %s\\n\\n" "$COUNTRYNAME" "$CITYNAME"
 	done
 	printf "\\n"
 }
@@ -583,11 +592,28 @@ UpdateVPNConfig(){
 	fi
 	VPN_COUNTRYID="$(grep "vpn""$VPN_NO""_countryid" "$SCRIPT_CONF" | cut -f2 -d"=")"
 	VPN_COUNTRYNAME="$(grep "vpn""$VPN_NO""_countryname" "$SCRIPT_CONF" | cut -f2 -d"=")"
-	[ -z "$VPN_COUNTRYNAME" ] && VPN_COUNTRYNAME="None specified"
-	Print_Output "true" "Retrieving recommended VPN server using NordVPN API with below parameters" "$PASS"
-	Print_Output "true" "Protocol: $VPN_PROT_SHORT - Type: $VPN_TYPE_SHORT - Country: $VPN_COUNTRYNAME" "$PASS"
+	VPN_CITYID="$(grep "vpn""$VPN_NO""_cityid" "$SCRIPT_CONF" | cut -f2 -d"=")"
+	VPN_CITYNAME="$(grep "vpn""$VPN_NO""_cityname" "$SCRIPT_CONF" | cut -f2 -d"=")"
+	vJSON=""
 	
-	vJSON="$(getRecommendedServers "$VPN_TYPE" "$VPN_PROT" "$VPN_COUNTRYID")"
+	Print_Output "true" "Retrieving recommended VPN server using NordVPN API with below parameters" "$PASS"
+	if [ "$VPN_COUNTRYID" = "0" ]; then
+		Print_Output "true" "Protocol: $VPN_PROT_SHORT - Type: $VPN_TYPE_SHORT" "$PASS"
+		vJSON="$(getRecommendedServers "$VPN_TYPE" "$VPN_PROT" "$VPN_COUNTRYID")"
+	else
+		if [ "$VPN_CITYID" = "0" ]; then
+			Print_Output "true" "Protocol: $VPN_PROT_SHORT - Type: $VPN_TYPE_SHORT - Country: $VPN_COUNTRYNAME" "$PASS"
+			vJSON="$(getRecommendedServers "$VPN_TYPE" "$VPN_PROT" "$VPN_COUNTRYID")"
+		else
+			Print_Output "true" "Protocol: $VPN_PROT_SHORT - Type: $VPN_TYPE_SHORT - Country: $VPN_COUNTRYNAME - City: $VPN_CITYNAME" "$PASS"
+			vJSON="$(getServersforCity "$VPN_TYPE" "$VPN_PROT" "$VPN_COUNTRYID" "$VPN_CITYID")"
+			if [ -z "$vJSON" ]; then
+				Print_Output "true" "No recommended VPN servers found for $VPN_CITYNAME, removing filter for city" "$WARN"
+				vJSON="$(getRecommendedServers "$VPN_TYPE" "$VPN_PROT" "$VPN_COUNTRYID")"
+			fi
+		fi
+	fi
+	
 	[ -z "$vJSON" ] && Print_Output "true" "Error contacting NordVPN API" "$ERR" && return 1
 	OVPN_IP="$(getIP "$vJSON")"
 	[ -z "$OVPN_IP" ] && Print_Output "true" "Could not determine IP for recommended VPN server" "$ERR" && return 1
