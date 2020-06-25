@@ -1287,12 +1287,13 @@ ScriptHeader(){
 
 MainMenu(){
 	printf "1.    List VPN client configurations\\n\\n"
-	printf "2.    Update a managed VPN client\\n"
-	printf "3.    Enable management for VPN client\\n"
-	printf "4.    Disable management for a VPN client\\n\\n"
-	printf "5.    Update schedule for a VPN client configuration update\\n"
-	printf "6.    Enable a scheduled VPN client configuration update\\n"
-	printf "7.    Delete a scheduled VPN client configuration update\\n\\n"
+	printf "2.    Update configuration for a managed VPN client\\n"
+	printf "3.    Search for new recommended server for a managed VPN client\\n\\n"
+	printf "4.    Enable management for a VPN client\\n"
+	printf "5.    Disable management for a VPN client\\n\\n"
+	printf "6.    Update schedule for a VPN client configuration update\\n"
+	printf "7.    Enable a scheduled VPN client configuration update\\n"
+	printf "8.    Delete a scheduled VPN client configuration update\\n\\n"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Update %s with latest version (force update)\\n\\n" "$SCRIPT_NAME"
 	printf "e.    Exit %s\\n\\n" "$SCRIPT_NAME"
@@ -1321,29 +1322,37 @@ MainMenu(){
 			;;
 			3)
 				printf "\\n"
-				Menu_ManageVPN
+				if Check_Lock "menu"; then
+					Menu_SearchVPN
+				fi
 				PressEnter
 				break
-			;;
+				;;
 			4)
 				printf "\\n"
-				Menu_UnmanageVPN
+				Menu_ManageVPN
 				PressEnter
 				break
 			;;
 			5)
 				printf "\\n"
-				Menu_ScheduleVPN
+				Menu_UnmanageVPN
 				PressEnter
 				break
 			;;
 			6)
 				printf "\\n"
-				Menu_EnableScheduleVPN
+				Menu_ScheduleVPN
 				PressEnter
 				break
 			;;
 			7)
+				printf "\\n"
+				Menu_EnableScheduleVPN
+				PressEnter
+				break
+			;;
+			8)
 				printf "\\n"
 				Menu_CancelScheduleVPN
 				PressEnter
@@ -1430,6 +1439,16 @@ Menu_UpdateVPN(){
 	else
 		printf "\\n"
 		Print_Output "false" "VPN client update cancelled" "$WARN"
+	fi
+	Clear_Lock
+}
+
+Menu_SearchVPN(){
+	if SetVPNClient; then
+		UpdateVPNConfig "unattended" "$GLOBAL_VPN_NO"
+	else
+		printf "\\n"
+		Print_Output "false" "VPN server search cancelled" "$WARN"
 	fi
 	Clear_Lock
 }
