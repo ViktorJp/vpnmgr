@@ -449,47 +449,47 @@ Conf_Exists(){
 }
 
 # use to create content of vJSON variable; $1 VPN type, $2 VPN protocol, $3 country id
-getRecommended(){
+getRecommendedServers(){
 	curlstring="https://api.nordvpn.com/v1/servers/recommendations?filters\[servers_groups\]\[identifier\]=$1&filters\[servers_technologies\]\[identifier\]=$2"
 	if [ "$3" != "0" ]; then
 		curlstring="$curlstring&filters\[country_id\]=$3"
 	fi
 	curlstring="$curlstring&limit=1"
-	/usr/sbin/curl -fsL --retry 3 "$curlstring"
+	/usr/sbin/curl -fsL --retry 3 "$curlstring" | jq -r -e '.[] // empty'
 }
 
 getCountryData(){
-	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/countries" | jq -r '.[]'
+	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/countries" | jq -r -e '.[] // empty'
 }
 
 getCountryNames(){
-	echo "$1" | jq -r '.name'
+	echo "$1" | jq -r -e '.name // empty'
 }
 
 getCountryID(){
-	echo "$1" | jq -r 'select(.name=="'"$2"'") | .id'
+	echo "$1" | jq -r -e 'select(.name=="'"$2"'") | .id // empty'
 }
 
 getCityCount(){
-	echo "$1" | jq -r 'select(.name=="'"$2"'") | .cities | length'
+	echo "$1" | jq -r -e 'select(.name=="'"$2"'") | .cities | length // empty'
 }
 
 getCityNames(){
-	echo "$1" | jq -r 'select(.name=="'"$2"'") | .cities[] | .name'
+	echo "$1" | jq -r -e 'select(.name=="'"$2"'") | .cities[] | .name // empty'
 }
 
 getCityID(){
-	echo "$1" | jq -r 'select(.name=="'"$2"'") | .cities[] | select(.name=="'"$3"'") | .id'
+	echo "$1" | jq -r -e 'select(.name=="'"$2"'") | .cities[] | select(.name=="'"$3"'") | .id // empty'
 }
 
 # use to create content of OVPN_IP variable
 getIP(){
-	echo "$1" | jq -r -e '.[].station // empty'
+	echo "$1" | jq -r -e '.station // empty'
 }
 
 # use to create content of OVPN_HOSTNAME variable
 getHostname(){
-	echo "$1" | jq -r -e '.[].hostname // empty'
+	echo "$1" | jq -r -e '.hostname // empty'
 }
 
 # use to create content of OVPN_DETAIL variable
@@ -587,7 +587,7 @@ UpdateVPNConfig(){
 	Print_Output "true" "Retrieving recommended VPN server using NordVPN API with below parameters" "$PASS"
 	Print_Output "true" "Protocol: $VPN_PROT_SHORT - Type: $VPN_TYPE_SHORT - Country: $VPN_COUNTRYNAME" "$PASS"
 	
-	vJSON="$(getRecommended "$VPN_TYPE" "$VPN_PROT" "$VPN_COUNTRYID")"
+	vJSON="$(getRecommendedServers "$VPN_TYPE" "$VPN_PROT" "$VPN_COUNTRYID")"
 	[ -z "$vJSON" ] && Print_Output "true" "Error contacting NordVPN API" "$ERR" && return 1
 	OVPN_IP="$(getIP "$vJSON")"
 	[ -z "$OVPN_IP" ] && Print_Output "true" "Could not determine IP for recommended VPN server" "$ERR" && return 1
@@ -989,6 +989,7 @@ SetVPNParameters(){
 	
 	if [ "$choosecountry" = "true" ]; then
 		countrydata="$(getCountryData)"
+		[ -z "$countrydata" ] && Print_Output "true" "Error retrieving list of countries from NordVPN" "$ERR" && return 1
 		LISTCOUNTRIES="$(getCountryNames "$countrydata")"
 		COUNTCOUNTRIES="$(echo "$LISTCOUNTRIES" | wc -l)"
 		while true; do
