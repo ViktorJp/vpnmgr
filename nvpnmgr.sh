@@ -423,7 +423,7 @@ Create_Symlinks(){
 	rm -rf "${SCRIPT_WEB_DIR:?}/"* 2>/dev/null
 	
 	ln -s "$SCRIPT_DIR/config"  "$SCRIPT_WEB_DIR/config.htm" 2>/dev/null
-	ln -s "$SCRIPT_DIR/nvpncountrydata"  "$SCRIPT_WEB_DIR/nvpncountrydata.htm" 2>/dev/null
+	ln -s "$SCRIPT_DIR/nvpncountrydata"  "$SCRIPT_WEB_DIR/nvpncountrydata.json" 2>/dev/null
 	
 	if [ ! -d "$SHARED_WEB_DIR" ]; then
 		ln -s "$SHARED_DIR" "$SHARED_WEB_DIR" 2>/dev/null
@@ -473,7 +473,7 @@ getRecommendedServers(){
 		curlstring="$curlstring&filters\[country_id\]=$3"
 	fi
 	curlstring="$curlstring&limit=1"
-	/usr/sbin/curl -fsL --retry 3 "$curlstring" | jq -r -e '.[] // empty'
+	/usr/sbin/curl -fsL --retry 3 "$curlstring" | jq -r
 }
 
 getServersforCity(){
@@ -482,7 +482,7 @@ getServersforCity(){
 
 getCountryData(){
 	Print_Output "true" "Refreshing NordVPN country data..." "$PASS"
-	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/countries" | jq -r -e '.[] // empty' > /tmp/nvpncountrydata
+	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/countries" | jq -r > /tmp/nvpncountrydata
 	countrydata="$(cat /tmp/nvpncountrydata)"
 	[ -z "$countrydata" ] && Print_Output "true" "Error, country data from NordVPN failed to download" "$ERR" && return 1
 	if [ -f "$SCRIPT_DIR/nvpncountrydata" ]; then
@@ -499,23 +499,23 @@ getCountryData(){
 }
 
 getCountryNames(){
-	echo "$1" | jq -r -e '.name // empty'
+	echo "$1" | jq -r -e '.[] | .name // empty'
 }
 
 getCountryID(){
-	echo "$1" | jq -r -e 'select(.name=="'"$2"'") | .id // empty'
+	echo "$1" | jq -r -e '.[] | select(.name=="'"$2"'") | .id // empty'
 }
 
 getCityCount(){
-	echo "$1" | jq -r -e 'select(.name=="'"$2"'") | .cities | length // empty'
+	echo "$1" | jq -r -e '.[] | select(.name=="'"$2"'") | .cities | length // empty'
 }
 
 getCityNames(){
-	echo "$1" | jq -r -e 'select(.name=="'"$2"'") | .cities[] | .name // empty'
+	echo "$1" | jq -r -e '.[] | select(.name=="'"$2"'") | .cities[] | .name // empty'
 }
 
 getCityID(){
-	echo "$1" | jq -r -e 'select(.name=="'"$2"'") | .cities[] | select(.name=="'"$3"'") | .id // empty'
+	echo "$1" | jq -r -e '.[] | select(.name=="'"$2"'") | .cities[] | select(.name=="'"$3"'") | .id // empty'
 }
 
 # use to create content of OVPN_IP variable
