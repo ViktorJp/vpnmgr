@@ -742,7 +742,7 @@ explicit-exit-notify 3"
 		echo "$CLIENT_CA" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_ca
 		echo "$CRT_CLIENT_STATIC" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_static
 		
-		if [ "$CONNECTSTATE" = "2" ]; then
+		if nvram get vpn_clientx_eas | grep -q "$VPN_NO"; then
 			service stop_vpnclient"$VPN_NO" >/dev/null 2>&1
 			sleep 3
 			service start_vpnclient"$VPN_NO" >/dev/null 2>&1
