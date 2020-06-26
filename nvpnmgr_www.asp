@@ -302,7 +302,7 @@ function get_conf_file(){
 				for (var vpnno = 1; vpnno < 6; vpnno++){
 					$j("#table_buttons").before(BuildConfigTable("vpn"+vpnno,"VPN Client "+vpnno));
 				}
-				for (var i = 0; i < 35; i++) {
+				for (var i = 0; i < 55; i++) {
 					if(window["nvpnmgr_settings"][i][0].indexOf("schdays") == -1){
 						eval("document.form.nvpnmgr_"+window["nvpnmgr_settings"][i][0]).value = window["nvpnmgr_settings"][i][1];
 						if(window["nvpnmgr_settings"][i][0].indexOf("managed") != -1){
