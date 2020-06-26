@@ -304,6 +304,9 @@ function get_conf_file(){
 				}
 				for (var i = 0; i < 55; i++) {
 					if(window["nvpnmgr_settings"][i][0].indexOf("schdays") == -1){
+						if(window["nvpnmgr_settings"][i][0].indexOf("country") != -1 || window["nvpnmgr_settings"][i][0].indexOf("city") != -1){
+							continue;
+						}
 						eval("document.form.nvpnmgr_"+window["nvpnmgr_settings"][i][0]).value = window["nvpnmgr_settings"][i][1];
 						if(window["nvpnmgr_settings"][i][0].indexOf("managed") != -1){
 							OptionsEnableDisable($j("#nvpnmgr_"+window["nvpnmgr_settings"][i][0].replace("_managed","")+"_man_"+window["nvpnmgr_settings"][i][1])[0]);
