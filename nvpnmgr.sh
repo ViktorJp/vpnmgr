@@ -306,6 +306,23 @@ Auto_ServiceEvent(){
 	esac
 }
 
+Auto_Cron(){
+	case $1 in
+		create)
+			STARTUPLINECOUNT=$(cru l | grep -c "$SCRIPT_NAME""_countrydata")
+			if [ "$STARTUPLINECOUNT" -eq 0 ]; then
+				cru a "$SCRIPT_NAME""_countrydata" "0 0 * * * /jffs/scripts/$SCRIPT_NAME getcountrydata"
+			fi
+		;;
+		delete)
+			STARTUPLINECOUNT=$(cru l | grep -c "$SCRIPT_NAME""_countrydata")
+			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
+				cru d "$SCRIPT_NAME""_countrydata"
+			fi
+		;;
+	esac
+}
+
 Download_File(){
 	/usr/sbin/curl -fsL --retry 3 "$1" -o "$2"
 }
@@ -406,6 +423,7 @@ Create_Symlinks(){
 	rm -rf "${SCRIPT_WEB_DIR:?}/"* 2>/dev/null
 	
 	ln -s "$SCRIPT_DIR/config"  "$SCRIPT_WEB_DIR/config.htm" 2>/dev/null
+	ln -s "$SCRIPT_DIR/nvpncountrydata"  "$SCRIPT_WEB_DIR/nvpncountrydata.htm" 2>/dev/null
 	
 	if [ ! -d "$SHARED_WEB_DIR" ]; then
 		ln -s "$SHARED_DIR" "$SHARED_WEB_DIR" 2>/dev/null
@@ -463,7 +481,21 @@ getServersforCity(){
 }
 
 getCountryData(){
-	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/countries" | jq -r -e '.[] // empty'
+	Print_Output "true" "Refreshing NordVPN country data..." "$PASS"
+	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/countries" | jq -r -e '.[] // empty' > /tmp/nvpncountrydata
+	countrydata="$(cat /tmp/nvpncountrydata)"
+	[ -z "$countrydata" ] && Print_Output "true" "Error, country data from NordVPN failed to download" "$ERR" && return 1
+	if [ -f "$SCRIPT_DIR/nvpncountrydata" ]; then
+		if ! diff -q /tmp/nvpncountrydata "$SCRIPT_DIR/nvpncountrydata" >/dev/null 2>&1; then
+			mv /tmp/nvpncountrydata "$SCRIPT_DIR/nvpncountrydata"
+			Print_Output "true" "Changes detected in NordVPN country data found, updating now" "$PASS"
+		else
+			Print_Output "true" "No changes in NordVPN country data" "$WARN"
+		fi
+	else
+		mv /tmp/nvpncountrydata "$SCRIPT_DIR/nvpncountrydata"
+		Print_Output "true" "No previous NordVPN country data found, updating now" "$PASS"
+	fi
 }
 
 getCountryNames(){
@@ -1014,8 +1046,11 @@ SetVPNParameters(){
 	fi
 	
 	if [ "$choosecountry" = "true" ]; then
-		countrydata="$(getCountryData)"
-		[ -z "$countrydata" ] && Print_Output "true" "Error retrieving list of countries from NordVPN" "$ERR" && return 1
+		if [ ! -f "$SCRIPT_DIR/nvpncountrydata" ]; then
+			getCountryData
+		fi
+		countrydata="$(cat "$SCRIPT_DIR/nvpncountrydata")"
+		[ -z "$countrydata" ] && Print_Output "true" "Error, country data from NordVPN is missing" "$ERR" && return 1
 		LISTCOUNTRIES="$(getCountryNames "$countrydata")"
 		COUNTCOUNTRIES="$(echo "$LISTCOUNTRIES" | wc -l)"
 		while true; do
@@ -1597,11 +1632,14 @@ Menu_Install(){
 	Create_Dirs
 	Conf_Exists
 	Create_Symlinks
+	Auto_Cron create 2>/dev/null
 	Auto_Startup create 2>/dev/null
 	Auto_ServiceEvent create 2>/dev/null
 	
 	Update_File "nvpnmgr_www.asp"
 	Update_File "shared-jy.tar.gz"
+	
+	getCountryData
 	
 	Shortcut_nvpnmgr create
 	Clear_Lock
@@ -1612,6 +1650,7 @@ Menu_Startup(){
 	Conf_Exists
 	Set_Version_Custom_Settings "local"
 	Create_Symlinks
+	Auto_Cron create 2>/dev/null
 	Auto_Startup create 2>/dev/null
 	Auto_ServiceEvent create 2>/dev/null
 	Shortcut_nvpnmgr create
@@ -1632,6 +1671,7 @@ Menu_ForceUpdate(){
 Menu_Uninstall(){
 	Print_Output "true" "Removing $SCRIPT_NAME..." "$PASS"
 	
+	Auto_Cron delete 2>/dev/null
 	Auto_Startup delete 2>/dev/null
 	Auto_ServiceEvent delete 2>/dev/null
 	
@@ -1708,6 +1748,7 @@ if [ -z "$1" ]; then
 	Conf_Exists
 	Set_Version_Custom_Settings "local"
 	Create_Symlinks
+	Auto_Cron create 2>/dev/null
 	Auto_Startup create 2>/dev/null
 	Auto_ServiceEvent create 2>/dev/null
 	Shortcut_nvpnmgr create
@@ -1724,6 +1765,10 @@ case "$1" in
 	;;
 	updatevpn)
 		UpdateVPNConfig "unattended" "$2"
+		exit 0
+	;;
+	getcountrydata)
+		getCountryData
 		exit 0
 	;;
 	startup)
