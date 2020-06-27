@@ -423,7 +423,7 @@ Create_Symlinks(){
 	rm -rf "${SCRIPT_WEB_DIR:?}/"* 2>/dev/null
 	
 	ln -s "$SCRIPT_DIR/config"  "$SCRIPT_WEB_DIR/config.htm" 2>/dev/null
-	ln -s "$SCRIPT_DIR/nvpncountrydata"  "$SCRIPT_WEB_DIR/nvpncountrydata.htm" 2>/dev/null
+	ln -s "$SCRIPT_DIR/nvpncountrydata" "$SCRIPT_WEB_DIR/nvpncountrydata.htm" 2>/dev/null
 	
 	if [ ! -d "$SHARED_WEB_DIR" ]; then
 		ln -s "$SHARED_DIR" "$SHARED_WEB_DIR" 2>/dev/null
@@ -489,11 +489,13 @@ getCountryData(){
 		if ! diff -q /tmp/nvpncountrydata "$SCRIPT_DIR/nvpncountrydata" >/dev/null 2>&1; then
 			mv /tmp/nvpncountrydata "$SCRIPT_DIR/nvpncountrydata"
 			Print_Output "true" "Changes detected in NordVPN country data found, updating now" "$PASS"
+			Create_Symlinks
 		else
 			Print_Output "true" "No changes in NordVPN country data" "$WARN"
 		fi
 	else
 		mv /tmp/nvpncountrydata "$SCRIPT_DIR/nvpncountrydata"
+		Create_Symlinks
 		Print_Output "true" "No previous NordVPN country data found, updating now" "$PASS"
 	fi
 }
@@ -1754,7 +1756,6 @@ if [ -z "$1" ]; then
 	Create_Dirs
 	Conf_Exists
 	Set_Version_Custom_Settings "local"
-	Create_Symlinks
 	Auto_Cron create 2>/dev/null
 	Auto_Startup create 2>/dev/null
 	Auto_ServiceEvent create 2>/dev/null
@@ -1762,6 +1763,7 @@ if [ -z "$1" ]; then
 	if [ ! -f "$SCRIPT_DIR/nvpncountrydata" ]; then
 		getCountryData
 	fi
+	Create_Symlinks
 	ScriptHeader
 	MainMenu
 	exit 0
