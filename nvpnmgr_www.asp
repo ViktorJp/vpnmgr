@@ -130,7 +130,7 @@ thead.collapsible-jquery {
 <script language="JavaScript" type="text/javascript" src="/validator.js"></script>
 <script language="JavaScript" type="text/javascript" src="/base64.js"></script>
 <script>
-var $j=jQuery.noConflict();
+var $j = jQuery.noConflict();
 var custom_settings;
 var daysofweek = ["Mon","Tues","Wed","Thurs","Fri","Sat","Sun"];
 
@@ -146,7 +146,7 @@ function LoadCustomSettings(){
 }
 
 function SettingHint(hintid) {
-	var tag_name= document.getElementsByTagName('a');
+	var tag_name = document.getElementsByTagName('a');
 	for (var i=0;i<tag_name.length;i++){
 		tag_name[i].onmouseout=nd;
 	}
@@ -272,8 +272,8 @@ function Validate_Schedule(forminput,hoursmins){
 function Validate_All(){
 	var validationfailed = false;
 	for(var i=1; i < 6; i++){
-		if(! Validate_Schedule(eval("document.form.nvpnmgr_vpn"+i+"_schhours"),"hours")){validationfailed=true;}
-		if(! Validate_Schedule(eval("document.form.nvpnmgr_vpn"+i+"_schmins"),"mins")){validationfailed=true;}
+		if(! Validate_Schedule(eval("document.form.nvpnmgr_vpn"+i+"_schhours"),"hours")) validationfailed=true;
+		if(! Validate_Schedule(eval("document.form.nvpnmgr_vpn"+i+"_schmins"),"mins")) validationfailed=true;
 	}
 	if(validationfailed){
 		alert("Validation for some fields failed. Please correct invalid values and try again.");
@@ -320,17 +320,11 @@ function get_conf_file(){
 				for (var i = 0; i < 55; i++) {
 					let settingname = window["nvpnmgr_settings"][i][0];
 					let settingvalue = window["nvpnmgr_settings"][i][1];
-					if(settingname.indexOf("cityid") != -1 || settingname.indexOf("countryid") != -1){
-						continue;
-					}
+					if(settingname.indexOf("cityid") != -1 || settingname.indexOf("countryid") != -1) continue;
 					if(settingname.indexOf("schdays") == -1){
 						eval("document.form.nvpnmgr_"+settingname).value = settingvalue;
-						if(settingname.indexOf("managed") != -1){
-							OptionsEnableDisable($j("#nvpnmgr_"+settingname.replace("_managed","")+"_man_"+settingvalue)[0]);
-						}
-						if(settingname.indexOf("schenabled") != -1){
-							ScheduleOptionsEnableDisable($j("#nvpnmgr_"+settingname.replace("_schenabled","")+"_sch_"+settingvalue)[0]);
-						}
+						if(settingname.indexOf("managed") != -1) OptionsEnableDisable($j("#nvpnmgr_"+settingname.replace("_managed","")+"_man_"+settingvalue)[0]);
+						if(settingname.indexOf("schenabled") != -1) ScheduleOptionsEnableDisable($j("#nvpnmgr_"+settingname.replace("_schenabled","")+"_sch_"+settingvalue)[0]);
 						if(settingname.indexOf("cityname") != -1){
 							let dropdown = $j('#nvpnmgr_'+settingname);
 							dropdown.empty();
