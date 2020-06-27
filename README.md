@@ -11,6 +11,13 @@ Manage and update VPN Client configurations for NordVPN on AsusWRT-Merlin.
 
 A NordVPN account is required to establish a connection.
 
+### Supporting development
+Love the script and want to support future development? Any and all donations gratefully received!
+
+[**PayPal donation**](https://paypal.me/jackyaz21)
+
+[**Buy me a coffee**](https://www.buymeacoffee.com/jackyaz)
+
 ![Menu UI](https://puu.sh/G14da/d3fab73e0b.png)
 
 ![Web UI](https://puu.sh/G14cN/92246932d1.png)
