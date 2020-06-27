@@ -26,7 +26,9 @@ Using your preferred SSH client/terminal, copy and paste the following command, 
 ```
 
 ## Usage
-To launch the nvpnmgr menu after installation, use:
+nvpnmgr adds a tab to the WebUI in the VPN area.
+
+Otherwise, to launch the nvpnmgr menu, use:
 ```sh
 nvpnmgr
 ```
