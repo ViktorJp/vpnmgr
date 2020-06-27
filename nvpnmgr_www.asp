@@ -344,6 +344,7 @@ function get_conf_file(){
 									$j.each(entry.cities, function (key2, entry2) {
 										dropdown.append($j('<option></option>').attr('value', entry2.name).text(entry2.name));
 									});
+									eval("document.form.nvpnmgr_"+settingname).value = settingvalue;
 									return false;
 								}
 							});
