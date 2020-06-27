@@ -1355,6 +1355,7 @@ MainMenu(){
 	printf "6.    Update schedule for a VPN client configuration update\\n"
 	printf "7.    Enable a scheduled VPN client configuration update\\n"
 	printf "8.    Delete a scheduled VPN client configuration update\\n\\n"
+	printf "r.    Refresh country data\\n\\n"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Update %s with latest version (force update)\\n\\n" "$SCRIPT_NAME"
 	printf "e.    Exit %s\\n\\n" "$SCRIPT_NAME"
@@ -1416,6 +1417,12 @@ MainMenu(){
 			8)
 				printf "\\n"
 				Menu_CancelScheduleVPN
+				PressEnter
+				break
+			;;
+			r)
+				printf "\\n"
+				getCountryData
 				PressEnter
 				break
 			;;
