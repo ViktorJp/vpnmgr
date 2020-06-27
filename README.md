@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.com/jackyaz/nvpnmgr.svg?branch=master)](https://travis-ci.com/jackyaz/nvpnmgr)
 
 ## v0.9.9
-### Updated on 2020-06-22
+### Updated on 2020-06-27
 ## About
 Originally developed by [@h0me5k1n](https://github.com/h0me5k1n/asusmerlin-nvpnmgr)
 
@@ -11,9 +11,9 @@ Automatically update VPN Client configuration to recommended NordVPN server on A
 
 A NordVPN account is required to establish a connection.
 
-![Menu UI](https://puu.sh/FZhMO/6ce55ca358.png)
+![Menu UI](https://puu.sh/G14da/d3fab73e0b.png)
 
-![Web UI](https://puu.sh/FZhMt/2b17558b53.png)
+![Web UI](https://puu.sh/G14cN/92246932d1.png)
 
 ## Supported firmware versions
 You must be running firmware Merlin 384.15/384.13_4 or Fork 43E5 (or later) [Asuswrt-Merlin](https://asuswrt.lostrealm.ca/)
