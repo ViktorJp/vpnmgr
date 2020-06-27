@@ -130,7 +130,7 @@ thead.collapsible-jquery {
 <script language="JavaScript" type="text/javascript" src="/validator.js"></script>
 <script language="JavaScript" type="text/javascript" src="/base64.js"></script>
 <script>
-var $j=jQuery.noConflict();
+var $j = jQuery.noConflict();
 var custom_settings;
 var daysofweek = ["Mon","Tues","Wed","Thurs","Fri","Sat","Sun"];
 
@@ -146,7 +146,7 @@ function LoadCustomSettings(){
 }
 
 function SettingHint(hintid) {
-	var tag_name= document.getElementsByTagName('a');
+	var tag_name = document.getElementsByTagName('a');
 	for (var i=0;i<tag_name.length;i++){
 		tag_name[i].onmouseout=nd;
 	}
@@ -154,10 +154,12 @@ function SettingHint(hintid) {
 	if(hintid == 1) hinttext="Manage VPN client using nvpnmgr";
 	if(hintid == 2) hinttext="Protocol to use for VPN server";
 	if(hintid == 3) hinttext="Type of NordVPN server to use";
-	if(hintid == 4) hinttext="Automatically update VPN to new NordVPN recommended server";
-	if(hintid == 5) hinttext="Day(s) of week to check for new recommended server";
-	if(hintid == 6) hinttext="Hour(s) of day to check for new recommended server (* for all, 0-23. Comma separate for multiple hours.)";
-	if(hintid == 7) hinttext="Minute(s) of hour to check for new recommended server (* for all, 0-59. Comma separate for multiple minutes.)";
+	if(hintid == 4) hinttext="Country of NordVPN server to use";
+	if(hintid == 5) hinttext="City of NordVPN server to use";
+	if(hintid == 6) hinttext="Automatically update VPN to new NordVPN recommended server";
+	if(hintid == 7) hinttext="Day(s) of week to check for new recommended server";
+	if(hintid == 8) hinttext="Hour(s) of day to check for new recommended server (* for all, 0-23. Comma separate for multiple hours.)";
+	if(hintid == 9) hinttext="Minute(s) of hour to check for new recommended server (* for all, 0-59. Comma separate for multiple minutes.)";
 	return overlib(hinttext, HAUTO, VAUTO);
 }
 
@@ -169,6 +171,8 @@ function OptionsEnableDisable(forminput){
 	if(inputvalue == "false"){
 		$j('input[name='+prefix+'_protocol]').prop("disabled",true);
 		$j('input[name='+prefix+'_type]').prop("disabled",true);
+		$j('select[name='+prefix+'_countryname]').prop("disabled",true);
+		$j('select[name='+prefix+'_cityname]').prop("disabled",true);
 		$j('input[name='+prefix+'_schenabled]').prop("disabled",true);
 		$j('input[name='+prefix+'_schhours]').addClass("disabled");
 		$j('input[name='+prefix+'_schhours]').prop("disabled",true);
@@ -181,6 +185,8 @@ function OptionsEnableDisable(forminput){
 	else if(inputvalue == "true"){
 		$j('input[name='+prefix+'_protocol]').prop("disabled",false);
 		$j('input[name='+prefix+'_type]').prop("disabled",false);
+		$j('select[name='+prefix+'_countryname]').prop("disabled",false);
+		$j('select[name='+prefix+'_cityname]').prop("disabled",false);
 		$j('input[name='+prefix+'_schenabled]').prop("disabled",false);
 		$j('input[name='+prefix+'_schhours]').removeClass("disabled");
 		$j('input[name='+prefix+'_schhours]').prop("disabled",false);
@@ -248,7 +254,7 @@ function Validate_Schedule(forminput,hoursmins){
 				validationfailed = "true";
 			}
 		}
-		else{
+		else {
 			validationfailed = "true";
 		}
 	}
@@ -257,7 +263,7 @@ function Validate_Schedule(forminput,hoursmins){
 		$j(forminput).addClass("invalid");
 		return false;
 	}
-	else{
+	else {
 		$j(forminput).removeClass("invalid");
 		return true;
 	}
@@ -266,14 +272,14 @@ function Validate_Schedule(forminput,hoursmins){
 function Validate_All(){
 	var validationfailed = false;
 	for(var i=1; i < 6; i++){
-		if(! Validate_Schedule(eval("document.form.nvpnmgr_vpn"+i+"_schhours"),"hours")){validationfailed=true;}
-		if(! Validate_Schedule(eval("document.form.nvpnmgr_vpn"+i+"_schmins"),"mins")){validationfailed=true;}
+		if(! Validate_Schedule(eval("document.form.nvpnmgr_vpn"+i+"_schhours"),"hours")) validationfailed=true;
+		if(! Validate_Schedule(eval("document.form.nvpnmgr_vpn"+i+"_schmins"),"mins")) validationfailed=true;
 	}
 	if(validationfailed){
 		alert("Validation for some fields failed. Please correct invalid values and try again.");
 		return false;
 	}
-	else{
+	else {
 		return true;
 	}
 }
@@ -301,32 +307,65 @@ function get_conf_file(){
 				}
 				for (var vpnno = 1; vpnno < 6; vpnno++){
 					$j("#table_buttons").before(BuildConfigTable("vpn"+vpnno,"VPN Client "+vpnno));
+				
+					let dropdown = $j('#nvpnmgr_vpn'+vpnno+'_countryname');
+					dropdown.empty();
+					dropdown.append('<option selected="true"></option>');
+					dropdown.prop('selectedIndex', 0);
+					$j.each(countryjson, function (key, entry) {
+						dropdown.append($j('<option></option>').attr('value', entry.name).text(entry.name));
+					});
 				}
-				for (var i = 0; i < 35; i++) {
-					if(window["nvpnmgr_settings"][i][0].indexOf("schdays") == -1){
-						eval("document.form.nvpnmgr_"+window["nvpnmgr_settings"][i][0]).value = window["nvpnmgr_settings"][i][1];
-						if(window["nvpnmgr_settings"][i][0].indexOf("managed") != -1){
-							OptionsEnableDisable($j("#nvpnmgr_"+window["nvpnmgr_settings"][i][0].replace("_managed","")+"_man_"+window["nvpnmgr_settings"][i][1])[0]);
+				
+				for (var i = 0; i < 55; i++) {
+					let settingname = window["nvpnmgr_settings"][i][0];
+					let settingvalue = window["nvpnmgr_settings"][i][1];
+					if(settingname.indexOf("cityid") != -1 || settingname.indexOf("countryid") != -1) continue;
+					if(settingname.indexOf("schdays") == -1){
+						eval("document.form.nvpnmgr_"+settingname).value = settingvalue;
+						if(settingname.indexOf("managed") != -1) OptionsEnableDisable($j("#nvpnmgr_"+settingname.replace("_managed","")+"_man_"+settingvalue)[0]);
+						if(settingname.indexOf("schenabled") != -1) ScheduleOptionsEnableDisable($j("#nvpnmgr_"+settingname.replace("_schenabled","")+"_sch_"+settingvalue)[0]);
+						if(settingname.indexOf("cityname") != -1){
+							let dropdown = $j('#nvpnmgr_'+settingname);
+							dropdown.empty();
+							dropdown.append('<option selected="true"></option>');
+							dropdown.prop('selectedIndex', 0);
+							$j.each(countryjson, function (key, entry) {
+								if(entry.name != window["nvpnmgr_settings"][i-1][1]){
+									return true;
+								}
+								else {
+									$j.each(entry.cities, function (key2, entry2) {
+										dropdown.append($j('<option></option>').attr('value', entry2.name).text(entry2.name));
+									});
+									eval("document.form.nvpnmgr_"+settingname).value = settingvalue;
+									return false;
+								}
+							});
 						}
-						if(window["nvpnmgr_settings"][i][0].indexOf("schenabled") != -1){
-							ScheduleOptionsEnableDisable($j("#nvpnmgr_"+window["nvpnmgr_settings"][i][0].replace("_schenabled","")+"_sch_"+window["nvpnmgr_settings"][i][1])[0]);
+						if(settingname.indexOf("countryname") != -1){
+							if(settingvalue == ""){
+								$j('#nvpnmgr_'+window["nvpnmgr_settings"][i+1][0]).prop("disabled",true);
+							}
+							else if(settingvalue != ""){
+								$j('#nvpnmgr_'+window["nvpnmgr_settings"][i+1][0]).prop("disabled",false);
+							}
 						}
 					}
 					else {
-						if(window["nvpnmgr_settings"][i][1] == "*"){
+						if(settingvalue == "*"){
 							for (var i2 = 0; i2 < daysofweek.length; i2++) {
-								$j("#nvpnmgr_"+window["nvpnmgr_settings"][i][0].substring(0,nvpnmgr_settings[i][0].indexOf('_'))+"_"+daysofweek[i2].toLowerCase()).prop("checked",true);
+								$j("#nvpnmgr_"+settingname.substring(0,nvpnmgr_settings[i][0].indexOf('_'))+"_"+daysofweek[i2].toLowerCase()).prop("checked",true);
 							}
 						}
 						else {
-							var schdayarray = window["nvpnmgr_settings"][i][1].split(',');
+							var schdayarray = settingvalue.split(',');
 							for (var i2 = 0; i2 < schdayarray.length; i2++) {
-								$j("#nvpnmgr_"+window["nvpnmgr_settings"][i][0].substring(0,nvpnmgr_settings[i][0].indexOf('_'))+"_"+schdayarray[i2].toLowerCase()).prop("checked",true);
+								$j("#nvpnmgr_"+settingname.substring(0,nvpnmgr_settings[i][0].indexOf('_'))+"_"+schdayarray[i2].toLowerCase()).prop("checked",true);
 							}
 						}
 					}
 				}
-				
 				AddEventHandlers();
 			}
 	});
@@ -375,7 +414,7 @@ function initial(){
 	SetCurrentPage();
 	LoadCustomSettings();
 	show_menu();
-	get_conf_file();
+	getCountryData();
 	ScriptUpdateLayout();
 }
 
@@ -415,14 +454,24 @@ function BuildConfigTable(prefix,title){
 	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(3);">Type</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" name="nvpnmgr_'+prefix+'_type" id="nvpnmgr_'+prefix+'_standard" class="input" value="Standard" checked><label for="nvpnmgr_'+prefix+'_standard">Standard</label><input autocomplete="off" autocapitalize="off" type="radio" name="nvpnmgr_'+prefix+'_type" for="nvpnmgr_'+prefix+'_double" class="input" value="Double"><label for="nvpnmgr_'+prefix+'_double">Double</label><input autocomplete="off" autocapitalize="off" type="radio" name="nvpnmgr_'+prefix+'_type" id="nvpnmgr_'+prefix+'_p2p" class="input" value="P2P"><label for="nvpnmgr_'+prefix+'_p2p">P2P</label></td>';
 	charthtml+='</tr>';
 	
+	/* COUNTRY */
+	charthtml+='<tr>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(4);">Country</a></td><td class="settingvalue"><select name="nvpnmgr_'+prefix+'_countryname" id="nvpnmgr_'+prefix+'_countryname" onChange="setCitiesforCountry(this)"></select></td>';
+	charthtml+='</tr>';
+	
+	/* CITY */
+	charthtml+='<tr>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(5);">City</a></td><td class="settingvalue"><select name="nvpnmgr_'+prefix+'_cityname" id="nvpnmgr_'+prefix+'_cityname"></select></td>';
+	charthtml+='</tr>';
+	
 	/* SCHEDULE ENABLED */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(4);">Scheduled update?</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" onchange="ScheduleOptionsEnableDisable(this)" name="nvpnmgr_'+prefix+'_schenabled" id="nvpnmgr_'+prefix+'_sch_true" class="input" value="true"><label for="nvpnmgr_'+prefix+'_sch_true">Yes</label><input autocomplete="off" autocapitalize="off" type="radio"  onchange="ScheduleOptionsEnableDisable(this)" name="nvpnmgr_'+prefix+'_schenabled" id="nvpnmgr_'+prefix+'_sch_false" class="input" value="false" checked><label for="nvpnmgr_'+prefix+'_sch_false">No</label></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(6);">Scheduled update?</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" onchange="ScheduleOptionsEnableDisable(this)" name="nvpnmgr_'+prefix+'_schenabled" id="nvpnmgr_'+prefix+'_sch_true" class="input" value="true"><label for="nvpnmgr_'+prefix+'_sch_true">Yes</label><input autocomplete="off" autocapitalize="off" type="radio"  onchange="ScheduleOptionsEnableDisable(this)" name="nvpnmgr_'+prefix+'_schenabled" id="nvpnmgr_'+prefix+'_sch_false" class="input" value="false" checked><label for="nvpnmgr_'+prefix+'_sch_false">No</label></td>';
 	charthtml+='</tr>';
 	
 	/* SCHEDULE DAYS */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(5);">Schedule Days</a></td><td class="settingvalue">';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(7);">Schedule Days</a></td><td class="settingvalue">';
 	charthtml+='<input autocomplete="off" autocapitalize="off" type="checkbox" name="nvpnmgr_'+prefix+'_schdays" id="nvpnmgr_'+prefix+'_mon" class="input" value="Mon"><label for="nvpnmgr_'+prefix+'_mon">Mon</label>';
 	charthtml+='<input autocomplete="off" autocapitalize="off" type="checkbox" name="nvpnmgr_'+prefix+'_schdays" id="nvpnmgr_'+prefix+'_tues" class="input" value="Tues"><label for="nvpnmgr_'+prefix+'_tues">Tues</label>';
 	charthtml+='<input autocomplete="off" autocapitalize="off" type="checkbox" name="nvpnmgr_'+prefix+'_schdays" id="nvpnmgr_'+prefix+'_wed" class="input" value="Wed"><label for="nvpnmgr_'+prefix+'_wed">Wed</label>';
@@ -434,12 +483,12 @@ function BuildConfigTable(prefix,title){
 	
 	/* SCHEDULE HOURS */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(6);">Schedule Hours</a></td><td class="settingvalue"><input data-lpignore="true" autocomplete="off" autocapitalize="off" type="text" class="input_32_table" name="nvpnmgr_'+prefix+'_schhours" value="*" onblur="Validate_Schedule(this,\'hours\')" /></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(8);">Schedule Hours</a></td><td class="settingvalue"><input data-lpignore="true" autocomplete="off" autocapitalize="off" type="text" class="input_32_table" name="nvpnmgr_'+prefix+'_schhours" value="*" onblur="Validate_Schedule(this,\'hours\')" /></td>';
 	charthtml+='</tr>';
 	
 	/* SCHEDULE MINS */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(7);">Schedule Minutes</a></td><td class="settingvalue"><input data-lpignore="true" autocomplete="off" autocapitalize="off" type="text" class="input_32_table" name="nvpnmgr_'+prefix+'_schmins" value="*" onblur="Validate_Schedule(this,\'mins\')" /></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(9);">Schedule Minutes</a></td><td class="settingvalue"><input data-lpignore="true" autocomplete="off" autocapitalize="off" type="text" class="input_32_table" name="nvpnmgr_'+prefix+'_schmins" value="*" onblur="Validate_Schedule(this,\'mins\')" /></td>';
 	charthtml+='</tr>';
 	
 	charthtml+='</table>';
@@ -462,7 +511,6 @@ function AddEventHandlers(){
 			}
 		})
 	});
-	
 	$j(".collapsible-jquery").each(function(index,element){
 		if(GetCookie($j(this)[0].id,"string") == "collapsed"){
 			$j(this).siblings().toggle(false);
@@ -477,12 +525,12 @@ $j.fn.serializeObject = function(){
 	var o = custom_settings;
 	var a = this.serializeArray();
 	$j.each(a, function() {
-		if (o[this.name] !== undefined && this.name.indexOf("nvpnmgr") != -1 && this.name.indexOf("version") == -1 && this.name.indexOf("schdays") == -1) {
+		if (o[this.name] !== undefined && this.name.indexOf("nvpnmgr") != -1 && this.name.indexOf("version") == -1 && this.name.indexOf("schdays") == -1 && this.name.indexOf("countryid") == -1 && this.name.indexOf("cityid") == -1) {
 			if (!o[this.name].push) {
 				o[this.name] = [o[this.name]];
 			}
 			o[this.name].push(this.value || '');
-		} else if (this.name.indexOf("nvpnmgr") != -1 && this.name.indexOf("version") == -1 && this.name.indexOf("schdays") == -1){
+		} else if (this.name.indexOf("nvpnmgr") != -1 && this.name.indexOf("version") == -1 && this.name.indexOf("schdays") == -1 && this.name.indexOf("countryid") == -1 && this.name.indexOf("cityid") == -1){
 			o[this.name] = this.value || '';
 		}
 	});
@@ -496,6 +544,27 @@ $j.fn.serializeObject = function(){
 			schdaysstring = "*";
 		}
 		o["nvpnmgr_vpn"+i+"_schdays"] = schdaysstring;
+		
+		if($j("select[name='nvpnmgr_vpn"+i+"_countryname']").val() == ""){
+			o["nvpnmgr_vpn"+i+"_countryid"] = 0;
+			o["nvpnmgr_vpn"+i+"_cityid"] = 0;
+		}
+		else {
+			o["nvpnmgr_vpn"+i+"_countryid"] = countryjson.filter(function(item) {
+				return item.name == $j("select[name='nvpnmgr_vpn"+i+"_countryname']").val();
+			}).map(function(d) {return d.id})[0];
+			
+			if($j("select[name='nvpnmgr_vpn"+i+"_cityname']").val() == ""){
+				o["nvpnmgr_vpn"+i+"_cityid"] = 0;
+			}
+			else {
+				o["nvpnmgr_vpn"+i+"_cityid"] = countryjson.filter(function(item) {
+					return item.name == $j("select[name='nvpnmgr_vpn"+i+"_countryname']").val();
+				})[0].cities.filter(function(item) {
+					return item.name == $j("select[name='nvpnmgr_vpn"+i+"_cityname']").val();
+				}).map(function(d) {return d.id})[0];
+			}
+		}
 	}
 	return o;
 };
@@ -512,6 +581,15 @@ function ScriptUpdateLayout(){
 		showhide("nvpnmgr_version_server", true);
 		showhide("btnDoUpdate", true);
 	}
+}
+
+function RefreshCountryData(){
+	var action_script_tmp = "start_nvpnmgrrefreshcountrydata";
+	document.form.action_script.value = action_script_tmp;
+	var restart_time = 10;
+	document.form.action_wait.value = restart_time;
+	showLoading();
+	document.form.submit();
 }
 
 function CheckUpdate(){
@@ -547,6 +625,52 @@ function GetVersionNumber(versiontype)
 	}
 	else {
 		return versionprop;
+	}
+}
+
+var countryjson = [];
+function getCountryData(){
+	$j.ajax({
+		url: '/ext/nvpnmgr/nvpncountrydata.htm',
+		dataType: 'json',
+		error: function(xhr){
+			setTimeout("getCountryData();", 1000);
+		},
+		success: function(data){
+			countryjson = data;
+			get_conf_file();
+		}
+	});
+}
+
+function setCitiesforCountry(forminput){
+	var inputname = forminput.name;
+	var inputvalue = forminput.value;
+	var prefix = inputname.substring(0,inputname.lastIndexOf('_'));
+	
+	let dropdown = $j('select[name='+prefix+'_cityname]');
+	dropdown.empty();
+	dropdown.append('<option selected="true"></option>');
+	dropdown.prop('selectedIndex', 0);
+	$j.each(countryjson, function (key, entry) {
+		if(entry.name != $j('select[name='+prefix+'_countryname]').val()){
+			return true;
+		}
+		else {
+			$j.each(entry.cities, function (key2, entry2) {
+				dropdown.append($j('<option></option>').attr('value', entry2.name).text(entry2.name));
+			});
+			if(dropdown[0].length == 2){
+				dropdown.prop('selectedIndex', 1);
+			}
+			return false;
+		}
+	});
+	if(inputvalue == ""){
+		dropdown.prop("disabled",true);
+	}
+	else if(inputvalue != ""){
+		dropdown.prop("disabled",false);
 	}
 }
 
@@ -606,6 +730,12 @@ function GetVersionNumber(versiontype)
 <input type="button" class="button_gen" onclick="CheckUpdate();" value="Check" id="btnChkUpdate">
 <input type="button" class="button_gen" onclick="DoUpdate();" value="Update" id="btnDoUpdate" style="display:none;">
 &nbsp;&nbsp;&nbsp;
+</td>
+</tr>
+<tr>
+<th width="20%">Country data</th>
+<td>
+<input type="button" class="button_gen" onclick="RefreshCountryData();" value="Refresh" id="btnRefreshCountryData">
 </td>
 </tr>
 </div>
