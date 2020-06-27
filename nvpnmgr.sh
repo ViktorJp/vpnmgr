@@ -1799,6 +1799,9 @@ case "$1" in
 			done
 			Clear_Lock
 			exit 0
+		elif [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME""refreshcountrydata" ]; then
+			getCountryData
+			exit 0
 		elif [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME""checkupdate" ]; then
 			Check_Lock
 			updatecheckresult="$(Update_Check)"

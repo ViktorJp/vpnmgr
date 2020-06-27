@@ -585,6 +585,15 @@ function ScriptUpdateLayout(){
 	}
 }
 
+function RefreshCountryData(){
+	var action_script_tmp = "start_nvpnmgrrefreshcountrydata";
+	document.form.action_script.value = action_script_tmp;
+	var restart_time = 10;
+	document.form.action_wait.value = restart_time;
+	showLoading();
+	document.form.submit();
+}
+
 function CheckUpdate(){
 	var action_script_tmp = "start_nvpnmgrcheckupdate";
 	document.form.action_script.value = action_script_tmp;
@@ -717,6 +726,12 @@ function setCitiesforCountry(forminput){
 <input type="button" class="button_gen" onclick="CheckUpdate();" value="Check" id="btnChkUpdate">
 <input type="button" class="button_gen" onclick="DoUpdate();" value="Update" id="btnDoUpdate" style="display:none;">
 &nbsp;&nbsp;&nbsp;
+</td>
+</tr>
+<tr>
+<th width="20%">Country data</th>
+<td>
+<input type="button" class="button_gen" onclick="RefreshCountryData();" value="Refresh" id="btnRefreshCountryData">
 </td>
 </tr>
 </div>
