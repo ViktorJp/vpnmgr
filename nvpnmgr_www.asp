@@ -512,7 +512,6 @@ function AddEventHandlers(){
 			}
 		})
 	});
-	
 	$j(".collapsible-jquery").each(function(index,element){
 		if(GetCookie($j(this)[0].id,"string") == "collapsed"){
 			$j(this).siblings().toggle(false);
@@ -630,7 +629,7 @@ function GetVersionNumber(versiontype)
 	}
 }
 
-var countryjson;
+var countryjson = [];
 function getCountryData(){
 	var request = async () => {
 		var response = await fetch("/ext/nvpnmgr/nvpncountrydata.htm");
