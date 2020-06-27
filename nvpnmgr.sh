@@ -473,7 +473,7 @@ getRecommendedServers(){
 		curlstring="$curlstring&filters\[country_id\]=$3"
 	fi
 	curlstring="$curlstring&limit=1"
-	/usr/sbin/curl -fsL --retry 3 "$curlstring" | jq -r
+	/usr/sbin/curl -fsL --retry 3 "$curlstring" | jq -r -e '.[] // empty'
 }
 
 getServersforCity(){
