@@ -415,7 +415,6 @@ function initial(){
 	LoadCustomSettings();
 	show_menu();
 	getCountryData();
-	get_conf_file();
 	ScriptUpdateLayout();
 }
 
@@ -631,11 +630,17 @@ function GetVersionNumber(versiontype)
 
 var countryjson = [];
 function getCountryData(){
-	var request = async () => {
-		var response = await fetch("/ext/nvpnmgr/nvpncountrydata.htm");
-		countryjson = await response.json();
-	}
-	request();
+	$j.ajax({
+		url: '/ext/nvpnmgr/nvpncountrydata.htm',
+		dataType: 'json',
+		error: function(xhr){
+			setTimeout("getCountryData();", 1000);
+		},
+		success: function(data){
+			countryjson = data;
+			get_conf_file();
+		}
+	});
 }
 
 function setCitiesforCountry(forminput){
