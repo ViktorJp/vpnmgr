@@ -254,7 +254,7 @@ function Validate_Schedule(forminput,hoursmins){
 				validationfailed = "true";
 			}
 		}
-		else{
+		else {
 			validationfailed = "true";
 		}
 	}
@@ -263,7 +263,7 @@ function Validate_Schedule(forminput,hoursmins){
 		$j(forminput).addClass("invalid");
 		return false;
 	}
-	else{
+	else {
 		$j(forminput).removeClass("invalid");
 		return true;
 	}
@@ -279,7 +279,7 @@ function Validate_All(){
 		alert("Validation for some fields failed. Please correct invalid values and try again.");
 		return false;
 	}
-	else{
+	else {
 		return true;
 	}
 }
@@ -527,12 +527,12 @@ $j.fn.serializeObject = function(){
 	var o = custom_settings;
 	var a = this.serializeArray();
 	$j.each(a, function() {
-		if (o[this.name] !== undefined && this.name.indexOf("nvpnmgr") != -1 && this.name.indexOf("version") == -1 && this.name.indexOf("schdays") == -1) {
+		if (o[this.name] !== undefined && this.name.indexOf("nvpnmgr") != -1 && this.name.indexOf("version") == -1 && this.name.indexOf("schdays") == -1 && this.name.indexOf("countryid") == -1 && this.name.indexOf("cityid") == -1) {
 			if (!o[this.name].push) {
 				o[this.name] = [o[this.name]];
 			}
 			o[this.name].push(this.value || '');
-		} else if (this.name.indexOf("nvpnmgr") != -1 && this.name.indexOf("version") == -1 && this.name.indexOf("schdays") == -1){
+		} else if (this.name.indexOf("nvpnmgr") != -1 && this.name.indexOf("version") == -1 && this.name.indexOf("schdays") == -1 && this.name.indexOf("countryid") == -1 && this.name.indexOf("cityid") == -1){
 			o[this.name] = this.value || '';
 		}
 	});
@@ -546,6 +546,27 @@ $j.fn.serializeObject = function(){
 			schdaysstring = "*";
 		}
 		o["nvpnmgr_vpn"+i+"_schdays"] = schdaysstring;
+		
+		if($j("select[name='nvpnmgr_vpn"+i+"_countryname']").val() == ""){
+			o["nvpnmgr_vpn"+i+"_countryid"] = 0;
+			o["nvpnmgr_vpn"+i+"_cityid"] = 0;
+		}
+		else {
+			o["nvpnmgr_vpn"+i+"_countryid"] = countryjson.filter(function(item) {
+				return item.name == $j("select[name='nvpnmgr_vpn"+i+"_countryname']").val();
+			}).map(function(d) {return d.id})[0];
+			
+			if($j("select[name='nvpnmgr_vpn"+i+"_cityname']").val() == ""){
+				o["nvpnmgr_vpn"+i+"_cityid"] = 0;
+			}
+			else {
+				o["nvpnmgr_vpn"+i+"_cityid"] = countryjson.filter(function(item) {
+					return item.name == $j("select[name='nvpnmgr_vpn"+i+"_countryname']").val();
+				})[0].cities.filter(function(item) {
+					return item.name == $j("select[name='nvpnmgr_vpn"+i+"_cityname']").val();
+				}).map(function(d) {return d.id})[0];
+			}
+		}
 	}
 	return o;
 };
