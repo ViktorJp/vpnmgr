@@ -633,7 +633,7 @@ function GetVersionNumber(versiontype)
 var countryjson;
 function getCountryData(){
 	var request = async () => {
-		var response = await fetch("/ext/nvpnmgr/nvpncountrydata.json");
+		var response = await fetch("/ext/nvpnmgr/nvpncountrydata.htm");
 		countryjson = await response.json();
 	}
 	request();
