@@ -647,6 +647,9 @@ function setCitiesforCountry(forminput){
 			$j.each(entry.cities, function (key2, entry2) {
 				dropdown.append($j('<option></option>').attr('value', entry2.name).text(entry2.name));
 			});
+			if(dropdown[0].length == 2){
+				dropdown.prop('selectedIndex', 1);
+			}
 			return false;
 		}
 	});
