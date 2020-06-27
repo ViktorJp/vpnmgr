@@ -5,7 +5,7 @@
 ## v0.9.9
 ### Updated on 2020-06-22
 ## About
-Originally developed by [@h0me5k1n](https://github.com/h0me5k1n/asusmerlin-nvpnmgr)
+The concept for this script was originally developed by [@h0me5k1n](https://github.com/h0me5k1n/asusmerlin-nvpnmgr)
 
 Manage and update VPN Client configurations for NordVPN on AsusWRT-Merlin.
 
