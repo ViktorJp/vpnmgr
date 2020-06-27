@@ -1752,6 +1752,9 @@ if [ -z "$1" ]; then
 	Auto_Startup create 2>/dev/null
 	Auto_ServiceEvent create 2>/dev/null
 	Shortcut_nvpnmgr create
+	if [ ! -f "$SCRIPT_DIR/nvpncountrydata" ]; then
+		getCountryData
+	fi
 	ScriptHeader
 	MainMenu
 	exit 0
