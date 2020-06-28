@@ -386,7 +386,14 @@ Conf_FromSettings(){
 			while IFS='' read -r line || [ -n "$line" ]; do
 				SETTINGNAME="$(echo "$line" | cut -f1 -d'=')"
 				SETTINGVALUE="$(echo "$line" | cut -f2- -d'=' | sed "s/=/ /g")"
-				sed -i "s/$SETTINGNAME=.*/$SETTINGNAME=$SETTINGVALUE/" "$SCRIPT_CONF"
+				SETTINGVPNNO="$(echo "$SETTINGNAME" | cut -f1 -d'_' | sed 's/vpn//g')"
+				if echo "$SETTINGNAME" | grep -q "usn"; then
+					nvram set vpn_client"$SETTINGVPNNO"_username="$SETTINGVALUE"
+				elif echo "$SETTINGNAME" | grep -q "pwd"; then
+					nvram set vpn_client"$SETTINGVPNNO"_password="$SETTINGVALUE"
+				else
+					sed -i "s/$SETTINGNAME=.*/$SETTINGNAME=$SETTINGVALUE/" "$SCRIPT_CONF"
+				fi
 			done < "$TMPFILE"
 			grep 'nvpnmgr_version' "$SETTINGSFILE" > "$TMPFILE"
 			sed -i "\\~nvpnmgr_~d" "$SETTINGSFILE"
@@ -394,6 +401,7 @@ Conf_FromSettings(){
 			cat "$SETTINGSFILE.bak" "$TMPFILE" > "$SETTINGSFILE"
 			rm -f "$TMPFILE"
 			rm -f "$SETTINGSFILE.bak"
+			nvram commit
 			Print_Output "true" "Merge of updated settings from WebUI completed successfully" "$PASS"
 		else
 			Print_Output "false" "No updated settings from WebUI found, no merge into $SCRIPT_CONF necessary" "$PASS"
