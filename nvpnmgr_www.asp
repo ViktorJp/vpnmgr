@@ -417,7 +417,7 @@ function applyRule() {
 		document.getElementById('amng_custom').value = JSON.stringify($j('form').serializeObject());
 		var action_script_tmp = "start_nvpnmgr";
 		document.form.action_script.value = action_script_tmp;
-		var restart_time = 30;
+		var restart_time = 15;
 		document.form.action_wait.value = restart_time;
 		showLoading();
 		document.form.submit();
@@ -712,7 +712,7 @@ function setCitiesforCountry(forminput){
 <input type="hidden" name="next_page" value="">
 <input type="hidden" name="modified" value="0">
 <input type="hidden" name="action_mode" value="apply">
-<input type="hidden" name="action_wait" value="30">
+<input type="hidden" name="action_wait" value="15">
 <input type="hidden" name="first_time" value="">
 <input type="hidden" name="SystemCmd" value="">
 <input type="hidden" name="action_script" value="start_nvpnmgr">
