@@ -1521,6 +1521,10 @@ Menu_UpdateVPN(){
 
 Menu_SearchVPN(){
 	if SetVPNClient; then
+		if [ "$(grep "vpn""$GLOBAL_VPN_NO""_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+			Print_Output "false" "VPN client $GLOBAL_VPN_NO is not managed, cannot search for new server" "$ERR"
+			return 1
+		fi
 		UpdateVPNConfig "unattended" "$GLOBAL_VPN_NO"
 	else
 		printf "\\n"
