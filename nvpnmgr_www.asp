@@ -212,24 +212,26 @@ function ScheduleOptionsEnableDisable(forminput){
 	var inputvalue = forminput.value;
 	var prefix = inputname.substring(0,inputname.lastIndexOf('_'));
 	
-	if(inputvalue == "false"){
-		$j('input[name='+prefix+'_schhours]').addClass("disabled");
-		$j('input[name='+prefix+'_schhours]').prop("disabled",true);
-		$j('input[name='+prefix+'_schmins]').addClass("disabled");
-		$j('input[name='+prefix+'_schmins]').prop("disabled",true);
-		for (var i = 0; i < daysofweek.length; i++) {
-			$j('#'+prefix+'_'+daysofweek[i].toLowerCase()).prop("disabled",true);
+	if(eval("document.form."+prefix+"_managed".value) == "true"){
+		if(inputvalue == "false"){
+			$j('input[name='+prefix+'_schhours]').addClass("disabled");
+			$j('input[name='+prefix+'_schhours]').prop("disabled",true);
+			$j('input[name='+prefix+'_schmins]').addClass("disabled");
+			$j('input[name='+prefix+'_schmins]').prop("disabled",true);
+			for (var i = 0; i < daysofweek.length; i++) {
+				$j('#'+prefix+'_'+daysofweek[i].toLowerCase()).prop("disabled",true);
+			}
 		}
-	}
-	else if(inputvalue == "true"){
-		$j('input[name='+prefix+'_schhours]').removeClass("disabled");
-		$j('input[name='+prefix+'_schhours]').prop("disabled",false);
-		$j('input[name='+prefix+'_schmins]').removeClass("disabled");
-		$j('input[name='+prefix+'_schmins]').prop("disabled",false);
-		for (var i = 0; i < daysofweek.length; i++) {
-			$j('#'+prefix+'_'+daysofweek[i].toLowerCase()).prop("disabled",false);
+		else if(inputvalue == "true"){
+			$j('input[name='+prefix+'_schhours]').removeClass("disabled");
+			$j('input[name='+prefix+'_schhours]').prop("disabled",false);
+			$j('input[name='+prefix+'_schmins]').removeClass("disabled");
+			$j('input[name='+prefix+'_schmins]').prop("disabled",false);
+			for (var i = 0; i < daysofweek.length; i++) {
+				$j('#'+prefix+'_'+daysofweek[i].toLowerCase()).prop("disabled",false);
+			}
 		}
-	}
+}
 }
 
 function Validate_Schedule(forminput,hoursmins){
