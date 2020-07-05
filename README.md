@@ -49,7 +49,7 @@ If this does not work, you will need to use the full path:
 Launch nvpnmgr and select option u
 
 ## Help
-Please post about any issues and problems here: [nvpnmgr on SNBForums](https://www.snbforums.com/threads/beta-nvpnmgr-manage-and-update-vpn-client-configurations-for-nordvpn.64930/)
+Please post about any issues and problems here: [nvpnmgr on SNBForums](https://www.snbforums.com/threads/nvpnmgr-manage-and-update-vpn-client-configurations-for-nordvpn.64930/)
 
 ## FAQs
 ### I haven't used scripts before on AsusWRT-Merlin
