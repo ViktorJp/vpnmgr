@@ -1795,6 +1795,7 @@ case "$1" in
 	;;
 	startup)
 		Check_Lock
+		Print_Output "true" "Sleeping for 30s before running startup routine" ""
 		sleep 30
 		Menu_Startup
 		exit 0
