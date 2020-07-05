@@ -18,7 +18,7 @@ Love the script and want to support future development? Any and all donations gr
 
 [**Buy me a coffee**](https://www.buymeacoffee.com/jackyaz)
 
-![Web UI](https://puu.sh/G3OKW/9bca373bce.png)
+![Web UI](https://puu.sh/G3OOj/4e7694f737.png)
 
 ![Menu UI](https://puu.sh/G3OJH/ce01dc18bc.png)
 
