@@ -2,8 +2,8 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/50f9c2244ef74cefb3da37448dd69848)](https://www.codacy.com/manual/jackyaz/nvpnmgr?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jackyaz/nvpnmgr&amp;utm_campaign=Badge_Grade)
 [![Build Status](https://travis-ci.com/jackyaz/nvpnmgr.svg?branch=master)](https://travis-ci.com/jackyaz/nvpnmgr)
 
-## v0.9.9
-### Updated on 2020-06-27
+## v1.0.0
+### Updated on 2020-07-05
 ## About
 The concept for this script was originally developed by [@h0me5k1n](https://github.com/h0me5k1n/asusmerlin-nvpnmgr)
 
@@ -18,9 +18,9 @@ Love the script and want to support future development? Any and all donations gr
 
 [**Buy me a coffee**](https://www.buymeacoffee.com/jackyaz)
 
-![Menu UI](https://puu.sh/G14da/d3fab73e0b.png)
+![Web UI](https://puu.sh/G3OOj/4e7694f737.png)
 
-![Web UI](https://puu.sh/G14cN/92246932d1.png)
+![Menu UI](https://puu.sh/G3OJH/ce01dc18bc.png)
 
 ## Supported firmware versions
 You must be running firmware Merlin 384.15/384.13_4 or Fork 43E5 (or later) [Asuswrt-Merlin](https://asuswrt.lostrealm.ca/)
@@ -49,7 +49,7 @@ If this does not work, you will need to use the full path:
 Launch nvpnmgr and select option u
 
 ## Help
-Please post about any issues and problems here: [nvpnmgr on SNBForums](https://www.snbforums.com/threads/beta-nvpnmgr-manage-and-update-vpn-client-configurations-for-nordvpn.64930/)
+Please post about any issues and problems here: [nvpnmgr on SNBForums](https://www.snbforums.com/threads/nvpnmgr-manage-and-update-vpn-client-configurations-for-nordvpn.64930/)
 
 ## FAQs
 ### I haven't used scripts before on AsusWRT-Merlin

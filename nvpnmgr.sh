@@ -20,7 +20,7 @@
 
 ### Start of script variables ###
 readonly SCRIPT_NAME="nvpnmgr"
-readonly SCRIPT_VERSION="v0.9.9"
+readonly SCRIPT_VERSION="v1.0.0"
 readonly SCRIPT_BRANCH="master"
 readonly SCRIPT_REPO="https://raw.githubusercontent.com/jackyaz/""$SCRIPT_NAME""/""$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
@@ -386,7 +386,14 @@ Conf_FromSettings(){
 			while IFS='' read -r line || [ -n "$line" ]; do
 				SETTINGNAME="$(echo "$line" | cut -f1 -d'=')"
 				SETTINGVALUE="$(echo "$line" | cut -f2- -d'=' | sed "s/=/ /g")"
-				sed -i "s/$SETTINGNAME=.*/$SETTINGNAME=$SETTINGVALUE/" "$SCRIPT_CONF"
+				SETTINGVPNNO="$(echo "$SETTINGNAME" | cut -f1 -d'_' | sed 's/vpn//g')"
+				if echo "$SETTINGNAME" | grep -q "usn"; then
+					nvram set vpn_client"$SETTINGVPNNO"_username="$SETTINGVALUE"
+				elif echo "$SETTINGNAME" | grep -q "pwd"; then
+					nvram set vpn_client"$SETTINGVPNNO"_password="$SETTINGVALUE"
+				else
+					sed -i "s/$SETTINGNAME=.*/$SETTINGNAME=$SETTINGVALUE/" "$SCRIPT_CONF"
+				fi
 			done < "$TMPFILE"
 			grep 'nvpnmgr_version' "$SETTINGSFILE" > "$TMPFILE"
 			sed -i "\\~nvpnmgr_~d" "$SETTINGSFILE"
@@ -394,6 +401,7 @@ Conf_FromSettings(){
 			cat "$SETTINGSFILE.bak" "$TMPFILE" > "$SETTINGSFILE"
 			rm -f "$TMPFILE"
 			rm -f "$SETTINGSFILE.bak"
+			nvram commit
 			Print_Output "true" "Merge of updated settings from WebUI completed successfully" "$PASS"
 		else
 			Print_Output "false" "No updated settings from WebUI found, no merge into $SCRIPT_CONF necessary" "$PASS"
@@ -777,9 +785,7 @@ explicit-exit-notify 3"
 		echo "$CRT_CLIENT_STATIC" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_static
 		
 		if nvram get vpn_clientx_eas | grep -q "$VPN_NO"; then
-			service stop_vpnclient"$VPN_NO" >/dev/null 2>&1
-			sleep 3
-			service start_vpnclient"$VPN_NO" >/dev/null 2>&1
+			service restart_vpnclient"$VPN_NO" >/dev/null 2>&1
 		fi
 		Print_Output "true" "VPN client $VPN_NO updated successfully ($OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT)" "$PASS"
 	else
@@ -1515,6 +1521,10 @@ Menu_UpdateVPN(){
 
 Menu_SearchVPN(){
 	if SetVPNClient; then
+		if [ "$(grep "vpn""$GLOBAL_VPN_NO""_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+			Print_Output "false" "VPN client $GLOBAL_VPN_NO is not managed, cannot search for new server" "$ERR"
+			return 1
+		fi
 		UpdateVPNConfig "unattended" "$GLOBAL_VPN_NO"
 	else
 		printf "\\n"
@@ -1785,6 +1795,7 @@ case "$1" in
 	;;
 	startup)
 		Check_Lock
+		Print_Output "true" "Sleeping for 30s before running startup routine" ""
 		sleep 30
 		Menu_Startup
 		exit 0
