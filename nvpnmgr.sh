@@ -682,7 +682,6 @@ UpdateVPNConfig(){
 	CRT_CLIENT_STATIC="$(getClientCRT "$OVPN_DETAIL")"
 	[ -z "$CRT_CLIENT_STATIC" ] && Print_Output "true" "Error determing VPN client certificate" "$ERR" && return 1
 	EXISTING_IP="$(getServerIP "$VPN_NO")"
-	CONNECTSTATE="$(getConnectState "$VPN_NO")"
 	
 	if [ "$OVPN_IP" != "$EXISTING_IP" ]; then
 		Print_Output "true" "Updating VPN client $VPN_NO to recommended NordVPN server" "$PASS"
@@ -973,36 +972,6 @@ SetVPNParameters(){
 	
 	if [ "$exitmenu" != "exit" ]; then
 		while true; do
-			printf "\\n\\e[1mPlease select a VPN protocol:\\e[0m\\n"
-			printf "    1. UDP\\n"
-			printf "    2. TCP\\n\\n"
-			printf "Choose an option:    "
-			read -r "protmenu"
-			
-			case "$protmenu" in
-				1)
-					vpnprot="openvpn_udp"
-					printf "\\n"
-					break
-				;;
-				2)
-					vpnprot="openvpn_tcp"
-					printf "\\n"
-					break
-				;;
-				e)
-					exitmenu="exit"
-					break
-				;;
-				*)
-					printf "\\n\\e[31mPlease enter a valid choice (1-2)\\e[0m\\n"
-				;;
-			esac
-		done
-	fi
-	
-	if [ "$exitmenu" != "exit" ]; then
-		while true; do
 			printf "\\n\\e[1mPlease select a VPN Type:\\e[0m\\n"
 			printf "    1. Standard VPN\\n"
 			printf "    2. Double VPN\\n"
@@ -1032,6 +1001,36 @@ SetVPNParameters(){
 				;;
 				*)
 					printf "\\n\\e[31mPlease enter a valid choice (1-3)\\e[0m\\n"
+				;;
+			esac
+		done
+	fi
+	
+	if [ "$exitmenu" != "exit" ]; then
+		while true; do
+			printf "\\n\\e[1mPlease select a VPN protocol:\\e[0m\\n"
+			printf "    1. UDP\\n"
+			printf "    2. TCP\\n\\n"
+			printf "Choose an option:    "
+			read -r "protmenu"
+			
+			case "$protmenu" in
+				1)
+					vpnprot="openvpn_udp"
+					printf "\\n"
+					break
+				;;
+				2)
+					vpnprot="openvpn_tcp"
+					printf "\\n"
+					break
+				;;
+				e)
+					exitmenu="exit"
+					break
+				;;
+				*)
+					printf "\\n\\e[31mPlease enter a valid choice (1-2)\\e[0m\\n"
 				;;
 			esac
 		done
@@ -1494,8 +1493,8 @@ Menu_UpdateVPN(){
 	ListVPNClients
 	printf "Choose options as follows:\\n"
 	printf "    - VPN client [1-5]\\n"
-	printf "    - protocol to use (pick from list)\\n"
 	printf "    - type of VPN to use (pick from list)\\n"
+	printf "    - protocol to use (pick from list)\\n"
 	printf "\\n"
 	printf "\\e[1m#########################################################\\e[0m\\n"
 	
