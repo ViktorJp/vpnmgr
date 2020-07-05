@@ -652,6 +652,10 @@ UpdateVPNConfig(){
 			if [ -z "$vJSON" ]; then
 				Print_Output "true" "No recommended VPN servers found for $VPN_CITYNAME, removing filter for city" "$WARN"
 				vJSON="$(getRecommendedServers "$VPN_TYPE" "$VPN_PROT" "$VPN_COUNTRYID")"
+				if [ -z "$vJSON" ]; then
+					Print_Output "true" "No recommended VPN servers found for $VPN_COUNTRYNAME, removing filter for country" "$WARN"
+					vJSON="$(getRecommendedServers "$VPN_TYPE" "$VPN_PROT" "0")"
+				fi
 			fi
 		fi
 	fi
