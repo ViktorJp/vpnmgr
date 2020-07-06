@@ -1661,6 +1661,8 @@ Menu_Install(){
 		exit 1
 	fi
 	
+	Process_Upgrade
+	
 	Create_Dirs
 	Conf_Exists
 	Create_Symlinks
