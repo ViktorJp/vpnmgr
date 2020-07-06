@@ -1773,6 +1773,7 @@ Entware_Ready(){
 ### ###
 
 Process_Upgrade(){
+	SETTINGSFILE="/jffs/addons/custom_settings.txt"
 	if grep -q "^nvpnmgr" "$SETTINGSFILE"; then
 		sed -i "s/nvpnmgr/vpnmgr/g" "$SETTINGSFILE"
 	fi
