@@ -659,7 +659,7 @@ function GetVersionNumber(versiontype)
 var countryjson = [];
 function getCountryData(){
 	$j.ajax({
-		url: '/ext/vpnmgr/nvpncountrydata.htm',
+		url: '/ext/vpnmgr/vpncountrydata.htm',
 		dataType: 'json',
 		error: function(xhr){
 			setTimeout("getCountryData();", 1000);
