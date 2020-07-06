@@ -1792,6 +1792,7 @@ if [ -z "$1" ]; then
 		opkg update
 		opkg install p7zip
 	fi
+	Process_Upgrade
 	Create_Dirs
 	Conf_Exists
 	Set_Version_Custom_Settings "local"
