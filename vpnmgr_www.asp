@@ -327,7 +327,7 @@ function get_conf_file(){
 					});
 				}
 				
-				for (var i = 0; i < 55; i++) {
+				for (var i = 0; i < window["vpnmgr_settings"].length; i++) {
 					let settingname = window["vpnmgr_settings"][i][0];
 					let settingvalue = window["vpnmgr_settings"][i][1];
 					if(settingname.indexOf("cityid") != -1 || settingname.indexOf("countryid") != -1 || settingname.indexOf("provider") != -1) continue;
