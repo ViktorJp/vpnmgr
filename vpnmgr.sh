@@ -1,22 +1,22 @@
 #!/bin/sh
 
-#########################################################
-##                                                     ##
-##  _ __ __   __ _ __   _ __   _ __ ___    __ _  _ __  ##
-## | '_ \\ \ / /| '_ \ | '_ \ | '_ ` _ \  / _` || '__| ##
-## | | | |\ V / | |_) || | | || | | | | || (_| || |    ##
-## |_| |_| \_/  | .__/ |_| |_||_| |_| |_| \__, ||_|    ##
-##              | |                        __/ |       ##
-##              |_|                       |___/        ##
-##                                                     ##
-##         https://github.com/jackyaz/vpnmgr          ##
-##                forked from h0me5k1n                 ##
-#########################################################
+###################################################
+##                                               ##
+## __   __ _ __   _ __   _ __ ___    __ _  _ __  ##
+## \ \ / /| '_ \ | '_ \ | '_ ` _ \  / _` || '__| ##
+##  \ V / | |_) || | | || | | | | || (_| || |    ##
+##   \_/  | .__/ |_| |_||_| |_| |_| \__, ||_|    ##
+##        | |                        __/ |       ##
+##        |_|                       |___/        ##
+##                                               ##
+##       https://github.com/jackyaz/vpnmgr       ##
+##              forked from h0me5k1n             ##
+###################################################
 
-########            Shellcheck directives        ########
+########         Shellcheck directives     ########
 # shellcheck disable=SC2018
 # shellcheck disable=SC2019
-#########################################################
+###################################################
 
 ### Start of script variables ###
 readonly SCRIPT_NAME="vpnmgr"
@@ -1346,20 +1346,20 @@ PressEnter(){
 ScriptHeader(){
 	clear
 	printf "\\n"
-	printf "\\e[1m#########################################################\\e[0m\\n"
-	printf "\\e[1m##                                                     ##\\e[0m\\n"
-	printf "\\e[1m##  _ __ __   __ _ __   _ __   _ __ ___    __ _  _ __  ##\\e[0m\\n"
-	printf "\\e[1m## | '_  \\ \ / /| '_ \ | '_ \ | '_   _ \  / _  || '__| ##\\e[0m\\n"
-	printf "\\e[1m## | | | |\ V / | |_) || | | || | | | | || (_| || |    ##\\e[0m\\n"
-	printf "\\e[1m## |_| |_| \_/  | .__/ |_| |_||_| |_| |_| \__, ||_|    ##\\e[0m\\n"
-	printf "\\e[1m##              | |                        __/ |       ##\\e[0m\\n"
-	printf "\\e[1m##              |_|                       |___/        ##\\e[0m\\n"
-	printf "\\e[1m##                                                     ##\\e[0m\\n"
-	printf "\\e[1m##                  %s on %-9s                ##\\e[0m\\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
-	printf "\\e[1m##                                                     ##\\e[0m\\n"
-	printf "\\e[1m##         https://github.com/jackyaz/vpnmgr          ##\\e[0m\\n"
-	printf "\\e[1m##                forked from h0me5k1n                 ##\\e[0m\\n"
-	printf "\\e[1m#########################################################\\e[0m\\n"
+	printf "\\e[1m###################################################\\e[0m\\n"
+	printf "\\e[1m##                                               ##\\e[0m\\n"
+	printf "\\e[1m## __   __ _ __   _ __   _ __ ___    __ _  _ __  ##\\e[0m\\n"
+	printf "\\e[1m## \ \ / /| '_ \ | '_ \ | '_   _ \  / _  || '__| ##\\e[0m\\n"
+	printf "\\e[1m##  \ V / | |_) || | | || | | | | || (_| || |    ##\\e[0m\\n"
+	printf "\\e[1m##   \_/  | .__/ |_| |_||_| |_| |_| \__, ||_|    ##\\e[0m\\n"
+	printf "\\e[1m##        | |                        __/ |       ##\\e[0m\\n"
+	printf "\\e[1m##        |_|                       |___/        ##\\e[0m\\n"
+	printf "\\e[1m##                                               ##\\e[0m\\n"
+	printf "\\e[1m##               %s on %-9s             ##\\e[0m\\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
+	printf "\\e[1m##                                               ##\\e[0m\\n"
+	printf "\\e[1m##       https://github.com/jackyaz/vpnmgr       ##\\e[0m\\n"
+	printf "\\e[1m##              forked from h0me5k1n             ##\\e[0m\\n"
+	printf "\\e[1m###################################################\\e[0m\\n"
 	printf "\\n"
 }
 
@@ -1369,19 +1369,19 @@ MainMenu(){
 	printf "3.    Enable management for a VPN client\\n"
 	printf "4.    Disable management for a VPN client\\n\\n"
 	
-	printf "\\e[1m##############    NordVPN clients only    ##############\\e[0m\\n\\n"
-	printf "5.    Search for new recommended server for a managed VPN client\\n"
-	printf "6.    Update schedule for a VPN client configuration update\\n"
-	printf "7.    Enable a scheduled VPN client configuration update\\n"
-	printf "8.    Delete a scheduled VPN client configuration update\\n\\n"
-	printf "\\e[1m#########################################################\\e[0m\\n\\n"
+	printf "\\e[1m###########         NordVPN only        ###########\\e[0m\\n\\n"
+	printf "5.    Search for new recommended server\\n"
+	printf "6.    Update schedule for a VPN client\\n"
+	printf "7.    Enable a scheduled VPN client update\\n"
+	printf "8.    Delete a scheduled VPN client update\\n\\n"
+	printf "\\e[1m###################################################\\e[0m\\n\\n"
 	printf "r.    Refresh cached data\\n\\n"
 	printf "u.    Check for updates\\n"
-	printf "uf.   Update %s with latest version (force update)\\n\\n" "$SCRIPT_NAME"
+	printf "uf.   Update %s with latest version (force)\\n\\n" "$SCRIPT_NAME"
 	printf "e.    Exit %s\\n\\n" "$SCRIPT_NAME"
 	printf "z.    Uninstall %s\\n" "$SCRIPT_NAME"
 	printf "\\n"
-	printf "\\e[1m#########################################################\\e[0m\\n"
+	printf "\\e[1m###################################################\\e[0m\\n"
 	printf "\\n"
 	
 	while true; do
