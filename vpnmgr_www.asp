@@ -330,7 +330,7 @@ function get_conf_file(){
 				for (var i = 0; i < 55; i++) {
 					let settingname = window["vpnmgr_settings"][i][0];
 					let settingvalue = window["vpnmgr_settings"][i][1];
-					if(settingname.indexOf("cityid") != -1 || settingname.indexOf("countryid") != -1) continue;
+					if(settingname.indexOf("cityid") != -1 || settingname.indexOf("countryid") != -1 || settingname.indexOf("provider") != -1) continue;
 					if(settingname.indexOf("schdays") == -1){
 						eval("document.form.vpnmgr_"+settingname).value = settingvalue;
 						if(settingname.indexOf("managed") != -1) OptionsEnableDisable($j("#vpnmgr_"+settingname.replace("_managed","")+"_man_"+settingvalue)[0]);
