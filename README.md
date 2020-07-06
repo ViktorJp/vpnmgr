@@ -1,9 +1,9 @@
-# nvpnmgr
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/50f9c2244ef74cefb3da37448dd69848)](https://www.codacy.com/manual/jackyaz/nvpnmgr?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jackyaz/nvpnmgr&amp;utm_campaign=Badge_Grade)
-[![Build Status](https://travis-ci.com/jackyaz/nvpnmgr.svg?branch=master)](https://travis-ci.com/jackyaz/nvpnmgr)
+# vpnmgr
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/50f9c2244ef74cefb3da37448dd69848)](https://www.codacy.com/manual/jackyaz/vpnmgr?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jackyaz/vpnmgr&amp;utm_campaign=Badge_Grade)
+[![Build Status](https://travis-ci.com/jackyaz/vpnmgr.svg?branch=master)](https://travis-ci.com/jackyaz/vpnmgr)
 
-## v1.1.0
-### Updated on 2020-07-05
+## v2.0.0
+### Updated on 2020-07-06
 ## About
 The concept for this script was originally developed by [@h0me5k1n](https://github.com/h0me5k1n/asusmerlin-nvpnmgr)
 
@@ -29,27 +29,27 @@ You must be running firmware Merlin 384.15/384.13_4 or Fork 43E5 (or later) [Asu
 Using your preferred SSH client/terminal, copy and paste the following command, then press Enter:
 
 ```sh
-/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/jackyaz/nvpnmgr/master/nvpnmgr.sh" -o "/jffs/scripts/nvpnmgr" && chmod 0755 /jffs/scripts/nvpnmgr && /jffs/scripts/nvpnmgr install
+/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/jackyaz/vpnmgr/master/vpnmgr.sh" -o "/jffs/scripts/vpnmgr" && chmod 0755 /jffs/scripts/vpnmgr && /jffs/scripts/vpnmgr install
 ```
 
 ## Usage
-nvpnmgr adds a tab to the WebUI in the VPN area.
+vpnmgr adds a tab to the WebUI in the VPN area.
 
-Otherwise, to launch the nvpnmgr menu, use:
+Otherwise, to launch the vpnmgr menu, use:
 ```sh
-nvpnmgr
+vpnmgr
 ```
 
 If this does not work, you will need to use the full path:
 ```sh
-/jffs/scripts/nvpnmgr
+/jffs/scripts/vpnmgr
 ```
 
 ## Updating
-Launch nvpnmgr and select option u
+Launch vpnmgr and select option u
 
 ## Help
-Please post about any issues and problems here: [nvpnmgr on SNBForums](https://www.snbforums.com/threads/nvpnmgr-manage-and-update-vpn-client-configurations-for-nordvpn.64930/)
+Please post about any issues and problems here: [vpnmgr on SNBForums](https://www.snbforums.com/threads/vpnmgr-manage-and-update-vpn-client-configurations-for-nordvpn.64930/)
 
 ## FAQs
 ### I haven't used scripts before on AsusWRT-Merlin

@@ -9,19 +9,19 @@
 ##              | |                        __/ |       ##
 ##              |_|                       |___/        ##
 ##                                                     ##
-##         https://github.com/jackyaz/nvpnmgr          ##
+##         https://github.com/jackyaz/vpnmgr          ##
 ##                forked from h0me5k1n                 ##
 #########################################################
 
-######            Shellcheck directives        ######
+########            Shellcheck directives        ########
 # shellcheck disable=SC2018
 # shellcheck disable=SC2019
-#####################################################
+#########################################################
 
 ### Start of script variables ###
-readonly SCRIPT_NAME="nvpnmgr"
-readonly SCRIPT_VERSION="v1.1.0"
-readonly SCRIPT_BRANCH="develop"
+readonly SCRIPT_NAME="vpnmgr"
+readonly SCRIPT_VERSION="v2.0.0"
+readonly SCRIPT_BRANCH="PIA"
 readonly SCRIPT_REPO="https://raw.githubusercontent.com/jackyaz/""$SCRIPT_NAME""/""$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
 readonly SCRIPT_CONF="$SCRIPT_DIR/config"
@@ -104,28 +104,28 @@ Set_Version_Custom_Settings(){
 	case "$1" in
 		local)
 			if [ -f "$SETTINGSFILE" ]; then
-				if [ "$(grep -c "nvpnmgr_version_local" $SETTINGSFILE)" -gt 0 ]; then
-					if [ "$SCRIPT_VERSION" != "$(grep "nvpnmgr_version_local" /jffs/addons/custom_settings.txt | cut -f2 -d' ')" ]; then
-						sed -i "s/nvpnmgr_version_local.*/nvpnmgr_version_local $SCRIPT_VERSION/" "$SETTINGSFILE"
+				if [ "$(grep -c "vpnmgr_version_local" $SETTINGSFILE)" -gt 0 ]; then
+					if [ "$SCRIPT_VERSION" != "$(grep "vpnmgr_version_local" /jffs/addons/custom_settings.txt | cut -f2 -d' ')" ]; then
+						sed -i "s/vpnmgr_version_local.*/vpnmgr_version_local $SCRIPT_VERSION/" "$SETTINGSFILE"
 					fi
 				else
-					echo "nvpnmgr_version_local $SCRIPT_VERSION" >> "$SETTINGSFILE"
+					echo "vpnmgr_version_local $SCRIPT_VERSION" >> "$SETTINGSFILE"
 				fi
 			else
-				echo "nvpnmgr_version_local $SCRIPT_VERSION" >> "$SETTINGSFILE"
+				echo "vpnmgr_version_local $SCRIPT_VERSION" >> "$SETTINGSFILE"
 			fi
 		;;
 		server)
 			if [ -f "$SETTINGSFILE" ]; then
-				if [ "$(grep -c "nvpnmgr_version_server" $SETTINGSFILE)" -gt 0 ]; then
-					if [ "$2" != "$(grep "nvpnmgr_version_server" /jffs/addons/custom_settings.txt | cut -f2 -d' ')" ]; then
-						sed -i "s/nvpnmgr_version_server.*/nvpnmgr_version_server $2/" "$SETTINGSFILE"
+				if [ "$(grep -c "vpnmgr_version_server" $SETTINGSFILE)" -gt 0 ]; then
+					if [ "$2" != "$(grep "vpnmgr_version_server" /jffs/addons/custom_settings.txt | cut -f2 -d' ')" ]; then
+						sed -i "s/vpnmgr_version_server.*/vpnmgr_version_server $2/" "$SETTINGSFILE"
 					fi
 				else
-					echo "nvpnmgr_version_server $2" >> "$SETTINGSFILE"
+					echo "vpnmgr_version_server $2" >> "$SETTINGSFILE"
 				fi
 			else
-				echo "nvpnmgr_version_server $2" >> "$SETTINGSFILE"
+				echo "vpnmgr_version_server $2" >> "$SETTINGSFILE"
 			fi
 		;;
 	esac
@@ -166,7 +166,7 @@ Update_Version(){
 		Update_File "shared-jy.tar.gz"
 		
 		if [ "$isupdate" != "false" ]; then
-			Update_File "nvpnmgr_www.asp"
+			Update_File "vpnmgr_www.asp"
 			/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output "true" "$SCRIPT_NAME successfully updated"
 			chmod 0755 /jffs/scripts/"$SCRIPT_NAME"
 			Clear_Lock
@@ -186,7 +186,7 @@ Update_Version(){
 		serverver=$(/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep "SCRIPT_VERSION=" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 		Print_Output "true" "Downloading latest version ($serverver) of $SCRIPT_NAME" "$PASS"
 		Update_File "shared-jy.tar.gz"
-		Update_File "nvpnmgr_www.asp"
+		Update_File "vpnmgr_www.asp"
 		/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output "true" "$SCRIPT_NAME successfully updated"
 		chmod 0755 /jffs/scripts/"$SCRIPT_NAME"
 		Clear_Lock
@@ -218,7 +218,7 @@ Update_File(){
 				Print_Output "true" "New version of $1 downloaded" "$PASS"
 			fi
 		fi
-	elif [ "$1" = "nvpnmgr_www.asp" ]; then
+	elif [ "$1" = "vpnmgr_www.asp" ]; then
 		tmpfile="/tmp/$1"
 		Download_File "$SCRIPT_REPO/$1" "$tmpfile"
 		if ! diff -q "$tmpfile" "$SCRIPT_DIR/$1" >/dev/null 2>&1; then
@@ -339,13 +339,13 @@ Get_WebUI_Page () {
 }
 
 Mount_WebUI(){
-	Get_WebUI_Page "$SCRIPT_DIR/nvpnmgr_www.asp"
+	Get_WebUI_Page "$SCRIPT_DIR/vpnmgr_www.asp"
 	if [ "$MyPage" = "none" ]; then
 		Print_Output "true" "Unable to mount $SCRIPT_NAME WebUI page, exiting" "$CRIT"
 		exit 1
 	fi
 	Print_Output "true" "Mounting $SCRIPT_NAME WebUI page as $MyPage" "$PASS"
-	cp -f "$SCRIPT_DIR/nvpnmgr_www.asp" "$SCRIPT_WEBPAGE_DIR/$MyPage"
+	cp -f "$SCRIPT_DIR/vpnmgr_www.asp" "$SCRIPT_WEBPAGE_DIR/$MyPage"
 	echo "NordVPN Manager" > "$SCRIPT_WEBPAGE_DIR/$(echo $MyPage | cut -f1 -d'.').title"
 	
 	if [ "$(uname -o)" = "ASUSWRT-Merlin" ]; then
@@ -376,13 +376,13 @@ Validate_Number(){
 
 Conf_FromSettings(){
 	SETTINGSFILE="/jffs/addons/custom_settings.txt"
-	TMPFILE="/tmp/nvpnmgr_settings.txt"
+	TMPFILE="/tmp/vpnmgr_settings.txt"
 	if [ -f "$SETTINGSFILE" ]; then
-		if [ "$(grep "nvpnmgr_" $SETTINGSFILE | grep -v "version" -c)" -gt 0 ]; then
+		if [ "$(grep "vpnmgr_" $SETTINGSFILE | grep -v "version" -c)" -gt 0 ]; then
 			Print_Output "true" "Updated settings from WebUI found, merging into $SCRIPT_CONF" "$PASS"
 			cp -a "$SCRIPT_CONF" "$SCRIPT_CONF.bak"
-			grep "nvpnmgr_" "$SETTINGSFILE" | grep -v "version" > "$TMPFILE"
-			sed -i "s/nvpnmgr_//g;s/ /=/g" "$TMPFILE"
+			grep "vpnmgr_" "$SETTINGSFILE" | grep -v "version" > "$TMPFILE"
+			sed -i "s/vpnmgr_//g;s/ /=/g" "$TMPFILE"
 			while IFS='' read -r line || [ -n "$line" ]; do
 				SETTINGNAME="$(echo "$line" | cut -f1 -d'=')"
 				SETTINGVALUE="$(echo "$line" | cut -f2- -d'=' | sed "s/=/ /g")"
@@ -395,8 +395,8 @@ Conf_FromSettings(){
 					sed -i "s/$SETTINGNAME=.*/$SETTINGNAME=$SETTINGVALUE/" "$SCRIPT_CONF"
 				fi
 			done < "$TMPFILE"
-			grep 'nvpnmgr_version' "$SETTINGSFILE" > "$TMPFILE"
-			sed -i "\\~nvpnmgr_~d" "$SETTINGSFILE"
+			grep 'vpnmgr_version' "$SETTINGSFILE" > "$TMPFILE"
+			sed -i "\\~vpnmgr_~d" "$SETTINGSFILE"
 			mv "$SETTINGSFILE" "$SETTINGSFILE.bak"
 			cat "$SETTINGSFILE.bak" "$TMPFILE" > "$SETTINGSFILE"
 			rm -f "$TMPFILE"
@@ -431,7 +431,7 @@ Create_Symlinks(){
 	rm -rf "${SCRIPT_WEB_DIR:?}/"* 2>/dev/null
 	
 	ln -s "$SCRIPT_DIR/config"  "$SCRIPT_WEB_DIR/config.htm" 2>/dev/null
-	ln -s "$SCRIPT_DIR/nvpncountrydata" "$SCRIPT_WEB_DIR/nvpncountrydata.htm" 2>/dev/null
+	ln -s "$SCRIPT_DIR/vpncountrydata" "$SCRIPT_WEB_DIR/vpncountrydata.htm" 2>/dev/null
 	
 	if [ ! -d "$SHARED_WEB_DIR" ]; then
 		ln -s "$SHARED_DIR" "$SHARED_WEB_DIR" 2>/dev/null
@@ -451,12 +451,18 @@ Conf_Exists(){
 				sed -i '/^vpn'"$i"'_schmins=.*/a vpn'"$i"'_countryname=' "$SCRIPT_CONF"
 			done
 		fi
+		if [ "$(wc -l < "$SCRIPT_CONF")" -eq 65 ]; then
+			for i in 1 2 3 4 5; do
+				sed -i '/^vpn'"$i"'_managed=.*/a vpn'"$i"'_provider=NordVPN' "$SCRIPT_CONF"
+			done
+		fi
 		return 0
 	else
 		for i in 1 2 3 4 5; do
 			{
 				echo "##### VPN Client $i #####"
 				echo "vpn$i""_managed=false"
+				echo "vpn$i""_provider=NordVPN"
 				echo "vpn$i""_protocol=UDP"
 				echo "vpn$i""_type=Standard"
 				echo "vpn$i""_schenabled=false"
@@ -490,19 +496,19 @@ getServersforCity(){
 
 getCountryData(){
 	Print_Output "true" "Refreshing NordVPN country data..." "$PASS"
-	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/countries" | jq -r > /tmp/nvpncountrydata
-	countrydata="$(cat /tmp/nvpncountrydata)"
+	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/countries" | jq -r > /tmp/vpncountrydata
+	countrydata="$(cat /tmp/vpncountrydata)"
 	[ -z "$countrydata" ] && Print_Output "true" "Error, country data from NordVPN failed to download" "$ERR" && return 1
-	if [ -f "$SCRIPT_DIR/nvpncountrydata" ]; then
-		if ! diff -q /tmp/nvpncountrydata "$SCRIPT_DIR/nvpncountrydata" >/dev/null 2>&1; then
-			mv /tmp/nvpncountrydata "$SCRIPT_DIR/nvpncountrydata"
+	if [ -f "$SCRIPT_DIR/vpncountrydata" ]; then
+		if ! diff -q /tmp/vpncountrydata "$SCRIPT_DIR/vpncountrydata" >/dev/null 2>&1; then
+			mv /tmp/vpncountrydata "$SCRIPT_DIR/vpncountrydata"
 			Print_Output "true" "Changes detected in NordVPN country data found, updating now" "$PASS"
 			Create_Symlinks
 		else
 			Print_Output "true" "No changes in NordVPN country data" "$WARN"
 		fi
 	else
-		mv /tmp/nvpncountrydata "$SCRIPT_DIR/nvpncountrydata"
+		mv /tmp/vpncountrydata "$SCRIPT_DIR/vpncountrydata"
 		Create_Symlinks
 		Print_Output "true" "No previous NordVPN country data found, updating now" "$PASS"
 	fi
@@ -880,7 +886,7 @@ CancelScheduleVPN(){
 	fi
 }
 
-Shortcut_nvpnmgr(){
+Shortcut_vpnmgr(){
 	case $1 in
 		create)
 			if [ -d "/opt/bin" ] && [ ! -f "/opt/bin/$SCRIPT_NAME" ] && [ -f "/jffs/scripts/$SCRIPT_NAME" ]; then
@@ -1057,10 +1063,10 @@ SetVPNParameters(){
 	fi
 	
 	if [ "$choosecountry" = "true" ]; then
-		if [ ! -f "$SCRIPT_DIR/nvpncountrydata" ]; then
+		if [ ! -f "$SCRIPT_DIR/vpncountrydata" ]; then
 			getCountryData
 		fi
-		countrydata="$(cat "$SCRIPT_DIR/nvpncountrydata")"
+		countrydata="$(cat "$SCRIPT_DIR/vpncountrydata")"
 		[ -z "$countrydata" ] && Print_Output "true" "Error, country data from NordVPN is missing" "$ERR" && return 1
 		LISTCOUNTRIES="$(getCountryNames "$countrydata")"
 		COUNTCOUNTRIES="$(echo "$LISTCOUNTRIES" | wc -l)"
@@ -1351,7 +1357,7 @@ ScriptHeader(){
 	printf "\\e[1m##                                                     ##\\e[0m\\n"
 	printf "\\e[1m##                  %s on %-9s                ##\\e[0m\\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
 	printf "\\e[1m##                                                     ##\\e[0m\\n"
-	printf "\\e[1m##         https://github.com/jackyaz/nvpnmgr          ##\\e[0m\\n"
+	printf "\\e[1m##         https://github.com/jackyaz/vpnmgr          ##\\e[0m\\n"
 	printf "\\e[1m##                forked from h0me5k1n                 ##\\e[0m\\n"
 	printf "\\e[1m#########################################################\\e[0m\\n"
 	printf "\\n"
@@ -1359,14 +1365,17 @@ ScriptHeader(){
 
 MainMenu(){
 	printf "1.    List VPN client configurations\\n\\n"
-	printf "2.    Update configuration for a managed VPN client\\n"
-	printf "3.    Search for new recommended server for a managed VPN client\\n\\n"
-	printf "4.    Enable management for a VPN client\\n"
-	printf "5.    Disable management for a VPN client\\n\\n"
+	printf "2.    Update configuration for a managed VPN client\\n\\n"
+	printf "3.    Enable management for a VPN client\\n"
+	printf "4.    Disable management for a VPN client\\n\\n"
+	
+	printf "\\e[1m##############    NordVPN clients only    ##############\\e[0m\\n\\n"
+	printf "5.    Search for new recommended server for a managed VPN client\\n"
 	printf "6.    Update schedule for a VPN client configuration update\\n"
 	printf "7.    Enable a scheduled VPN client configuration update\\n"
 	printf "8.    Delete a scheduled VPN client configuration update\\n\\n"
-	printf "r.    Refresh country data\\n\\n"
+	printf "\\e[1m#########################################################\\e[0m\\n\\n"
+	printf "r.    Refresh cached data\\n\\n"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Update %s with latest version (force update)\\n\\n" "$SCRIPT_NAME"
 	printf "e.    Exit %s\\n\\n" "$SCRIPT_NAME"
@@ -1395,21 +1404,21 @@ MainMenu(){
 			;;
 			3)
 				printf "\\n"
-				if Check_Lock "menu"; then
-					Menu_SearchVPN
-				fi
+				Menu_ManageVPN
 				PressEnter
 				break
-				;;
+			;;
 			4)
 				printf "\\n"
-				Menu_ManageVPN
+				Menu_UnmanageVPN
 				PressEnter
 				break
 			;;
 			5)
 				printf "\\n"
-				Menu_UnmanageVPN
+				if Check_Lock "menu"; then
+					Menu_SearchVPN
+				fi
 				PressEnter
 				break
 			;;
@@ -1631,6 +1640,7 @@ Check_Requirements(){
 		Print_Output "true" "Installing required packages from Entware" "$PASS"
 		opkg update
 		opkg install jq
+		opkg install p7zip
 		return 0
 	else
 		return 1
@@ -1658,12 +1668,12 @@ Menu_Install(){
 	Auto_Startup create 2>/dev/null
 	Auto_ServiceEvent create 2>/dev/null
 	
-	Update_File "nvpnmgr_www.asp"
+	Update_File "vpnmgr_www.asp"
 	Update_File "shared-jy.tar.gz"
 	
 	getCountryData
 	
-	Shortcut_nvpnmgr create
+	Shortcut_vpnmgr create
 	Clear_Lock
 }
 
@@ -1675,7 +1685,7 @@ Menu_Startup(){
 	Auto_Cron create 2>/dev/null
 	Auto_Startup create 2>/dev/null
 	Auto_ServiceEvent create 2>/dev/null
-	Shortcut_nvpnmgr create
+	Shortcut_vpnmgr create
 	Mount_WebUI
 	Clear_Lock
 }
@@ -1700,7 +1710,7 @@ Menu_Uninstall(){
 	rm -rf "$SCRIPT_WEB_DIR" 2>/dev/null
 	rm -rf "$SCRIPT_DIR" 2>/dev/null
 	
-	Shortcut_nvpnmgr delete
+	Shortcut_vpnmgr delete
 	
 	rm -f "/jffs/scripts/$SCRIPT_NAME" 2>/dev/null
 	Clear_Lock
@@ -1762,18 +1772,34 @@ Entware_Ready(){
 }
 ### ###
 
+Process_Upgrade(){
+	if grep -q "^nvpnmgr" "$SETTINGSFILE"; then
+		sed -i "s/nvpnmgr/vpnmgr/g" "$SETTINGSFILE"
+	fi
+	if grep -q "^nvpnmgr" "$SETTINGSFILE"; then
+		sed -i "s/nvpnmgr/vpnmgr/g" "$SETTINGSFILE"
+	fi
+	if [ -d "/jffs/addons/nvpnmgr.d" ]; then
+		mv "/jffs/addons/nvpnmgr.d" "/jffs/addons/vpnmgr.d"
+	fi
+}
+
 NTP_Ready "$@"
 Entware_Ready "$@"
 
 if [ -z "$1" ]; then
+	if [ ! -f /opt/bin/7z ]; then
+		opkg update
+		opkg install p7zip
+	fi
 	Create_Dirs
 	Conf_Exists
 	Set_Version_Custom_Settings "local"
 	Auto_Cron create 2>/dev/null
 	Auto_Startup create 2>/dev/null
 	Auto_ServiceEvent create 2>/dev/null
-	Shortcut_nvpnmgr create
-	if [ ! -f "$SCRIPT_DIR/nvpncountrydata" ]; then
+	Shortcut_vpnmgr create
+	if [ ! -f "$SCRIPT_DIR/vpncountrydata" ]; then
 		getCountryData
 	fi
 	Create_Symlinks
