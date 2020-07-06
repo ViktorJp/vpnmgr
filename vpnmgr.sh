@@ -1776,11 +1776,14 @@ Process_Upgrade(){
 	if grep -q "^nvpnmgr" "$SETTINGSFILE"; then
 		sed -i "s/nvpnmgr/vpnmgr/g" "$SETTINGSFILE"
 	fi
-	if grep -q "^nvpnmgr" "$SETTINGSFILE"; then
-		sed -i "s/nvpnmgr/vpnmgr/g" "$SETTINGSFILE"
-	fi
 	if [ -d "/jffs/addons/nvpnmgr.d" ]; then
 		mv "/jffs/addons/nvpnmgr.d" "/jffs/addons/vpnmgr.d"
+	fi
+	if [ -f "/jffs/addons/vpnmgr.d/nvpnmgr_www.asp" ]; then
+		rm -f "/jffs/addons/vpnmgr.d/nvpnmgr_www.asp"
+	fi
+	if [ -f "/jffs/addons/vpnmgr.d/nvpncountrydata" ]; then
+		rm -f "/jffs/addons/vpnmgr.d/nvpncountrydata"
 	fi
 }
 
