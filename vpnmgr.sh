@@ -1786,6 +1786,9 @@ Process_Upgrade(){
 	if [ -f "/jffs/addons/vpnmgr.d/nvpncountrydata" ]; then
 		rm -f "/jffs/addons/vpnmgr.d/nvpncountrydata"
 	fi
+	if [ -f "/opt/bin/nvpnmgr" ]; then
+		rm -f /opt/bin/nvpnmgr
+	fi
 }
 
 NTP_Ready "$@"
