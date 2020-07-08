@@ -1775,9 +1775,11 @@ Entware_Ready(){
 ### ###
 
 Process_Upgrade(){
-	SETTINGSFILE="/jffs/addons/custom_settings.txt"
-	if grep -q "^nvpnmgr" "$SETTINGSFILE"; then
-		sed -i "s/nvpnmgr/vpnmgr/g" "$SETTINGSFILE"
+	if grep -q "^nvpnmgr" "/jffs/addons/custom_settings.txt"; then
+		sed -i "s/nvpnmgr/vpnmgr/g" "/jffs/addons/custom_settings.txt"
+	fi
+	if grep -q "nvpnmgr" "/var/spool/cron/crontabs/$USER"; then
+		sed -i "s/nvpnmgr/vpnmgr/g" "/var/spool/cron/crontabs/$USER"
 	fi
 	if [ -d "/jffs/addons/nvpnmgr.d" ]; then
 		mv "/jffs/addons/nvpnmgr.d" "/jffs/addons/vpnmgr.d"
