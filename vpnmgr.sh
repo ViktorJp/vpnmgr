@@ -816,7 +816,6 @@ UpdateVPNConfig(){
 		nvram set vpn_client"$VPN_NO"_desc="$VPN_PROVIDER $OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT"
 		
 		nvram set vpn_client"$VPN_NO"_cipher="$OVPN_CIPHER"
-		nvram set vpn_client"$VPN_NO"_comp="-1"
 		nvram set vpn_client"$VPN_NO"_connretry="-1"
 		nvram set vpn_client"$VPN_NO"_crypt="tls"
 		nvram set vpn_client"$VPN_NO"_digest="$OVPN_AUTHDIGEST"
@@ -830,6 +829,12 @@ UpdateVPNConfig(){
 		nvram set vpn_client"$VPN_NO"_tlsremote="0"
 		nvram set vpn_client"$VPN_NO"_userauth="1"
 		nvram set vpn_client"$VPN_NO"_useronly="0"
+		
+		if [ "$VPN_PROVIDER" = "NordVPN" ]; then
+		nvram set vpn_client"$VPN_NO"_comp="-1"
+		elif [ "$VPN_PROVIDER" = "PIA" ]; then
+		nvram set vpn_client"$VPN_NO"_comp="no"
+		fi
 		
 		vpncustomoptions='remote-random
 resolv-retry infinite
