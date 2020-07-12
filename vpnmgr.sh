@@ -804,6 +804,9 @@ UpdateVPNConfig(){
 			else
 				nvram set vpn_client"$VPN_NO"_clientlist="<DummyVPN>172.16.14.1>>VPN"
 			fi
+			if ! nvram get vpn_clientx_eas | grep -q "$VPN_NO"; then
+				nvram set vpn_clientx_eas="$(nvram get vpn_clientx_eas),$VPN_NO"
+			fi
 		fi
 		
 		nvram set vpn_client"$VPN_NO"_addr="$OVPN_ADDR"
