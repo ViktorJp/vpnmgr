@@ -535,47 +535,38 @@ getCityID(){
 	echo "$1" | jq -r -e '.[] | select(.name=="'"$2"'") | .cities[] | select(.name=="'"$3"'") | .id // empty'
 }
 
-# use to create content of OVPN_IP variable
 getIP(){
 	echo "$1" | jq -r -e '.station // empty'
 }
 
-# use to create content of OVPN_HOSTNAME variable
 getHostname(){
 	echo "$1" | jq -r -e '.hostname // empty'
 }
 
-# use to create content of OVPN_DETAIL variable
 getOVPNcontents(){
 	/usr/sbin/curl -fsL --retry 3 "https://downloads.nordcdn.com/configs/files/ovpn_$2/servers/$1"
 }
 
-# use to create content of OVPN_PORT variable
 getPort(){
 	echo "$1" | grep "^remote " | cut -f3 -d' '
 }
 
-# use to create content of OVPN_CIPHER variable
 getCipher(){
 	echo "$1" | grep "^cipher " | cut -f2 -d' '
 }
 
-# use to create content of OVPN_AUTHDIGEST variable
 getAuthDigest(){
 	echo "$1" | grep "^auth " | cut -f2 -d' '
 }
 
-# use to create content of CLIENT_CA variable
 getClientCA(){
 	echo "$1" | awk '/<ca>/{flag=1;next}/<\/ca>/{flag=0}flag' | sed '/^#/ d'
 }
 
-# use to create content of CRT_CLIENT_STATIC variable
 getClientCRT(){
 	echo "$1" | awk '/<tls-auth>/{flag=1;next}/<\/tls-auth>/{flag=0}flag' | sed '/^#/ d'
 }
 
-# use to create content of CONNECTSTATE variable - set to 2 if the VPN is connected
 getConnectState(){
 	nvram get vpn_client"$1"_state
 }
