@@ -546,8 +546,7 @@ getCountryNames(){
 	if [ "$1" = "NordVPN" ]; then
 		echo "$2" | jq -r -e '.[] | .name // empty'
 	elif [ "$1" = "PIA" ]; then
-		unsortedlist="$(/opt/bin/7z -ba l "$2" -- *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//' | sort -u -k 1,1)"
-		echo "$unsortedlist" | sedCountryCodesDestructive | sort | awk '{$1=$1;print}'
+		echo "$2" | sort -u -k 1,1 | sedCountryCodesDestructive | sort | awk '{$1=$1;print}'
 	fi
 }
 
@@ -559,9 +558,7 @@ getCityCount(){
 	if [ "$1" = "NordVPN" ]; then
 		echo "$2" | jq -r -e '.[] | select(.name=="'"$3"'") | .cities | length // empty'
 	elif [ "$1" = "PIA" ]; then
-		unsortedlist="$(/opt/bin/7z -ba l "$2" -- *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//')"
-		sortedlist="$(echo "$unsortedlist" | sedCountryCodesDestructive | sort)"
-		echo "$sortedlist" | grep -c "$3"
+		echo "$2" | sedCountryCodesDestructive | sort | grep -c "$3"
 	fi
 }
 
@@ -569,9 +566,7 @@ getCityNames(){
 	if [ "$1" = "NordVPN" ]; then
 		echo "$2" | jq -r -e '.[] | select(.name=="'"$3"'") | .cities[] | .name // empty'
 	elif [ "$1" = "PIA" ]; then
-		unsortedlist="$(/opt/bin/7z -ba l "$2" -- *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//')"
-		sortedlist="$(echo "$unsortedlist" | sedCountryCodes | sort)"
-		echo "$sortedlist" | grep "$3" | sed "s/$3//" | awk '{$1=$1;print}'
+		echo "$2" | sedCountryCodes | sort | grep "$3" | sed "s/$3//" | awk '{$1=$1;print}'
 	fi
 }
 
@@ -654,6 +649,7 @@ getOVPNArchives(){
 	done
 	
 	if [ "$archiveschanged" = "true" ]; then
+		/opt/bin/7z -ba l "$OVPN_ARCHIVE_DIR/pia_udp_standard.zip" -- *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//' | sort | awk '{$1=$1;print}' > "$SCRIPT_DIR/pia_countrydata"
 		Print_Output "true" "Changes detected in OpenVPN file archives, local copies updated" "$PASS"
 	else
 		Print_Output "true" "No changes in OpenVPN file archives" "$WARN"
@@ -1093,7 +1089,6 @@ SetVPNParameters(){
 	countryid="0"
 	cityname=""
 	cityid="0"
-	ovpnarchive=""
 	
 	while true; do
 		printf "\\n\\e[1mPlease enter the VPN client number (1-5):\\e[0m    "
@@ -1272,9 +1267,9 @@ SetVPNParameters(){
 				[ -z "$countrydata" ] && Print_Output "true" "Error, country data from NordVPN is missing" "$ERR" && return 1
 				LISTCOUNTRIES="$(getCountryNames "NordVPN" "$countrydata")"
 			elif [ "$vpnprovider" = "PIA" ]; then
-				ovpnarchive="$OVPN_ARCHIVE_DIR/pia_""$(echo "$vpnprot" | cut -f2 -d"_")""_$(echo "$vpntype" | cut -f2 -d"_").zip"
-				[ ! -f "$ovpnarchive" ] && Print_Output "true" "Error, OpenVPN file archives from PIA are missing" "$ERR" && return 1
-				LISTCOUNTRIES="$(getCountryNames "PIA" "$ovpnarchive")"
+				countrydata="$(cat "$SCRIPT_DIR/pia_countrydata")"
+				[ -z "$countrydata" ] && Print_Output "true" "Error, country data from PIA is missing" "$ERR" && return 1
+				LISTCOUNTRIES="$(getCountryNames "PIA" "$countrydata")"
 			fi
 			COUNTCOUNTRIES="$(echo "$LISTCOUNTRIES" | wc -l)"
 			while true; do
@@ -1317,14 +1312,17 @@ SetVPNParameters(){
 				if [ "$vpnprovider" = "NordVPN" ]; then
 					citycount="$(getCityCount "NordVPN" "$countrydata" "$countryname")"
 				elif [ "$vpnprovider" = "PIA" ]; then
-					citycount="$(getCityCount "PIA" "$ovpnarchive" "$countryname")"
+					countrydata="$(cat "$SCRIPT_DIR/pia_countrydata")"
+					citycount="$(getCityCount "PIA" "$countrydata" "$countryname")"
 				fi
+				
 				if [ "$citycount" -eq "1" ]; then
 					if [ "$vpnprovider" = "NordVPN" ]; then
 						cityname="$(getCityNames "NordVPN" "$countrydata" "$countryname")"
 						cityid="$(getCityID "$countrydata" "$countryname" "$cityname")"
 					elif [ "$vpnprovider" = "PIA" ]; then
-						cityname="$(getCityNames "PIA" "$ovpnarchive" "$countryname")"
+						countrydata="$(cat "$SCRIPT_DIR/pia_countrydata")"
+						cityname="$(getCityNames "PIA" "$countrydata" "$countryname")"
 					fi
 				elif [ "$citycount" -gt "1" ]; then
 					if [ "$vpnprovider" = "NordVPN" ]; then
@@ -1353,10 +1351,12 @@ SetVPNParameters(){
 			
 			if [ "$choosecity" = "true" ]; then
 				LISTCITIES=""
+				
 				if [ "$vpnprovider" = "NordVPN" ]; then
 					LISTCITIES="$(getCityNames "NordVPN" "$countrydata" "$countryname")"
 				elif [ "$vpnprovider" = "PIA" ]; then
-					LISTCITIES="$(getCityNames "PIA" "$ovpnarchive" "$countryname")"
+					countrydata="$(cat "$SCRIPT_DIR/pia_countrydata")"
+					LISTCITIES="$(getCityNames "PIA" "$countrydata" "$countryname")"
 				fi
 				
 				COUNTCITIES="$(echo "$LISTCITIES" | wc -l)"
