@@ -546,7 +546,7 @@ getCountryNames(){
 	if [ "$1" = "NordVPN" ]; then
 		echo "$2" | jq -r -e '.[] | .name // empty'
 	elif [ "$1" = "PIA" ]; then
-		unsortedlist="$(/opt/bin/7z -ba l "$2" *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//' | sort -u -k 1,1)"
+		unsortedlist="$(/opt/bin/7z -ba l "$2" -- *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//' | sort -u -k 1,1)"
 		echo "$unsortedlist" | sedCountryCodesDestructive | sort | awk '{$1=$1;print}'
 	fi
 }
@@ -559,7 +559,7 @@ getCityCount(){
 	if [ "$1" = "NordVPN" ]; then
 		echo "$2" | jq -r -e '.[] | select(.name=="'"$3"'") | .cities | length // empty'
 	elif [ "$1" = "PIA" ]; then
-		unsortedlist="$(/opt/bin/7z -ba l "$2" *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//')"
+		unsortedlist="$(/opt/bin/7z -ba l "$2" -- *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//')"
 		sortedlist="$(echo "$unsortedlist" | sedCountryCodesDestructive | sort)"
 		echo "$sortedlist" | grep -c "$3"
 	fi
@@ -569,7 +569,7 @@ getCityNames(){
 	if [ "$1" = "NordVPN" ]; then
 		echo "$2" | jq -r -e '.[] | select(.name=="'"$3"'") | .cities[] | .name // empty'
 	elif [ "$1" = "PIA" ]; then
-		unsortedlist="$(/opt/bin/7z -ba l "$2" *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//')"
+		unsortedlist="$(/opt/bin/7z -ba l "$2" -- *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//')"
 		sortedlist="$(echo "$unsortedlist" | sedCountryCodes | sort)"
 		echo "$sortedlist" | grep "$3" | sed "s/$3//" | awk '{$1=$1;print}'
 	fi
