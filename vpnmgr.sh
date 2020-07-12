@@ -600,17 +600,17 @@ getOVPNArchives(){
 	archiveschanged="false"
 	for f in $FILES; do
 		if [ -f "$f" ]; then
-			if [ -f "$OVPN_ARCHIVE_DIR/$(basename $f)" ]; then
+			if [ -f "$OVPN_ARCHIVE_DIR/$(basename "$f")" ]; then
 				remotemd5="$(md5sum "$f" | awk '{print $1}')"
-				localmd5="$(md5sum "$OVPN_ARCHIVE_DIR/$(basename $f)" | awk '{print $1}')"
+				localmd5="$(md5sum "$OVPN_ARCHIVE_DIR/$(basename "$f")" | awk '{print $1}')"
 				if [ "$localmd5" != "$remotemd5" ]; then
-					mv "$f" "$OVPN_ARCHIVE_DIR/$(basename $f)"
+					mv "$f" "$OVPN_ARCHIVE_DIR/$(basename "$f")"
 					archiveschanged="true"
 				else
 					rm -f "$f"
 				fi
 			else
-				mv "$f" "$OVPN_ARCHIVE_DIR/$(basename $f)"
+				mv "$f" "$OVPN_ARCHIVE_DIR/$(basename "$f")"
 				archiveschanged="true"
 			fi
 		fi
