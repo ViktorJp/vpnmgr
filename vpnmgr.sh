@@ -1793,6 +1793,11 @@ Process_Upgrade(){
 	if [ -f /opt/bin/nvpnmgr ]; then
 		rm -f /opt/bin/nvpnmgr
 	fi
+	if [ -f /jffs/scripts/nvpnmgr ]; then
+		mv /jffs/scripts/nvpnmgr /jffs/scripts/vpnmgr
+		exec /jffs/scripts/vpnmgr
+		exit 1
+	fi
 }
 
 NTP_Ready "$@"
