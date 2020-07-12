@@ -171,6 +171,7 @@ function OptionsEnableDisable(forminput){
 	var prefix = inputname.substring(0,inputname.lastIndexOf('_'));
 	
 	if(inputvalue == "false"){
+		$j('input[name='+prefix+'_provider]').prop("disabled",true);
 		$j('input[name='+prefix+'_usn]').addClass("disabled");
 		$j('input[name='+prefix+'_usn]').prop("disabled",true);
 		$j('input[name='+prefix+'_pwd]').addClass("disabled");
@@ -189,6 +190,7 @@ function OptionsEnableDisable(forminput){
 		}
 	}
 	else if(inputvalue == "true"){
+		$j('input[name='+prefix+'_provider]').prop("disabled",false);
 		$j('input[name='+prefix+'_usn]').removeClass("disabled");
 		$j('input[name='+prefix+'_usn]').prop("disabled",false);
 		$j('input[name='+prefix+'_pwd]').removeClass("disabled");
@@ -206,6 +208,26 @@ function OptionsEnableDisable(forminput){
 			$j('#'+prefix+'_'+daysofweek[i].toLowerCase()).prop("disabled",false);
 		}
 	}
+}
+
+function VPNTypesToggle(forminput){
+	var inputname = forminput.name;
+	var inputvalue = forminput.value;
+	var prefix = inputname.substring(0,inputname.lastIndexOf('_'));
+	
+	if(inputvalue == "NordVPN"){
+		$j('label[for='+prefix+'_standard],#'+prefix+'_standard').show();
+		$j('label[for='+prefix+'_double],#'+prefix+'_double').show();
+		$j('label[for='+prefix+'_p2p],#'+prefix+'_p2p').show();
+		$j('label[for='+prefix+'_strong],#'+prefix+'_strong').hide();
+	}
+	else if(inputvalue == "PIA"){
+		$j('label[for='+prefix+'_standard],#'+prefix+'_standard').show();
+		$j('label[for='+prefix+'_double],#'+prefix+'_double').hide();
+		$j('label[for='+prefix+'_p2p],#'+prefix+'_p2p').hide();
+		$j('label[for='+prefix+'_strong],#'+prefix+'_strong').show();
+	}
+	$j('#'+prefix+'_standard').prop("checked", true);
 }
 
 function ScheduleOptionsEnableDisable(forminput){
@@ -232,7 +254,7 @@ function ScheduleOptionsEnableDisable(forminput){
 				$j('#'+prefix+'_'+daysofweek[i].toLowerCase()).prop("disabled",false);
 			}
 		}
-}
+	}
 }
 
 function Validate_Schedule(forminput,hoursmins){
@@ -336,6 +358,8 @@ function get_conf_file(){
 						eval("document.form.vpnmgr_"+settingname).value = settingvalue;
 						if(settingname.indexOf("managed") != -1) OptionsEnableDisable($j("#vpnmgr_"+settingname.replace("_managed","")+"_man_"+settingvalue)[0]);
 						if(settingname.indexOf("schenabled") != -1) ScheduleOptionsEnableDisable($j("#vpnmgr_"+settingname.replace("_schenabled","")+"_sch_"+settingvalue)[0]);
+						if(settingname.indexOf("provider") != -1) VPNTypesToggle($j("#vpnmgr_"+settingname.replace("_provider","")+"_prov_"+settingvalue.toLowerCase())[0]);
+						
 						if(settingname.indexOf("cityname") != -1){
 							let dropdown = $j('#vpnmgr_'+settingname);
 							dropdown.empty();
@@ -465,7 +489,7 @@ function BuildConfigTable(prefix,title){
 	
 	/* PROVIDER */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(2);">VPN Provider</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" onchange="" name="vpnmgr_'+prefix+'_provider" id="vpnmgr_'+prefix+'_prov_nordvpn" class="input" value="NordVPN" checked><label for="vpnmgr_'+prefix+'_prov_nordvpn">NordVPN</label><input autocomplete="off" autocapitalize="off" type="radio" onchange="" name="vpnmgr_'+prefix+'_provider" id="vpnmgr_'+prefix+'_prov_pia" class="input" value="PIA"><label for="vpnmgr_'+prefix+'_prov_pia">PIA</label></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(2);">VPN Provider</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" onchange="VPNTypesToggle(this)" name="vpnmgr_'+prefix+'_provider" id="vpnmgr_'+prefix+'_prov_nordvpn" class="input" value="NordVPN" checked><label for="vpnmgr_'+prefix+'_prov_nordvpn">NordVPN</label><input autocomplete="off" autocapitalize="off" type="radio" onchange="VPNTypesToggle(this)" name="vpnmgr_'+prefix+'_provider" id="vpnmgr_'+prefix+'_prov_pia" class="input" value="PIA"><label for="vpnmgr_'+prefix+'_prov_pia">PIA</label></td>';
 	charthtml+='</tr>';
 	
 	/* USERNAME ENABLED */
@@ -480,7 +504,7 @@ function BuildConfigTable(prefix,title){
 	
 	/* TYPE */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(5);">Type</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" name="vpnmgr_'+prefix+'_type" id="vpnmgr_'+prefix+'_standard" class="input" value="Standard" checked><label for="vpnmgr_'+prefix+'_standard">Standard</label><input autocomplete="off" autocapitalize="off" type="radio" name="vpnmgr_'+prefix+'_type" id="vpnmgr_'+prefix+'_double" class="input" value="Double"><label for="vpnmgr_'+prefix+'_double">Double</label><input autocomplete="off" autocapitalize="off" type="radio" name="vpnmgr_'+prefix+'_type" id="vpnmgr_'+prefix+'_p2p" class="input" value="P2P"><label for="vpnmgr_'+prefix+'_p2p">P2P</label></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(5);">Type</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" name="vpnmgr_'+prefix+'_type" id="vpnmgr_'+prefix+'_standard" class="input" value="Standard" checked><label for="vpnmgr_'+prefix+'_standard">Standard</label><input autocomplete="off" autocapitalize="off" type="radio" name="vpnmgr_'+prefix+'_type" id="vpnmgr_'+prefix+'_double" class="input" value="Double"><label for="vpnmgr_'+prefix+'_double">Double</label><input autocomplete="off" autocapitalize="off" type="radio" name="vpnmgr_'+prefix+'_type" id="vpnmgr_'+prefix+'_p2p" class="input" value="P2P"><label for="vpnmgr_'+prefix+'_p2p">P2P</label><input autocomplete="off" autocapitalize="off" type="radio" name="vpnmgr_'+prefix+'_type" id="vpnmgr_'+prefix+'_strong" class="input" value="Strong"><label for="vpnmgr_'+prefix+'_strong">Strong</label></td>';
 	charthtml+='</tr>';
 	
 	/* PROTOCOL */
