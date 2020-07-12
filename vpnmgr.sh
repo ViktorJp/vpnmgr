@@ -516,6 +516,7 @@ getCountryData(){
 			Print_Output "true" "Changes detected in NordVPN country data found, updating now" "$PASS"
 			Create_Symlinks
 		else
+			rm -f /tmp/vpncountrydata
 			Print_Output "true" "No changes in NordVPN country data" "$WARN"
 		fi
 	else
