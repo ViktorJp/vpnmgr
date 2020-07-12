@@ -785,6 +785,13 @@ UpdateVPNConfig(){
 	fi
 	
 	EXISTING_ADDR="$(nvram get vpn_client"$VPN_NO"_addr)"
+	EXISTING_PORT="$(nvram get vpn_client"$VPN_NO"_port)"
+	EXISTING_PROTO="$(nvram get vpn_client"$VPN_NO"_proto)"
+	if [ "$EXISTING_PROTO" = "tcp-client" ]; then
+		EXISTING_PROTO="TCP"
+	elif [ "$EXISTING_PROTO" = "udp" ]; then
+		EXISTING_PROTO="UDP"
+	fi
 	
 	OVPN_HOSTNAME_SHORT=""
 	if [ "$VPN_PROVIDER" = "NordVPN" ]; then
@@ -793,7 +800,7 @@ UpdateVPNConfig(){
 		OVPN_HOSTNAME_SHORT="$(echo "$OVPN_ADDR" | cut -f1 -d'.')"
 	fi
 	
-	if [ "$OVPN_ADDR" != "$EXISTING_ADDR" ]; then
+	if [ "$OVPN_ADDR" != "$EXISTING_ADDR" ] || [ "$OVPN_PORT" != "$EXISTING_PORT" ] || [ "$VPN_PROT_SHORT" != "$EXISTING_PROTO" ]; then
 		Print_Output "true" "Updating VPN client $VPN_NO to new $VPN_PROVIDER server" "$PASS"
 		
 		if [ -z "$(nvram get vpn_client"$VPN_NO"_addr)" ]; then
