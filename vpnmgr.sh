@@ -839,9 +839,6 @@ UpdateVPNConfig(){
 		vpncustomoptions='remote-random
 resolv-retry infinite
 remote-cert-tls server
-tun-mtu 1500
-tun-mtu-extra 32
-mssfix 1450
 ping 15
 ping-restart 0
 ping-timer-rem
@@ -864,6 +861,14 @@ pull-filter ignore "route-ipv6"'
 		vpncustomoptions="$vpncustomoptions
 explicit-exit-notify 3"
 	fi
+	
+	if [ "$VPN_PROVIDER" = "NordVPN" ]; then
+		vpncustomoptions="$vpncustomoptions
+tun-mtu 1500
+tun-mtu-extra 32
+mssfix 1450"
+	fi
+	
 		
 		vpncustomoptionsbase64="$(echo "$vpncustomoptions" | head -c -1 | openssl base64 -A)"
 		
