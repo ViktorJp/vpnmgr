@@ -322,7 +322,7 @@ function get_conf_file(){
 					dropdown.empty();
 					dropdown.append('<option selected="true"></option>');
 					dropdown.prop('selectedIndex', 0);
-					$j.each(countryjson, function (key, entry) {
+					$j.each(nordvpncountries, function (key, entry) {
 						dropdown.append($j('<option></option>').attr('value', entry.name).text(entry.name));
 					});
 				}
@@ -340,7 +340,7 @@ function get_conf_file(){
 							dropdown.empty();
 							dropdown.append('<option selected="true"></option>');
 							dropdown.prop('selectedIndex', 0);
-							$j.each(countryjson, function (key, entry) {
+							$j.each(nordvpncountries, function (key, entry) {
 								if(entry.name != window["vpnmgr_settings"][i-1][1]){
 									return true;
 								}
@@ -578,7 +578,7 @@ $j.fn.serializeObject = function(){
 			o["vpnmgr_vpn"+i+"_cityid"] = 0;
 		}
 		else {
-			o["vpnmgr_vpn"+i+"_countryid"] = countryjson.filter(function(item) {
+			o["vpnmgr_vpn"+i+"_countryid"] = nordvpncountries.filter(function(item) {
 				return item.name == $j("select[name='vpnmgr_vpn"+i+"_countryname']").val();
 			}).map(function(d) {return d.id})[0];
 			
@@ -586,7 +586,7 @@ $j.fn.serializeObject = function(){
 				o["vpnmgr_vpn"+i+"_cityid"] = 0;
 			}
 			else {
-				o["vpnmgr_vpn"+i+"_cityid"] = countryjson.filter(function(item) {
+				o["vpnmgr_vpn"+i+"_cityid"] = nordvpncountries.filter(function(item) {
 					return item.name == $j("select[name='vpnmgr_vpn"+i+"_countryname']").val();
 				})[0].cities.filter(function(item) {
 					return item.name == $j("select[name='vpnmgr_vpn"+i+"_cityname']").val();
@@ -656,7 +656,7 @@ function GetVersionNumber(versiontype)
 	}
 }
 
-var countryjson = [];
+var nordvpncountries = [];
 function getNordVPNCountryData(){
 	$j.ajax({
 		url: '/ext/vpnmgr/nordvpn_countrydata.htm',
@@ -665,7 +665,22 @@ function getNordVPNCountryData(){
 			setTimeout("getNordVPNCountryData();", 1000);
 		},
 		success: function(data){
-			countryjson = data;
+			nordvpncountries = data;
+			getPIACountryData();
+		}
+	});
+}
+
+var piacountries = [];
+function getPIACountryData(){
+	$j.ajax({
+		url: '/ext/vpnmgr/pia_countrydata.htm',
+		dataType: 'json',
+		error: function(xhr){
+			setTimeout("getPIACountryData();", 1000);
+		},
+		success: function(data){
+			piacountries = data;
 			get_conf_file();
 		}
 	});
@@ -680,7 +695,7 @@ function setCitiesforCountry(forminput){
 	dropdown.empty();
 	dropdown.append('<option selected="true"></option>');
 	dropdown.prop('selectedIndex', 0);
-	$j.each(countryjson, function (key, entry) {
+	$j.each(nordvpncountries, function (key, entry) {
 		if(entry.name != $j('select[name='+prefix+'_countryname]').val()){
 			return true;
 		}
