@@ -151,16 +151,17 @@ function SettingHint(hintid) {
 	}
 	hinttext="My text goes here";
 	if(hintid == 1) hinttext="Manage VPN client using vpnmgr";
-	if(hintid == 2) hinttext="Username for VPN";
-	if(hintid == 3) hinttext="Password for VPN";
-	if(hintid == 4) hinttext="Protocol to use for VPN server";
-	if(hintid == 5) hinttext="Type of VPN server to use";
-	if(hintid == 6) hinttext="Country of VPN server to use";
-	if(hintid == 7) hinttext="City of VPN server to use";
-	if(hintid == 8) hinttext="Automatically update VPN to new VPN server";
-	if(hintid == 9) hinttext="Day(s) of week to check for new server";
-	if(hintid == 10) hinttext="Hour(s) of day to check for new server (* for all, 0-23. Comma separate for multiple hours.)";
-	if(hintid == 11) hinttext="Minute(s) of hour to check for new server (* for all, 0-59. Comma separate for multiple minutes.)";
+	if(hintid == 2) hinttext="Provider to use for VPN";
+	if(hintid == 3) hinttext="Username for VPN";
+	if(hintid == 4) hinttext="Password for VPN";
+	if(hintid == 5) hinttext="Protocol to use for VPN server";
+	if(hintid == 6) hinttext="Type of VPN server to use";
+	if(hintid == 7) hinttext="Country of VPN server to use";
+	if(hintid == 8) hinttext="City of VPN server to use";
+	if(hintid == 9) hinttext="Automatically update VPN to new VPN server";
+	if(hintid == 10) hinttext="Day(s) of week to check for new server";
+	if(hintid == 11) hinttext="Hour(s) of day to check for new server (* for all, 0-23. Comma separate for multiple hours.)";
+	if(hintid == 12) hinttext="Minute(s) of hour to check for new server (* for all, 0-59. Comma separate for multiple minutes.)";
 	return overlib(hinttext, HAUTO, VAUTO);
 }
 
@@ -330,7 +331,7 @@ function get_conf_file(){
 				for (var i = 0; i < window["vpnmgr_settings"].length; i++) {
 					let settingname = window["vpnmgr_settings"][i][0];
 					let settingvalue = window["vpnmgr_settings"][i][1];
-					if(settingname.indexOf("cityid") != -1 || settingname.indexOf("countryid") != -1 || settingname.indexOf("provider") != -1) continue;
+					if(settingname.indexOf("cityid") != -1 || settingname.indexOf("countryid") != -1) continue;
 					if(settingname.indexOf("schdays") == -1){
 						eval("document.form.vpnmgr_"+settingname).value = settingvalue;
 						if(settingname.indexOf("managed") != -1) OptionsEnableDisable($j("#vpnmgr_"+settingname.replace("_managed","")+"_man_"+settingvalue)[0]);
@@ -459,17 +460,22 @@ function BuildConfigTable(prefix,title){
 	
 	/* MANAGEMENT ENABLED */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(1);">Managed by vpnmgr?</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" onchange="OptionsEnableDisable(this)" name="vpnmgr_'+prefix+'_managed" id="vpnmgr_'+prefix+'_man_true" class="input" value="true"><label for="vpnmgr_'+prefix+'_man_true">Yes</label><input autocomplete="off" autocapitalize="off" type="radio"  onchange="OptionsEnableDisable(this)" name="vpnmgr_'+prefix+'_managed" id="vpnmgr_'+prefix+'_man_false" class="input" value="false" checked><label for="vpnmgr_'+prefix+'_man_false">No</label></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(1);">Managed by vpnmgr?</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" onchange="OptionsEnableDisable(this)" name="vpnmgr_'+prefix+'_managed" id="vpnmgr_'+prefix+'_man_true" class="input" value="true"><label for="vpnmgr_'+prefix+'_man_true">Yes</label><input autocomplete="off" autocapitalize="off" type="radio" onchange="OptionsEnableDisable(this)" name="vpnmgr_'+prefix+'_managed" id="vpnmgr_'+prefix+'_man_false" class="input" value="false" checked><label for="vpnmgr_'+prefix+'_man_false">No</label></td>';
+	charthtml+='</tr>';
+	
+	/* PROVIDER */
+	charthtml+='<tr>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(2);">VPN Provider</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" onchange="" name="vpnmgr_'+prefix+'_provider" id="vpnmgr_'+prefix+'_prov_nordvpn" class="input" value="NordVPN" checked><label for="vpnmgr_'+prefix+'_prov_nordvpn">NordVPN</label><input autocomplete="off" autocapitalize="off" type="radio" onchange="" name="vpnmgr_'+prefix+'_provider" id="vpnmgr_'+prefix+'_prov_pia" class="input" value="PIA"><label for="vpnmgr_'+prefix+'_prov_pia">PIA</label></td>';
 	charthtml+='</tr>';
 	
 	/* USERNAME ENABLED */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(2);">Username</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="text" class="input_25_table" onchange="" name="vpnmgr_'+prefix+'_usn" id="vpnmgr_'+prefix+'_usn"></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(3);">Username</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="text" class="input_25_table" onchange="" name="vpnmgr_'+prefix+'_usn" id="vpnmgr_'+prefix+'_usn"></td>';
 	charthtml+='</tr>';
 	
 	/* PASSWORD */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(3);">Password</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="password" class="input_25_table" onchange="" name="vpnmgr_'+prefix+'_pwd" id="vpnmgr_'+prefix+'_pwd"><input type="checkbox" name="show_pass_'+prefix+'" onclick="pass_checked(document.form.vpnmgr_'+prefix+'_pwd,document.form.show_pass_'+prefix+')">Show password</td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(4);">Password</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="password" class="input_25_table" onchange="" name="vpnmgr_'+prefix+'_pwd" id="vpnmgr_'+prefix+'_pwd"><input type="checkbox" name="show_pass_'+prefix+'" onclick="pass_checked(document.form.vpnmgr_'+prefix+'_pwd,document.form.show_pass_'+prefix+')">Show password</td>';
 	charthtml+='</tr>';
 	
 	/* TYPE */
@@ -479,27 +485,27 @@ function BuildConfigTable(prefix,title){
 	
 	/* PROTOCOL */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(4);">Protocol</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" name="vpnmgr_'+prefix+'_protocol" id="vpnmgr_'+prefix+'_tcp" class="input" value="TCP"><label for="vpnmgr_'+prefix+'_tcp">TCP</label><input autocomplete="off" autocapitalize="off" type="radio" name="vpnmgr_'+prefix+'_protocol" id="vpnmgr_'+prefix+'_udp" class="input" value="UDP" checked><label for="vpnmgr_'+prefix+'_udp">UDP</label></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(6);">Protocol</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" name="vpnmgr_'+prefix+'_protocol" id="vpnmgr_'+prefix+'_tcp" class="input" value="TCP"><label for="vpnmgr_'+prefix+'_tcp">TCP</label><input autocomplete="off" autocapitalize="off" type="radio" name="vpnmgr_'+prefix+'_protocol" id="vpnmgr_'+prefix+'_udp" class="input" value="UDP" checked><label for="vpnmgr_'+prefix+'_udp">UDP</label></td>';
 	charthtml+='</tr>';
 	
 	/* COUNTRY */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(6);">Country</a></td><td class="settingvalue"><select name="vpnmgr_'+prefix+'_countryname" id="vpnmgr_'+prefix+'_countryname" onChange="setCitiesforCountry(this)"></select></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(7);">Country</a></td><td class="settingvalue"><select name="vpnmgr_'+prefix+'_countryname" id="vpnmgr_'+prefix+'_countryname" onChange="setCitiesforCountry(this)"></select></td>';
 	charthtml+='</tr>';
 	
 	/* CITY */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(7);">City</a></td><td class="settingvalue"><select name="vpnmgr_'+prefix+'_cityname" id="vpnmgr_'+prefix+'_cityname"></select></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(8);">City</a></td><td class="settingvalue"><select name="vpnmgr_'+prefix+'_cityname" id="vpnmgr_'+prefix+'_cityname"></select></td>';
 	charthtml+='</tr>';
 	
 	/* SCHEDULE ENABLED */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(8);">Scheduled update?</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" onchange="ScheduleOptionsEnableDisable(this)" name="vpnmgr_'+prefix+'_schenabled" id="vpnmgr_'+prefix+'_sch_true" class="input" value="true"><label for="vpnmgr_'+prefix+'_sch_true">Yes</label><input autocomplete="off" autocapitalize="off" type="radio"  onchange="ScheduleOptionsEnableDisable(this)" name="vpnmgr_'+prefix+'_schenabled" id="vpnmgr_'+prefix+'_sch_false" class="input" value="false" checked><label for="vpnmgr_'+prefix+'_sch_false">No</label></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(9);">Scheduled update?</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" onchange="ScheduleOptionsEnableDisable(this)" name="vpnmgr_'+prefix+'_schenabled" id="vpnmgr_'+prefix+'_sch_true" class="input" value="true"><label for="vpnmgr_'+prefix+'_sch_true">Yes</label><input autocomplete="off" autocapitalize="off" type="radio"  onchange="ScheduleOptionsEnableDisable(this)" name="vpnmgr_'+prefix+'_schenabled" id="vpnmgr_'+prefix+'_sch_false" class="input" value="false" checked><label for="vpnmgr_'+prefix+'_sch_false">No</label></td>';
 	charthtml+='</tr>';
 	
 	/* SCHEDULE DAYS */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(9);">Schedule Days</a></td><td class="settingvalue">';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(10);">Schedule Days</a></td><td class="settingvalue">';
 	charthtml+='<input autocomplete="off" autocapitalize="off" type="checkbox" name="vpnmgr_'+prefix+'_schdays" id="vpnmgr_'+prefix+'_mon" class="input" value="Mon"><label for="vpnmgr_'+prefix+'_mon">Mon</label>';
 	charthtml+='<input autocomplete="off" autocapitalize="off" type="checkbox" name="vpnmgr_'+prefix+'_schdays" id="vpnmgr_'+prefix+'_tues" class="input" value="Tues"><label for="vpnmgr_'+prefix+'_tues">Tues</label>';
 	charthtml+='<input autocomplete="off" autocapitalize="off" type="checkbox" name="vpnmgr_'+prefix+'_schdays" id="vpnmgr_'+prefix+'_wed" class="input" value="Wed"><label for="vpnmgr_'+prefix+'_wed">Wed</label>';
@@ -511,12 +517,12 @@ function BuildConfigTable(prefix,title){
 	
 	/* SCHEDULE HOURS */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(10);">Schedule Hours</a></td><td class="settingvalue"><input data-lpignore="true" autocomplete="off" autocapitalize="off" type="text" class="input_32_table" name="vpnmgr_'+prefix+'_schhours" value="*" onblur="Validate_Schedule(this,\'hours\')" /></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(11);">Schedule Hours</a></td><td class="settingvalue"><input data-lpignore="true" autocomplete="off" autocapitalize="off" type="text" class="input_32_table" name="vpnmgr_'+prefix+'_schhours" value="*" onblur="Validate_Schedule(this,\'hours\')" /></td>';
 	charthtml+='</tr>';
 	
 	/* SCHEDULE MINS */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(11);">Schedule Minutes</a></td><td class="settingvalue"><input data-lpignore="true" autocomplete="off" autocapitalize="off" type="text" class="input_32_table" name="vpnmgr_'+prefix+'_schmins" value="*" onblur="Validate_Schedule(this,\'mins\')" /></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(12);">Schedule Minutes</a></td><td class="settingvalue"><input data-lpignore="true" autocomplete="off" autocapitalize="off" type="text" class="input_32_table" name="vpnmgr_'+prefix+'_schmins" value="*" onblur="Validate_Schedule(this,\'mins\')" /></td>';
 	charthtml+='</tr>';
 	
 	charthtml+='</table>';
