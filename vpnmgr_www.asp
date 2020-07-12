@@ -681,7 +681,7 @@ var piacountries = [];
 function getPIACountryData(){
 	$j.ajax({
 		url: '/ext/vpnmgr/pia_countrydata.htm',
-		dataType: 'json',
+		dataType: 'text',
 		error: function(xhr){
 			setTimeout("getPIACountryData();", 1000);
 		},
