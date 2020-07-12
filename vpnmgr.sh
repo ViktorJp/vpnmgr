@@ -446,7 +446,7 @@ Create_Symlinks(){
 	rm -rf "${SCRIPT_WEB_DIR:?}/"* 2>/dev/null
 	
 	ln -s "$SCRIPT_DIR/config"  "$SCRIPT_WEB_DIR/config.htm" 2>/dev/null
-	ln -s "$SCRIPT_DIR/vpncountrydata" "$SCRIPT_WEB_DIR/vpncountrydata.htm" 2>/dev/null
+	ln -s "$SCRIPT_DIR/nordvpn_countrydata" "$SCRIPT_WEB_DIR/nordvpn_countrydata.htm" 2>/dev/null
 	
 	if [ ! -d "$SHARED_WEB_DIR" ]; then
 		ln -s "$SHARED_DIR" "$SHARED_WEB_DIR" 2>/dev/null
@@ -511,20 +511,20 @@ getServersforCity(){
 
 getCountryData(){
 	Print_Output "true" "Refreshing NordVPN country data..." "$PASS"
-	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/countries" | jq -r > /tmp/vpncountrydata
-	countrydata="$(cat /tmp/vpncountrydata)"
+	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/countries" | jq -r > /tmp/nordvpn_countrydata
+	countrydata="$(cat /tmp/nordvpn_countrydata)"
 	[ -z "$countrydata" ] && Print_Output "true" "Error, country data from NordVPN failed to download" "$ERR" && return 1
-	if [ -f "$SCRIPT_DIR/vpncountrydata" ]; then
-		if ! diff -q /tmp/vpncountrydata "$SCRIPT_DIR/vpncountrydata" >/dev/null 2>&1; then
-			mv /tmp/vpncountrydata "$SCRIPT_DIR/vpncountrydata"
+	if [ -f "$SCRIPT_DIR/nordvpn_countrydata" ]; then
+		if ! diff -q /tmp/nordvpn_countrydata "$SCRIPT_DIR/nordvpn_countrydata" >/dev/null 2>&1; then
+			mv /tmp/nordvpn_countrydata "$SCRIPT_DIR/nordvpn_countrydata"
 			Print_Output "true" "Changes detected in NordVPN country data found, updating now" "$PASS"
 			Create_Symlinks
 		else
-			rm -f /tmp/vpncountrydata
+			rm -f /tmp/nordvpn_countrydata
 			Print_Output "true" "No changes in NordVPN country data" "$WARN"
 		fi
 	else
-		mv /tmp/vpncountrydata "$SCRIPT_DIR/vpncountrydata"
+		mv /tmp/nordvpn_countrydata "$SCRIPT_DIR/nordvpn_countrydata"
 		Create_Symlinks
 		Print_Output "true" "No previous NordVPN country data found, updating now" "$PASS"
 	fi
@@ -1268,7 +1268,7 @@ SetVPNParameters(){
 		if [ "$choosecountry" = "true" ]; then
 			LISTCOUNTRIES=""
 			if [ "$vpnprovider" = "NordVPN" ]; then
-				countrydata="$(cat "$SCRIPT_DIR/vpncountrydata")"
+				countrydata="$(cat "$SCRIPT_DIR/nordvpn_countrydata")"
 				[ -z "$countrydata" ] && Print_Output "true" "Error, country data from NordVPN is missing" "$ERR" && return 1
 				LISTCOUNTRIES="$(getCountryNames "NordVPN" "$countrydata")"
 			elif [ "$vpnprovider" = "PIA" ]; then
@@ -2056,7 +2056,7 @@ if [ -z "$1" ]; then
 	Auto_Startup create 2>/dev/null
 	Auto_ServiceEvent create 2>/dev/null
 	Shortcut_vpnmgr create
-	if [ ! -f "$SCRIPT_DIR/vpncountrydata" ]; then
+	if [ ! -f "$SCRIPT_DIR/nordvpn_countrydata" ]; then
 		getCountryData
 	fi
 	if [ "$(/usr/bin/find "$OVPN_ARCHIVE_DIR" -name "*.zip" | wc -l)" -lt "4" ]; then

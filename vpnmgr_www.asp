@@ -432,7 +432,7 @@ function initial(){
 	SetCurrentPage();
 	LoadCustomSettings();
 	show_menu();
-	getCountryData();
+	getNordVPNCountryData();
 	ScriptUpdateLayout();
 }
 
@@ -657,12 +657,12 @@ function GetVersionNumber(versiontype)
 }
 
 var countryjson = [];
-function getCountryData(){
+function getNordVPNCountryData(){
 	$j.ajax({
-		url: '/ext/vpnmgr/vpncountrydata.htm',
+		url: '/ext/vpnmgr/nordvpn_countrydata.htm',
 		dataType: 'json',
 		error: function(xhr){
-			setTimeout("getCountryData();", 1000);
+			setTimeout("getNordVPNCountryData();", 1000);
 		},
 		success: function(data){
 			countryjson = data;
