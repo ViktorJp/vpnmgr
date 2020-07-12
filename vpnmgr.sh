@@ -1242,23 +1242,27 @@ SetVPNParameters(){
 	fi
 	
 		if [ "$exitmenu" != "exit" ]; then
-			while true; do
-				printf "\\n\\e[1mWould you like to select a country (y/n)?\\e[0m    "
-				read -r "country_select"
-				
-				if [ "$country_select" = "e" ]; then
-					exitmenu="exit"
-					break
-				elif [ "$country_select" = "n" ] || [ "$country_select" = "N" ]; then
-					choosecountry="false"
-					break
-				elif [ "$country_select" = "y" ] || [ "$country_select" = "Y" ]; then
-					choosecountry="true"
-					break
-				else
-					printf "\\n\\e[31mPlease enter y or n\\e[0m\\n"
-				fi
-			done
+			if [ "$vpnprovider" = "NordVPN" ]; then
+				while true; do
+					printf "\\n\\e[1mWould you like to select a country (y/n)?\\e[0m    "
+					read -r "country_select"
+					
+					if [ "$country_select" = "e" ]; then
+						exitmenu="exit"
+						break
+					elif [ "$country_select" = "n" ] || [ "$country_select" = "N" ]; then
+						choosecountry="false"
+						break
+					elif [ "$country_select" = "y" ] || [ "$country_select" = "Y" ]; then
+						choosecountry="true"
+						break
+					else
+						printf "\\n\\e[31mPlease enter y or n\\e[0m\\n"
+					fi
+				done
+			elif [ "$vpnprovider" = "PIA" ]; then
+				choosecountry="true"
+			fi
 		fi
 		
 		if [ "$choosecountry" = "true" ]; then
@@ -1323,23 +1327,27 @@ SetVPNParameters(){
 						cityname="$(getCityNames "PIA" "$ovpnarchive" "$countryname")"
 					fi
 				elif [ "$citycount" -gt "1" ]; then
-					while true; do
-						printf "\\n\\e[1mWould you like to select a city (y/n)?\\e[0m    "
-						read -r "city_select"
-						
-						if [ "$city_select" = "e" ]; then
-							exitmenu="exit"
-							break
-						elif [ "$city_select" = "n" ] || [ "$city_select" = "N" ]; then
-							choosecity="false"
-							break
-						elif [ "$city_select" = "y" ] || [ "$city_select" = "Y" ]; then
-							choosecity="true"
-							break
-						else
-							printf "\\n\\e[31mPlease enter y or n\\e[0m\\n"
-						fi
-					done
+					if [ "$vpnprovider" = "NordVPN" ]; then
+						while true; do
+							printf "\\n\\e[1mWould you like to select a city (y/n)?\\e[0m    "
+							read -r "city_select"
+							
+							if [ "$city_select" = "e" ]; then
+								exitmenu="exit"
+								break
+							elif [ "$city_select" = "n" ] || [ "$city_select" = "N" ]; then
+								choosecity="false"
+								break
+							elif [ "$city_select" = "y" ] || [ "$city_select" = "Y" ]; then
+								choosecity="true"
+								break
+							else
+								printf "\\n\\e[31mPlease enter y or n\\e[0m\\n"
+							fi
+						done
+					elif [ "$vpnprovider" = "PIA" ]; then
+						choosecity="true"
+					fi
 				fi
 			fi
 			
