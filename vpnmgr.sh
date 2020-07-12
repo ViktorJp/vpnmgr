@@ -1920,7 +1920,7 @@ if [ -z "$1" ]; then
 	if [ ! -f "$SCRIPT_DIR/vpncountrydata" ]; then
 		getCountryData
 	fi
-	if [ "$(ls -l $OVPN_ARCHIVE_DIR | wc -l)" -lt "4" ]; then
+	if [ "$(/usr/bin/find "$OVPN_ARCHIVE_DIR" -name "*.zip" | wc -l)" -lt "4" ]; then
 		getOVPNArchives
 	fi
 	
