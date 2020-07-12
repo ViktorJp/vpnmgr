@@ -353,7 +353,7 @@ Mount_WebUI(){
 	Get_WebUI_Page "$SCRIPT_DIR/vpnmgr_www.asp"
 	if [ "$MyPage" = "none" ]; then
 		Print_Output "true" "Unable to mount $SCRIPT_NAME WebUI page, exiting" "$CRIT"
-		exit 1
+		return 1
 	fi
 	Print_Output "true" "Mounting $SCRIPT_NAME WebUI page as $MyPage" "$PASS"
 	cp -f "$SCRIPT_DIR/vpnmgr_www.asp" "$SCRIPT_WEBPAGE_DIR/$MyPage"
