@@ -151,16 +151,16 @@ function SettingHint(hintid) {
 	}
 	hinttext="My text goes here";
 	if(hintid == 1) hinttext="Manage VPN client using vpnmgr";
-	if(hintid == 2) hinttext="Username for NordVPN account";
-	if(hintid == 3) hinttext="Password for NordVPN account";
+	if(hintid == 2) hinttext="Username for VPN";
+	if(hintid == 3) hinttext="Password for VPN";
 	if(hintid == 4) hinttext="Protocol to use for VPN server";
-	if(hintid == 5) hinttext="Type of NordVPN server to use";
-	if(hintid == 6) hinttext="Country of NordVPN server to use";
-	if(hintid == 7) hinttext="City of NordVPN server to use";
-	if(hintid == 8) hinttext="Automatically update VPN to new NordVPN recommended server";
-	if(hintid == 9) hinttext="Day(s) of week to check for new recommended server";
-	if(hintid == 10) hinttext="Hour(s) of day to check for new recommended server (* for all, 0-23. Comma separate for multiple hours.)";
-	if(hintid == 11) hinttext="Minute(s) of hour to check for new recommended server (* for all, 0-59. Comma separate for multiple minutes.)";
+	if(hintid == 5) hinttext="Type of VPN server to use";
+	if(hintid == 6) hinttext="Country of VPN server to use";
+	if(hintid == 7) hinttext="City of VPN server to use";
+	if(hintid == 8) hinttext="Automatically update VPN to new VPN server";
+	if(hintid == 9) hinttext="Day(s) of week to check for new server";
+	if(hintid == 10) hinttext="Hour(s) of day to check for new server (* for all, 0-23. Comma separate for multiple hours.)";
+	if(hintid == 11) hinttext="Minute(s) of hour to check for new server (* for all, 0-59. Comma separate for multiple minutes.)";
 	return overlib(hinttext, HAUTO, VAUTO);
 }
 
@@ -752,7 +752,7 @@ function setCitiesforCountry(forminput){
 <div>&nbsp;</div>
 <div class="formfonttitle" id="scripttitle" style="text-align:center;">vpnmgr</div>
 <div style="margin:10px 0 10px 5px;" class="splitLine"></div>
-<div class="formfontdesc">Automatically update VPN Client configuration to recommended NordVPN server on AsusWRT-Merlin</div>
+<div class="formfontdesc">Management of your VPN Client connections for various VPN providers</div>
 <table width="100%" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#6b8fa3" class="FormTable" style="border:0px;" id="table_scripttools">
 <thead class="collapsible-jquery" id="scripttools">
 <tr><td colspan="2">Script Utilities (click to expand/collapse)</td></tr>

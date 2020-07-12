@@ -32,6 +32,7 @@ readonly SHARED_REPO="https://raw.githubusercontent.com/jackyaz/shared-jy/master
 readonly SHARED_WEB_DIR="$SCRIPT_WEBPAGE_DIR/shared-jy"
 [ -z "$(nvram get odmpid)" ] && ROUTER_MODEL=$(nvram get productid) || ROUTER_MODEL=$(nvram get odmpid)
 GLOBAL_VPN_NO=""
+GLOBAL_VPN_PROVIDER=""
 GLOBAL_VPN_PROT=""
 GLOBAL_VPN_TYPE=""
 GLOBAL_CRU_DAYNUMBERS=""
@@ -346,7 +347,7 @@ Mount_WebUI(){
 	fi
 	Print_Output "true" "Mounting $SCRIPT_NAME WebUI page as $MyPage" "$PASS"
 	cp -f "$SCRIPT_DIR/vpnmgr_www.asp" "$SCRIPT_WEBPAGE_DIR/$MyPage"
-	echo "NordVPN Manager" > "$SCRIPT_WEBPAGE_DIR/$(echo $MyPage | cut -f1 -d'.').title"
+	echo "VPN Manager" > "$SCRIPT_WEBPAGE_DIR/$(echo $MyPage | cut -f1 -d'.').title"
 	
 	if [ "$(uname -o)" = "ASUSWRT-Merlin" ]; then
 		if [ ! -f "/tmp/menuTree.js" ]; then
@@ -355,7 +356,7 @@ Mount_WebUI(){
 		
 		sed -i "\\~$MyPage~d" /tmp/menuTree.js
 		
-		sed -i "/url: \"Advanced_OpenVPNClient_Content.asp\", tabName:/a {url: \"$MyPage\", tabName: \"NordVPN Manager\"}," /tmp/menuTree.js
+		sed -i "/url: \"Advanced_OpenVPNClient_Content.asp\", tabName:/a {url: \"$MyPage\", tabName: \"VPN Manager\"}," /tmp/menuTree.js
 		
 		umount /www/require/modules/menuTree.js 2>/dev/null
 		mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
@@ -574,16 +575,6 @@ getClientCRT(){
 	echo "$1" | awk '/<tls-auth>/{flag=1;next}/<\/tls-auth>/{flag=0}flag' | sed '/^#/ d'
 }
 
-# use to create content of EXISTING_NAME variable
-getConnName(){
-	nvram get vpn_client"$1"_desc
-}
-
-# use to create content of EXISTING_IP variable
-getServerIP(){
-	nvram get vpn_client"$1"_addr
-}
-
 # use to create content of CONNECTSTATE variable - set to 2 if the VPN is connected
 getConnectState(){
 	nvram get vpn_client"$1"_state
@@ -629,6 +620,7 @@ UpdateVPNConfig(){
 		shift
 	fi
 	VPN_NO="$1"
+	VPN_PROVIDER="$(grep "vpn""$VPN_NO""_provider" "$SCRIPT_CONF" | cut -f2 -d"=")"
 	VPN_PROT_SHORT="$(grep "vpn""$VPN_NO""_protocol" "$SCRIPT_CONF" | cut -f2 -d"=")"
 	VPN_PROT="openvpn_""$(echo "$VPN_PROT_SHORT" | tr "A-Z" "a-z")"
 	VPN_TYPE_SHORT="$(grep "vpn""$VPN_NO""_type" "$SCRIPT_CONF" | cut -f2 -d"=")"
@@ -656,10 +648,10 @@ UpdateVPNConfig(){
 			Print_Output "true" "Protocol: $VPN_PROT_SHORT - Type: $VPN_TYPE_SHORT - Country: $VPN_COUNTRYNAME - City: $VPN_CITYNAME" "$PASS"
 			vJSON="$(getServersforCity "$VPN_TYPE" "$VPN_PROT" "$VPN_COUNTRYID" "$VPN_CITYID")"
 			if [ -z "$vJSON" ]; then
-				Print_Output "true" "No recommended VPN servers found for $VPN_CITYNAME, removing filter for city" "$WARN"
+				Print_Output "true" "No VPN servers found for $VPN_CITYNAME, removing filter for city" "$WARN"
 				vJSON="$(getRecommendedServers "$VPN_TYPE" "$VPN_PROT" "$VPN_COUNTRYID")"
 				if [ -z "$vJSON" ]; then
-					Print_Output "true" "No recommended VPN servers found for $VPN_COUNTRYNAME, removing filter for country" "$WARN"
+					Print_Output "true" "No VPN servers found for $VPN_COUNTRYNAME, removing filter for country" "$WARN"
 					vJSON="$(getRecommendedServers "$VPN_TYPE" "$VPN_PROT" "0")"
 				fi
 			fi
@@ -668,9 +660,9 @@ UpdateVPNConfig(){
 	
 	[ -z "$vJSON" ] && Print_Output "true" "Error contacting NordVPN API" "$ERR" && return 1
 	OVPN_IP="$(getIP "$vJSON")"
-	[ -z "$OVPN_IP" ] && Print_Output "true" "Could not determine IP for recommended VPN server" "$ERR" && return 1
+	[ -z "$OVPN_IP" ] && Print_Output "true" "Could not determine IP for VPN server" "$ERR" && return 1
 	OVPN_HOSTNAME="$(getHostname "$vJSON")"
-	[ -z "$OVPN_HOSTNAME" ] && Print_Output "true" "Could not determine hostname for recommended VPN server" "$ERR" && return 1
+	[ -z "$OVPN_HOSTNAME" ] && Print_Output "true" "Could not determine hostname for VPN server" "$ERR" && return 1
 	#shellcheck disable=SC2018
 	#shellcheck disable=SC2019
 	OVPN_HOSTNAME_SHORT="$(echo "$OVPN_HOSTNAME" | cut -f1 -d'.' | tr "a-z" "A-Z")"
@@ -678,19 +670,19 @@ UpdateVPNConfig(){
 	OVPN_DETAIL="$(getOVPNcontents "$OVPNFILE" "$(echo "$VPN_PROT" | cut -f2 -d"_")")"
 	[ -z "$OVPN_DETAIL" ] && Print_Output "true" "Error downloading VPN server ovpn file" "$ERR" && return 1
 	OVPN_PORT="$(getPort "$OVPN_DETAIL")"
-	[ -z "$OVPN_PORT" ] && Print_Output "true" "Error determining port for recommended VPN server" "$ERR" && return 1
+	[ -z "$OVPN_PORT" ] && Print_Output "true" "Error determining port for VPN server" "$ERR" && return 1
 	OVPN_CIPHER="$(getCipher "$OVPN_DETAIL")"
-	[ -z "$OVPN_CIPHER" ] && Print_Output "true" "Error determining cipher for recommended VPN server" "$ERR" && return 1
+	[ -z "$OVPN_CIPHER" ] && Print_Output "true" "Error determining cipher for VPN server" "$ERR" && return 1
 	OVPN_AUTHDIGEST="$(getAuthDigest "$OVPN_DETAIL")"
-	[ -z "$OVPN_AUTHDIGEST" ] && Print_Output "true" "Error determining auth digest for recommended VPN server" "$ERR" && return 1
+	[ -z "$OVPN_AUTHDIGEST" ] && Print_Output "true" "Error determining auth digest for VPN server" "$ERR" && return 1
 	CLIENT_CA="$(getClientCA "$OVPN_DETAIL")"
 	[ -z "$CLIENT_CA" ] && Print_Output "true" "Error determing VPN server Certificate Authority certificate" "$ERR" && return 1
 	CRT_CLIENT_STATIC="$(getClientCRT "$OVPN_DETAIL")"
 	[ -z "$CRT_CLIENT_STATIC" ] && Print_Output "true" "Error determing VPN client certificate" "$ERR" && return 1
-	EXISTING_IP="$(getServerIP "$VPN_NO")"
+	EXISTING_IP="$(nvram get vpn_client"$VPN_NO"_addr)"
 	
 	if [ "$OVPN_IP" != "$EXISTING_IP" ]; then
-		Print_Output "true" "Updating VPN client $VPN_NO to recommended NordVPN server" "$PASS"
+		Print_Output "true" "Updating VPN client $VPN_NO to new $VPN_PROVIDER server" "$PASS"
 		
 		if [ -z "$(nvram get vpn_client"$VPN_NO"_addr)" ]; then
 			nvram set vpn_client"$VPN_NO"_adns="3"
@@ -704,7 +696,7 @@ UpdateVPNConfig(){
 		elif [ "$VPN_PROT_SHORT" = "UDP" ]; then
 			nvram set vpn_client"$VPN_NO"_proto="udp"
 		fi
-		nvram set vpn_client"$VPN_NO"_desc="NordVPN $OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT"
+		nvram set vpn_client"$VPN_NO"_desc="$VPN_PROVIDER $OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT"
 		
 		nvram set vpn_client"$VPN_NO"_cipher="$OVPN_CIPHER"
 		nvram set vpn_client"$VPN_NO"_comp="-1"
@@ -946,6 +938,7 @@ SetVPNClient(){
 SetVPNParameters(){
 	exitmenu=""
 	vpnnum=""
+	vpnprovider=""
 	vpnprot=""
 	vpntype=""
 	countrydata=""
@@ -978,26 +971,20 @@ SetVPNParameters(){
 	
 	if [ "$exitmenu" != "exit" ]; then
 		while true; do
-			printf "\\n\\e[1mPlease select a VPN Type:\\e[0m\\n"
-			printf "    1. Standard VPN\\n"
-			printf "    2. Double VPN\\n"
-			printf "    3. P2P\\n\\n"
+			printf "\\n\\e[1mPlease select a VPN provider:\\e[0m\\n"
+			printf "    1. NordVPN\\n"
+			printf "    2. Private Internet Access (PIA)\\n\\n"
 			printf "Choose an option:    "
-			read -r "typemenu"
+			read -r "provmenu"
 			
-			case "$typemenu" in
+			case "$provmenu" in
 				1)
-					vpntype="legacy_standard"
+					vpnprovider="NordVPN"
 					printf "\\n"
 					break
 				;;
 				2)
-					vpntype="legacy_double_vpn"
-					printf "\\n"
-					break
-				;;
-				3)
-					vpntype="legacy_p2p"
+					vpnprovider="PIA"
 					printf "\\n"
 					break
 				;;
@@ -1006,10 +993,76 @@ SetVPNParameters(){
 					break
 				;;
 				*)
-					printf "\\n\\e[31mPlease enter a valid choice (1-3)\\e[0m\\n"
+					printf "\\n\\e[31mPlease enter a valid choice (1-2)\\e[0m\\n"
 				;;
 			esac
 		done
+	fi
+	
+	if [ "$exitmenu" != "exit" ]; then
+		if [ "$vpnprovider" = "NordVPN" ]; then
+			while true; do
+				printf "\\n\\e[1mPlease select a VPN Type:\\e[0m\\n"
+				printf "    1. Standard\\n"
+				printf "    2. Double\\n"
+				printf "    3. P2P\\n\\n"
+				printf "Choose an option:    "
+				read -r "typemenu"
+				
+				case "$typemenu" in
+					1)
+						vpntype="legacy_standard"
+						printf "\\n"
+						break
+					;;
+					2)
+						vpntype="legacy_double_vpn"
+						printf "\\n"
+						break
+					;;
+					3)
+						vpntype="legacy_p2p"
+						printf "\\n"
+						break
+					;;
+					e)
+						exitmenu="exit"
+						break
+					;;
+					*)
+						printf "\\n\\e[31mPlease enter a valid choice (1-3)\\e[0m\\n"
+					;;
+				esac
+			done
+		elif [ "$vpnprovider" = "PIA" ]; then
+			while true; do
+				printf "\\n\\e[1mPlease select a VPN Type:\\e[0m\\n"
+				printf "    1. Standard\\n"
+				printf "    2. Strong\\n\\n"
+				printf "Choose an option:    "
+				read -r "typemenu"
+				
+				case "$typemenu" in
+					1)
+						vpntype="standard"
+						printf "\\n"
+						break
+					;;
+					2)
+						vpntype="strong"
+						printf "\\n"
+						break
+					;;
+					e)
+						exitmenu="exit"
+						break
+					;;
+					*)
+						printf "\\n\\e[31mPlease enter a valid choice (1-3)\\e[0m\\n"
+					;;
+				esac
+			done
+		fi
 	fi
 	
 	if [ "$exitmenu" != "exit" ]; then
@@ -1042,129 +1095,132 @@ SetVPNParameters(){
 		done
 	fi
 	
-	if [ "$exitmenu" != "exit" ]; then
-		while true; do
-			printf "\\n\\e[1mWould you like to select a country (y/n)?\\e[0m    "
-			read -r "country_select"
-			
-			if [ "$country_select" = "e" ]; then
-				exitmenu="exit"
-				break
-			elif [ "$country_select" = "n" ] || [ "$country_select" = "N" ]; then
-				choosecountry="false"
-				break
-			elif [ "$country_select" = "y" ] || [ "$country_select" = "Y" ]; then
-				choosecountry="true"
-				break
-			else
-				printf "\\n\\e[31mPlease enter y or n\\e[0m\\n"
-			fi
-		done
-	fi
-	
-	if [ "$choosecountry" = "true" ]; then
-		if [ ! -f "$SCRIPT_DIR/vpncountrydata" ]; then
-			getCountryData
-		fi
-		countrydata="$(cat "$SCRIPT_DIR/vpncountrydata")"
-		[ -z "$countrydata" ] && Print_Output "true" "Error, country data from NordVPN is missing" "$ERR" && return 1
-		LISTCOUNTRIES="$(getCountryNames "$countrydata")"
-		COUNTCOUNTRIES="$(echo "$LISTCOUNTRIES" | wc -l)"
-		while true; do
-			printf "\\n\\e[1mPlease select a country:\\e[0m\\n"
-			COUNTER="1"
-			#shellcheck disable=SC2039
-			IFS=$'\n'
-			for COUNTRY in $LISTCOUNTRIES; do
-				printf "    %s. %s\\n" "$COUNTER" "$COUNTRY"
-				COUNTER=$((COUNTER+1))
-			done
-			unset IFS
-			
-			printf "Choose an option:    "
-			read -r "country_choice"
-			
-			if [ "$country_choice" = "e" ]; then
-				exitmenu="exit"
-				break
-			elif ! Validate_Number "" "$country_choice" "silent"; then
-				printf "\\n\\e[31mPlease enter a valid number (1-%s)\\e[0m\\n" "$COUNTCOUNTRIES"
-			else
-				if [ "$country_choice" -lt 1 ] || [ "$country_choice" -gt "$COUNTCOUNTRIES" ]; then
-					printf "\\n\\e[31mPlease enter a number between 1 and %s\\e[0m\\n" "$COUNTCOUNTRIES"
-				else
-					countryname="$(echo "$LISTCOUNTRIES" | sed -n "$country_choice"p)"
-					countryid="$(getCountryID "$countrydata" "$countryname")"
-					printf "\\n"
-					break
-				fi
-			fi
-		done
-	
+	if [ "$vpnprovider" = "NordVPN" ]; then
 		if [ "$exitmenu" != "exit" ]; then
-			citycount="$(getCityCount "$countrydata" "$countryname")"
-			if [ "$citycount" -eq "1" ]; then
-				cityname="$(getCityNames "$countrydata" "$countryname")"
-				cityid="$(getCityID "$countrydata" "$countryname" "$cityname")"
-			elif [ "$citycount" -gt "1" ]; then
-				while true; do
-					printf "\\n\\e[1mWould you like to select a city (y/n)?\\e[0m    "
-					read -r "city_select"
-					
-					if [ "$city_select" = "e" ]; then
-						exitmenu="exit"
-						break
-					elif [ "$city_select" = "n" ] || [ "$city_select" = "N" ]; then
-						choosecity="false"
-						break
-					elif [ "$city_select" = "y" ] || [ "$city_select" = "Y" ]; then
-						choosecity="true"
-						break
-					else
-						printf "\\n\\e[31mPlease enter y or n\\e[0m\\n"
-					fi
-				done
-			fi
+			while true; do
+				printf "\\n\\e[1mWould you like to select a country (y/n)?\\e[0m    "
+				read -r "country_select"
+				
+				if [ "$country_select" = "e" ]; then
+					exitmenu="exit"
+					break
+				elif [ "$country_select" = "n" ] || [ "$country_select" = "N" ]; then
+					choosecountry="false"
+					break
+				elif [ "$country_select" = "y" ] || [ "$country_select" = "Y" ]; then
+					choosecountry="true"
+					break
+				else
+					printf "\\n\\e[31mPlease enter y or n\\e[0m\\n"
+				fi
+			done
 		fi
 		
-		if [ "$choosecity" = "true" ]; then
-			LISTCITIES="$(getCityNames "$countrydata" "$countryname")"
-			COUNTCITIES="$(echo "$LISTCITIES" | wc -l)"
+		if [ "$choosecountry" = "true" ]; then
+			if [ ! -f "$SCRIPT_DIR/vpncountrydata" ]; then
+				getCountryData
+			fi
+			countrydata="$(cat "$SCRIPT_DIR/vpncountrydata")"
+			[ -z "$countrydata" ] && Print_Output "true" "Error, country data from NordVPN is missing" "$ERR" && return 1
+			LISTCOUNTRIES="$(getCountryNames "$countrydata")"
+			COUNTCOUNTRIES="$(echo "$LISTCOUNTRIES" | wc -l)"
 			while true; do
-				printf "\\n\\e[1mPlease select a city:\\e[0m\\n"
+				printf "\\n\\e[1mPlease select a country:\\e[0m\\n"
 				COUNTER="1"
 				#shellcheck disable=SC2039
 				IFS=$'\n'
-				for CITY in $LISTCITIES; do
-					printf "    %s. %s\\n" "$COUNTER" "$CITY"
+				for COUNTRY in $LISTCOUNTRIES; do
+					printf "    %s. %s\\n" "$COUNTER" "$COUNTRY"
 					COUNTER=$((COUNTER+1))
 				done
 				unset IFS
 				
 				printf "Choose an option:    "
-				read -r "city_choice"
+				read -r "country_choice"
 				
-				if [ "$city_choice" = "e" ]; then
+				if [ "$country_choice" = "e" ]; then
 					exitmenu="exit"
 					break
-				elif ! Validate_Number "" "$city_choice" "silent"; then
-					printf "\\n\\e[31mPlease enter a valid number (1-%s)\\e[0m\\n" "$COUNTCITIES"
+				elif ! Validate_Number "" "$country_choice" "silent"; then
+					printf "\\n\\e[31mPlease enter a valid number (1-%s)\\e[0m\\n" "$COUNTCOUNTRIES"
 				else
-					if [ "$city_choice" -lt 1 ] || [ "$city_choice" -gt "$COUNTCITIES" ]; then
-						printf "\\n\\e[31mPlease enter a number between 1 and %s\\e[0m\\n" "$COUNTCITIES"
+					if [ "$country_choice" -lt 1 ] || [ "$country_choice" -gt "$COUNTCOUNTRIES" ]; then
+						printf "\\n\\e[31mPlease enter a number between 1 and %s\\e[0m\\n" "$COUNTCOUNTRIES"
 					else
-						cityname="$(echo "$LISTCITIES" | sed -n "$city_choice"p)"
-						cityid="$(getCityID "$countrydata" "$countryname" "$cityname")"
+						countryname="$(echo "$LISTCOUNTRIES" | sed -n "$country_choice"p)"
+						countryid="$(getCountryID "$countrydata" "$countryname")"
 						printf "\\n"
 						break
 					fi
 				fi
 			done
+		
+			if [ "$exitmenu" != "exit" ]; then
+				citycount="$(getCityCount "$countrydata" "$countryname")"
+				if [ "$citycount" -eq "1" ]; then
+					cityname="$(getCityNames "$countrydata" "$countryname")"
+					cityid="$(getCityID "$countrydata" "$countryname" "$cityname")"
+				elif [ "$citycount" -gt "1" ]; then
+					while true; do
+						printf "\\n\\e[1mWould you like to select a city (y/n)?\\e[0m    "
+						read -r "city_select"
+						
+						if [ "$city_select" = "e" ]; then
+							exitmenu="exit"
+							break
+						elif [ "$city_select" = "n" ] || [ "$city_select" = "N" ]; then
+							choosecity="false"
+							break
+						elif [ "$city_select" = "y" ] || [ "$city_select" = "Y" ]; then
+							choosecity="true"
+							break
+						else
+							printf "\\n\\e[31mPlease enter y or n\\e[0m\\n"
+						fi
+					done
+				fi
+			fi
+			
+			if [ "$choosecity" = "true" ]; then
+				LISTCITIES="$(getCityNames "$countrydata" "$countryname")"
+				COUNTCITIES="$(echo "$LISTCITIES" | wc -l)"
+				while true; do
+					printf "\\n\\e[1mPlease select a city:\\e[0m\\n"
+					COUNTER="1"
+					#shellcheck disable=SC2039
+					IFS=$'\n'
+					for CITY in $LISTCITIES; do
+						printf "    %s. %s\\n" "$COUNTER" "$CITY"
+						COUNTER=$((COUNTER+1))
+					done
+					unset IFS
+					
+					printf "Choose an option:    "
+					read -r "city_choice"
+					
+					if [ "$city_choice" = "e" ]; then
+						exitmenu="exit"
+						break
+					elif ! Validate_Number "" "$city_choice" "silent"; then
+						printf "\\n\\e[31mPlease enter a valid number (1-%s)\\e[0m\\n" "$COUNTCITIES"
+					else
+						if [ "$city_choice" -lt 1 ] || [ "$city_choice" -gt "$COUNTCITIES" ]; then
+							printf "\\n\\e[31mPlease enter a number between 1 and %s\\e[0m\\n" "$COUNTCITIES"
+						else
+							cityname="$(echo "$LISTCITIES" | sed -n "$city_choice"p)"
+							cityid="$(getCityID "$countrydata" "$countryname" "$cityname")"
+							printf "\\n"
+							break
+						fi
+					fi
+				done
+			fi
 		fi
 	fi
 	
 	if [ "$exitmenu" != "exit" ]; then
 		GLOBAL_VPN_NO="$vpnnum"
+		GLOBAL_VPN_PROVIDER="$vpnprovider"
 		GLOBAL_VPN_PROT="$vpnprot"
 		GLOBAL_VPN_TYPE="$vpntype"
 		GLOBAL_COUNTRY_NAME="$countryname"
@@ -1358,7 +1414,7 @@ ScriptHeader(){
 	printf "\\e[1m##               %s on %-9s             ##\\e[0m\\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
 	printf "\\e[1m##                                               ##\\e[0m\\n"
 	printf "\\e[1m##       https://github.com/jackyaz/vpnmgr       ##\\e[0m\\n"
-	printf "\\e[1m##              forked from h0me5k1n             ##\\e[0m\\n"
+	printf "\\e[1m##                                               ##\\e[0m\\n"
 	printf "\\e[1m###################################################\\e[0m\\n"
 	printf "\\n"
 }
@@ -1502,8 +1558,10 @@ Menu_UpdateVPN(){
 	ListVPNClients
 	printf "Choose options as follows:\\n"
 	printf "    - VPN client [1-5]\\n"
-	printf "    - type of VPN to use (pick from list)\\n"
-	printf "    - protocol to use (pick from list)\\n"
+	printf "    - VPN provider (pick from list)\\n"
+	printf "    - type of VPN (pick from list)\\n"
+	printf "    - protocol (pick from list)\\n"
+	printf "    - country/city of VPN Server (pick from list)\\n"
 	printf "\\n"
 	printf "\\e[1m#########################################################\\e[0m\\n"
 	
@@ -1517,8 +1575,9 @@ Menu_UpdateVPN(){
 		fi
 		
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_managed.*$/vpn'"$GLOBAL_VPN_NO"'_managed=true/' "$SCRIPT_CONF"
-		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_protocol.*$/vpn'"$GLOBAL_VPN_NO"'_protocol='"$VPN_PROT_SHORT"'/' "$SCRIPT_CONF"
+		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_provider.*$/vpn'"$GLOBAL_VPN_NO"'_provider='"$GLOBAL_VPN_PROVIDER"'/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_type.*$/vpn'"$GLOBAL_VPN_NO"'_type='"$VPN_TYPE_SHORT"'/' "$SCRIPT_CONF"
+		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_protocol.*$/vpn'"$GLOBAL_VPN_NO"'_protocol='"$VPN_PROT_SHORT"'/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_countryname.*$/vpn'"$GLOBAL_VPN_NO"'_countryname='"$GLOBAL_COUNTRY_NAME"'/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_countryid.*$/vpn'"$GLOBAL_VPN_NO"'_countryid='"$GLOBAL_COUNTRY_ID"'/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_cityname.*$/vpn'"$GLOBAL_VPN_NO"'_cityname='"$GLOBAL_CITY_NAME"'/' "$SCRIPT_CONF"
