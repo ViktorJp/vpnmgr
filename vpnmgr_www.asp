@@ -611,8 +611,8 @@ function ScriptUpdateLayout(){
 	}
 }
 
-function RefreshCountryData(){
-	var action_script_tmp = "start_vpnmgrrefreshcountrydata";
+function RefreshCachedData(){
+	var action_script_tmp = "start_vpnmgrrefreshcacheddata";
 	document.form.action_script.value = action_script_tmp;
 	var restart_time = 10;
 	document.form.action_wait.value = restart_time;
@@ -771,9 +771,9 @@ function setCitiesforCountry(forminput){
 </td>
 </tr>
 <tr>
-<th width="20%">Country data</th>
+<th width="20%">Cached data</th>
 <td>
-<input type="button" class="button_gen" onclick="RefreshCountryData();" value="Refresh" id="btnRefreshCountryData">
+<input type="button" class="button_gen" onclick="RefreshCachedData();" value="Refresh" id="btnRefreshCachedData">
 </td>
 </tr>
 </div>

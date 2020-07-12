@@ -25,6 +25,7 @@ readonly SCRIPT_BRANCH="PIA"
 readonly SCRIPT_REPO="https://raw.githubusercontent.com/jackyaz/""$SCRIPT_NAME""/""$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
 readonly SCRIPT_CONF="$SCRIPT_DIR/config"
+readonly OVPN_ARCHIVE_DIR="$SCRIPT_DIR/ovpn"
 readonly SCRIPT_WEBPAGE_DIR="$(readlink /www/user)"
 readonly SCRIPT_WEB_DIR="$SCRIPT_WEBPAGE_DIR/$SCRIPT_NAME"
 readonly SHARED_DIR="/jffs/addons/shared-jy"
@@ -311,14 +312,19 @@ Auto_Cron(){
 	case $1 in
 		create)
 			STARTUPLINECOUNT=$(cru l | grep -c "$SCRIPT_NAME""_countrydata")
+			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
+				cru d "$SCRIPT_NAME""_countrydata"
+			fi
+		
+			STARTUPLINECOUNT=$(cru l | grep -c "$SCRIPT_NAME""_cacheddata")
 			if [ "$STARTUPLINECOUNT" -eq 0 ]; then
-				cru a "$SCRIPT_NAME""_countrydata" "0 0 * * * /jffs/scripts/$SCRIPT_NAME getcountrydata"
+				cru a "$SCRIPT_NAME""_cacheddata" "0 0 * * * /jffs/scripts/$SCRIPT_NAME refreshcacheddata"
 			fi
 		;;
 		delete)
-			STARTUPLINECOUNT=$(cru l | grep -c "$SCRIPT_NAME""_countrydata")
+			STARTUPLINECOUNT=$(cru l | grep -c "$SCRIPT_NAME""_cacheddata")
 			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
-				cru d "$SCRIPT_NAME""_countrydata"
+				cru d "$SCRIPT_NAME""_cacheddata"
 			fi
 		;;
 	esac
@@ -413,6 +419,10 @@ Conf_FromSettings(){
 Create_Dirs(){
 	if [ ! -d "$SCRIPT_DIR" ]; then
 		mkdir -p "$SCRIPT_DIR"
+	fi
+	
+	if [ ! -d "$OVPN_ARCHIVE_DIR" ]; then
+		mkdir -p "$OVPN_ARCHIVE_DIR"
 	fi
 	
 	if [ ! -d "$SHARED_DIR" ]; then
@@ -569,6 +579,47 @@ getClientCRT(){
 
 getConnectState(){
 	nvram get vpn_client"$1"_state
+}
+
+getOVPNArchives(){
+	Print_Output "true" "Refreshing OpenVPN file archives..." "$PASS"
+	
+	### PIA ###
+	# Standard UDP
+	Download_File https://www.privateinternetaccess.com/openvpn/openvpn.zip /tmp/pia_udp_standard.zip
+	# Standard TCP
+	Download_File https://www.privateinternetaccess.com/openvpn/openvpn-tcp.zip /tmp/pia_tcp_standard.zip
+	# Strong UDP
+	Download_File https://www.privateinternetaccess.com/openvpn/openvpn-strong.zip /tmp/pia_udp_strong.zip
+	# Strong TCP
+	Download_File https://www.privateinternetaccess.com/openvpn/openvpn-strong-tcp.zip /tmp/pia_tcp_strong.zip
+	###########
+	
+	FILES="/tmp/pia*.zip"
+	archiveschanged="false"
+	for f in $FILES; do
+		if [ -f "$f" ]; then
+			if [ -f "$OVPN_ARCHIVE_DIR/$(basename $f)" ]; then
+				remotemd5="$(md5sum "$f")"
+				localmd5="$(md5sum "$OVPN_ARCHIVE_DIR/$(basename $f)")"
+				if [ "$localmd5" != "$remotemd5" ]; then
+					mv "$f" "$OVPN_ARCHIVE_DIR/$(basename $f)"
+					archiveschanged="true"
+				else
+					rm -f "$f"
+				fi
+			else
+				mv "$f" "$OVPN_ARCHIVE_DIR/$(basename $f)"
+				archiveschanged="true"
+			fi
+		fi
+	done
+	
+	if [ "$archiveschanged" = "true" ]; then
+		Print_Output "true" "Changes detected in OpenVPN file archives, local copies updated" "$PASS"
+	else
+		Print_Output "true" "No changes in OpenVPN file archives" "$WARN"
+	fi
 }
 
 ListVPNClients(){
@@ -1108,9 +1159,6 @@ SetVPNParameters(){
 		fi
 		
 		if [ "$choosecountry" = "true" ]; then
-			if [ ! -f "$SCRIPT_DIR/vpncountrydata" ]; then
-				getCountryData
-			fi
 			countrydata="$(cat "$SCRIPT_DIR/vpncountrydata")"
 			[ -z "$countrydata" ] && Print_Output "true" "Error, country data from NordVPN is missing" "$ERR" && return 1
 			LISTCOUNTRIES="$(getCountryNames "$countrydata")"
@@ -1422,7 +1470,7 @@ MainMenu(){
 	printf "7.    Enable a scheduled VPN client update\\n"
 	printf "8.    Delete a scheduled VPN client update\\n\\n"
 	printf "\\e[1m###################################################\\e[0m\\n\\n"
-	printf "r.    Refresh cached data\\n\\n"
+	printf "r.    Refresh cached data from VPN providers\\n\\n"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Update %s with latest version (force)\\n\\n" "$SCRIPT_NAME"
 	printf "e.    Exit %s\\n\\n" "$SCRIPT_NAME"
@@ -1490,6 +1538,7 @@ MainMenu(){
 			r)
 				printf "\\n"
 				getCountryData
+				getOVPNArchives
 				PressEnter
 				break
 			;;
@@ -1724,6 +1773,7 @@ Menu_Install(){
 	Update_File "shared-jy.tar.gz"
 	
 	getCountryData
+	getOVPNArchives
 	
 	Shortcut_vpnmgr create
 	Clear_Lock
@@ -1869,6 +1919,10 @@ if [ -z "$1" ]; then
 	if [ ! -f "$SCRIPT_DIR/vpncountrydata" ]; then
 		getCountryData
 	fi
+	if [ "$(ls -l $OVPN_ARCHIVE_DIR | wc -l)" -lt "4" ]; then
+		getOVPNArchives
+	fi
+	
 	Create_Symlinks
 	ScriptHeader
 	MainMenu
@@ -1885,8 +1939,9 @@ case "$1" in
 		UpdateVPNConfig "unattended" "$2"
 		exit 0
 	;;
-	getcountrydata)
+	refreshcacheddata)
 		getCountryData
+		getOVPNArchives
 		exit 0
 	;;
 	startup)
@@ -1915,8 +1970,9 @@ case "$1" in
 			done
 			Clear_Lock
 			exit 0
-		elif [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME""refreshcountrydata" ]; then
+		elif [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME""refreshcacheddata" ]; then
 			getCountryData
+			getOVPNArchives
 			exit 0
 		elif [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME""checkupdate" ]; then
 			Check_Lock
