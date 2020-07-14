@@ -642,7 +642,7 @@ $j.fn.serializeObject = function(){
 		}
 		o["vpnmgr_vpn"+i+"_schdays"] = schdaysstring;
 		
-		if($j("select[name='vpnmgr_vpn"+i+"_countryname']").val() == "" || $j("select[name='vpnmgr_vpn"+i+"_provider']").val() == "PIA"){
+		if($j("select[name='vpnmgr_vpn"+i+"_countryname']").val() == "" || $j("input[name='vpnmgr_vpn"+i+"_provider']:checked").val() == "PIA"){
 			o["vpnmgr_vpn"+i+"_countryid"] = 0;
 			o["vpnmgr_vpn"+i+"_cityid"] = 0;
 		}
