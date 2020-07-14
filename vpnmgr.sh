@@ -798,52 +798,55 @@ UpdateVPNConfig(){
 	fi
 	
 	if [ "$OVPN_ADDR" != "$EXISTING_ADDR" ] || [ "$OVPN_PORT" != "$EXISTING_PORT" ] || [ "$VPN_PROT_SHORT" != "$EXISTING_PROTO" ]; then
-		Print_Output "true" "Updating VPN client $VPN_NO to new $VPN_PROVIDER server" "$PASS"
-		
-		if [ -z "$(nvram get vpn_client"$VPN_NO"_addr)" ]; then
-			nvram set vpn_client"$VPN_NO"_adns="3"
-			nvram set vpn_client"$VPN_NO"_enforce="1"
-			if [ "$(Firmware_Number_Check "$(nvram get buildno)")" -lt "$(Firmware_Number_Check 384.18)" ]; then
-				nvram set vpn_client"$VPN_NO"_clientlist="<DummyVPN>172.16.14.1>0.0.0.0>VPN"
-			else
-				nvram set vpn_client"$VPN_NO"_clientlist="<DummyVPN>172.16.14.1>>VPN"
-			fi
-			if ! nvram get vpn_clientx_eas | grep -q "$VPN_NO"; then
-				nvram set vpn_clientx_eas="$(nvram get vpn_clientx_eas),$VPN_NO"
-			fi
+		Print_Output "true" "VPN client $VPN_NO server - unchanged" "$WARN"
+	fi
+	
+	Print_Output "true" "Updating VPN client $VPN_NO to $VPN_PROVIDER server" "$PASS"
+	
+	if [ -z "$(nvram get vpn_client"$VPN_NO"_addr)" ]; then
+		nvram set vpn_client"$VPN_NO"_adns="3"
+		nvram set vpn_client"$VPN_NO"_enforce="1"
+		if [ "$(Firmware_Number_Check "$(nvram get buildno)")" -lt "$(Firmware_Number_Check 384.18)" ]; then
+			nvram set vpn_client"$VPN_NO"_clientlist="<DummyVPN>172.16.14.1>0.0.0.0>VPN"
+		else
+			nvram set vpn_client"$VPN_NO"_clientlist="<DummyVPN>172.16.14.1>>VPN"
 		fi
-		
-		nvram set vpn_client"$VPN_NO"_addr="$OVPN_ADDR"
-		nvram set vpn_client"$VPN_NO"_port="$OVPN_PORT"
-		if [ "$VPN_PROT_SHORT" = "TCP" ]; then
-			nvram set vpn_client"$VPN_NO"_proto="tcp-client"
-		elif [ "$VPN_PROT_SHORT" = "UDP" ]; then
-			nvram set vpn_client"$VPN_NO"_proto="udp"
+		if ! nvram get vpn_clientx_eas | grep -q "$VPN_NO"; then
+			nvram set vpn_clientx_eas="$(nvram get vpn_clientx_eas),$VPN_NO"
 		fi
-		nvram set vpn_client"$VPN_NO"_desc="$VPN_PROVIDER $OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT"
-		
-		nvram set vpn_client"$VPN_NO"_cipher="$OVPN_CIPHER"
-		nvram set vpn_client"$VPN_NO"_connretry="-1"
-		nvram set vpn_client"$VPN_NO"_crypt="tls"
-		nvram set vpn_client"$VPN_NO"_digest="$OVPN_AUTHDIGEST"
-		nvram set vpn_client"$VPN_NO"_fw="1"
-		nvram set vpn_client"$VPN_NO"_hmac="1"
-		nvram set vpn_client"$VPN_NO"_if="tun"
-		nvram set vpn_client"$VPN_NO"_nat="1"
-		nvram set vpn_client"$VPN_NO"_ncp_ciphers="AES-256-GCM:AES-128-GCM:AES-256-CBC:AES-128-CBC"
-		nvram set vpn_client"$VPN_NO"_ncp_enable="1"
-		nvram set vpn_client"$VPN_NO"_reneg="0"
-		nvram set vpn_client"$VPN_NO"_tlsremote="0"
-		nvram set vpn_client"$VPN_NO"_userauth="1"
-		nvram set vpn_client"$VPN_NO"_useronly="0"
-		
-		if [ "$VPN_PROVIDER" = "NordVPN" ]; then
-		nvram set vpn_client"$VPN_NO"_comp="-1"
-		elif [ "$VPN_PROVIDER" = "PIA" ]; then
-		nvram set vpn_client"$VPN_NO"_comp="no"
-		fi
-		
-		vpncustomoptions='remote-random
+	fi
+	
+	nvram set vpn_client"$VPN_NO"_addr="$OVPN_ADDR"
+	nvram set vpn_client"$VPN_NO"_port="$OVPN_PORT"
+	if [ "$VPN_PROT_SHORT" = "TCP" ]; then
+		nvram set vpn_client"$VPN_NO"_proto="tcp-client"
+	elif [ "$VPN_PROT_SHORT" = "UDP" ]; then
+		nvram set vpn_client"$VPN_NO"_proto="udp"
+	fi
+	nvram set vpn_client"$VPN_NO"_desc="$VPN_PROVIDER $OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT"
+	
+	nvram set vpn_client"$VPN_NO"_cipher="$OVPN_CIPHER"
+	nvram set vpn_client"$VPN_NO"_connretry="-1"
+	nvram set vpn_client"$VPN_NO"_crypt="tls"
+	nvram set vpn_client"$VPN_NO"_digest="$OVPN_AUTHDIGEST"
+	nvram set vpn_client"$VPN_NO"_fw="1"
+	nvram set vpn_client"$VPN_NO"_hmac="1"
+	nvram set vpn_client"$VPN_NO"_if="tun"
+	nvram set vpn_client"$VPN_NO"_nat="1"
+	nvram set vpn_client"$VPN_NO"_ncp_ciphers="AES-256-GCM:AES-128-GCM:AES-256-CBC:AES-128-CBC"
+	nvram set vpn_client"$VPN_NO"_ncp_enable="1"
+	nvram set vpn_client"$VPN_NO"_reneg="0"
+	nvram set vpn_client"$VPN_NO"_tlsremote="0"
+	nvram set vpn_client"$VPN_NO"_userauth="1"
+	nvram set vpn_client"$VPN_NO"_useronly="0"
+	
+	if [ "$VPN_PROVIDER" = "NordVPN" ]; then
+	nvram set vpn_client"$VPN_NO"_comp="-1"
+	elif [ "$VPN_PROVIDER" = "PIA" ]; then
+	nvram set vpn_client"$VPN_NO"_comp="no"
+	fi
+	
+	vpncustomoptions='remote-random
 resolv-retry infinite
 remote-cert-tls server
 ping 15
@@ -863,7 +866,7 @@ push "rcvbuf 524288"
 pull-filter ignore "auth-token"
 pull-filter ignore "ifconfig-ipv6"
 pull-filter ignore "route-ipv6"'
-
+	
 	if [ "$VPN_PROT_SHORT" = "UDP" ]; then
 		vpncustomoptions="$vpncustomoptions
 explicit-exit-notify 3"
@@ -876,64 +879,60 @@ tun-mtu-extra 32
 mssfix 1450"
 	fi
 	
-		
-		vpncustomoptionsbase64="$(echo "$vpncustomoptions" | head -c -1 | openssl base64 -A)"
-		
-		if [ "$(/bin/uname -m)" = "aarch64" ]; then
-			nvram set vpn_client"$VPN_NO"_cust2="$(echo "$vpncustomoptionsbase64" | cut -c0-255)"
-			nvram set vpn_client"$VPN_NO"_cust21="$(echo "$vpncustomoptionsbase64" | cut -c256-510)"
-			nvram set vpn_client"$VPN_NO"_cust22="$(echo "$vpncustomoptionsbase64" | cut -c511-765)"
-		elif [ "$(uname -o)" = "ASUSWRT-Merlin" ]; then
-			nvram set vpn_client"$VPN_NO"_cust2="$vpncustomoptionsbase64"
-		else
-			nvram set vpn_client"$VPN_NO"_custom="$vpncustomoptions"
-		fi
-		
-		if [ "$ISUNATTENDED" = "true" ]; then
-			if [ -z "$(nvram get vpn_client"$VPN_NO"_username)" ]; then
-				Print_Output "true" "No username set for VPN client $VPN_NO" "$WARN"
-			fi
-			
-			if [ -z "$(nvram get vpn_client"$VPN_NO"_password)" ]; then
-				Print_Output "true" "No password set for VPN client $VPN_NO" "$WARN"
-			fi
-		else
-			if [ -z "$(nvram get vpn_client"$VPN_NO"_username)" ]; then
-				printf "\\n\\e[1mNo username set for VPN client %s\\e[0m\\n" "$VPN_NO"
-				printf "Please enter username:    "
-				read -r "vpnusn"
-				nvram set vpn_client"$VPN_NO"_username="$vpnusn"
-				printf "\\n"
-			fi
-			
-			if [ -z "$(nvram get vpn_client"$VPN_NO"_password)" ]; then
-				printf "\\n\\e[1mNo password set for VPN client %s\\e[0m\\n" "$VPN_NO"
-				printf "Please enter password:    "
-				read -r "vpnpwd"
-				nvram set vpn_client"$VPN_NO"_password="$vpnpwd"
-				printf "\\n"
-			fi
-		fi
-		
-		nvram commit
-		
-		if [ "$VPN_PROVIDER" = "NordVPN" ]; then
-			echo "$CLIENT_CA" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_ca
-			echo "$CRT_CLIENT_STATIC" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_static
-			rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_crl
-		elif [ "$VPN_PROVIDER" = "PIA" ]; then
-			echo "$CLIENT_CA" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_ca
-			echo "$CLIENT_CRL" > vpn_crt_client"$VPN_NO"_crl
-			rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_static
-		fi
-		
-		if nvram get vpn_clientx_eas | grep -q "$VPN_NO"; then
-			service restart_vpnclient"$VPN_NO" >/dev/null 2>&1
-		fi
-		Print_Output "true" "VPN client $VPN_NO updated successfully ($OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT)" "$PASS"
+	vpncustomoptionsbase64="$(echo "$vpncustomoptions" | head -c -1 | openssl base64 -A)"
+	
+	if [ "$(/bin/uname -m)" = "aarch64" ]; then
+		nvram set vpn_client"$VPN_NO"_cust2="$(echo "$vpncustomoptionsbase64" | cut -c0-255)"
+		nvram set vpn_client"$VPN_NO"_cust21="$(echo "$vpncustomoptionsbase64" | cut -c256-510)"
+		nvram set vpn_client"$VPN_NO"_cust22="$(echo "$vpncustomoptionsbase64" | cut -c511-765)"
+	elif [ "$(uname -o)" = "ASUSWRT-Merlin" ]; then
+		nvram set vpn_client"$VPN_NO"_cust2="$vpncustomoptionsbase64"
 	else
-		Print_Output "true" "VPN client $VPN_NO is already using the chosen server" "$WARN"
+		nvram set vpn_client"$VPN_NO"_custom="$vpncustomoptions"
 	fi
+	
+	if [ "$ISUNATTENDED" = "true" ]; then
+		if [ -z "$(nvram get vpn_client"$VPN_NO"_username)" ]; then
+			Print_Output "true" "No username set for VPN client $VPN_NO" "$WARN"
+		fi
+		
+		if [ -z "$(nvram get vpn_client"$VPN_NO"_password)" ]; then
+			Print_Output "true" "No password set for VPN client $VPN_NO" "$WARN"
+		fi
+	else
+		if [ -z "$(nvram get vpn_client"$VPN_NO"_username)" ]; then
+			printf "\\n\\e[1mNo username set for VPN client %s\\e[0m\\n" "$VPN_NO"
+			printf "Please enter username:    "
+			read -r "vpnusn"
+			nvram set vpn_client"$VPN_NO"_username="$vpnusn"
+			printf "\\n"
+		fi
+		
+		if [ -z "$(nvram get vpn_client"$VPN_NO"_password)" ]; then
+			printf "\\n\\e[1mNo password set for VPN client %s\\e[0m\\n" "$VPN_NO"
+			printf "Please enter password:    "
+			read -r "vpnpwd"
+			nvram set vpn_client"$VPN_NO"_password="$vpnpwd"
+			printf "\\n"
+		fi
+	fi
+	
+	nvram commit
+	
+	if [ "$VPN_PROVIDER" = "NordVPN" ]; then
+		echo "$CLIENT_CA" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_ca
+		echo "$CRT_CLIENT_STATIC" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_static
+		rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_crl
+	elif [ "$VPN_PROVIDER" = "PIA" ]; then
+		echo "$CLIENT_CA" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_ca
+		echo "$CLIENT_CRL" > vpn_crt_client"$VPN_NO"_crl
+		rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_static
+	fi
+	
+	if nvram get vpn_clientx_eas | grep -q "$VPN_NO"; then
+		service restart_vpnclient"$VPN_NO" >/dev/null 2>&1
+	fi
+	Print_Output "true" "VPN client $VPN_NO updated successfully ($OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT)" "$PASS"
 }
 
 ManageVPN(){
@@ -1602,13 +1601,10 @@ MainMenu(){
 	printf "2.    Update configuration for a managed VPN client\\n\\n"
 	printf "3.    Enable management for a VPN client\\n"
 	printf "4.    Disable management for a VPN client\\n\\n"
-	
-	printf "\\e[1m###########         NordVPN only        ###########\\e[0m\\n\\n"
-	printf "5.    Search for new recommended server\\n"
+	printf "5.    Search for new recommended server/reload server\\n"
 	printf "6.    Update schedule for a VPN client\\n"
-	printf "7.    Enable a scheduled VPN client update\\n"
-	printf "8.    Delete a scheduled VPN client update\\n\\n"
-	printf "\\e[1m###################################################\\e[0m\\n\\n"
+	printf "7.    Enable a scheduled VPN client update/reload\\n"
+	printf "8.    Delete a scheduled VPN client update/reload\\n\\n"
 	printf "r.    Refresh cached data from VPN providers\\n\\n"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Update %s with latest version (force)\\n\\n" "$SCRIPT_NAME"

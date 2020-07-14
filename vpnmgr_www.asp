@@ -159,9 +159,9 @@ function SettingHint(hintid) {
 	if(hintid == 7) hinttext="Country of VPN server to use";
 	if(hintid == 8) hinttext="City of VPN server to use";
 	if(hintid == 9) hinttext="Automatically update VPN to new VPN server";
-	if(hintid == 10) hinttext="Day(s) of week to check for new server";
-	if(hintid == 11) hinttext="Hour(s) of day to check for new server (* for all, 0-23. Comma separate for multiple hours.)";
-	if(hintid == 12) hinttext="Minute(s) of hour to check for new server (* for all, 0-59. Comma separate for multiple minutes.)";
+	if(hintid == 10) hinttext="Day(s) of week to check for new server/reload server config";
+	if(hintid == 11) hinttext="Hour(s) of day to check for new server/reload server config (* for all, 0-23. Comma separate for multiple hours.)";
+	if(hintid == 12) hinttext="Minute(s) of hour to check for new server/reload server config (* for all, 0-59. Comma separate for multiple minutes.)";
 	return overlib(hinttext, HAUTO, VAUTO);
 }
 
@@ -563,7 +563,7 @@ function BuildConfigTable(prefix,title){
 	
 	/* SCHEDULE ENABLED */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(9);">Scheduled update?</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" onchange="ScheduleOptionsEnableDisable(this)" name="vpnmgr_'+prefix+'_schenabled" id="vpnmgr_'+prefix+'_sch_true" class="input" value="true"><label for="vpnmgr_'+prefix+'_sch_true">Yes</label><input autocomplete="off" autocapitalize="off" type="radio"  onchange="ScheduleOptionsEnableDisable(this)" name="vpnmgr_'+prefix+'_schenabled" id="vpnmgr_'+prefix+'_sch_false" class="input" value="false" checked><label for="vpnmgr_'+prefix+'_sch_false">No</label></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(9);">Scheduled update/reload?</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" onchange="ScheduleOptionsEnableDisable(this)" name="vpnmgr_'+prefix+'_schenabled" id="vpnmgr_'+prefix+'_sch_true" class="input" value="true"><label for="vpnmgr_'+prefix+'_sch_true">Yes</label><input autocomplete="off" autocapitalize="off" type="radio"  onchange="ScheduleOptionsEnableDisable(this)" name="vpnmgr_'+prefix+'_schenabled" id="vpnmgr_'+prefix+'_sch_false" class="input" value="false" checked><label for="vpnmgr_'+prefix+'_sch_false">No</label></td>';
 	charthtml+='</tr>';
 	
 	/* SCHEDULE DAYS */
