@@ -235,7 +235,7 @@ function ScheduleOptionsEnableDisable(forminput){
 	var inputvalue = forminput.value;
 	var prefix = inputname.substring(0,inputname.lastIndexOf('_'));
 	
-	if(eval("document.form."+prefix+"_managed".value) == "true"){
+	if(eval("document.form."+prefix+"_managed").value == "true"){
 		if(inputvalue == "false"){
 			$j('input[name='+prefix+'_schhours]').addClass("disabled");
 			$j('input[name='+prefix+'_schhours]').prop("disabled",true);
