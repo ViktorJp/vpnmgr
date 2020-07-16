@@ -249,12 +249,12 @@ Auto_Startup(){
 				fi
 				
 				if [ "$STARTUPLINECOUNTEX" -eq 0 ]; then
-					echo "/jffs/scripts/$SCRIPT_NAME startup"' # '"$SCRIPT_NAME""_startup &" >> /jffs/scripts/services-start
+					echo "/jffs/scripts/$SCRIPT_NAME startup &"' # '"$SCRIPT_NAME""_startup" >> /jffs/scripts/services-start
 				fi
 			else
 				echo "#!/bin/sh" > /jffs/scripts/services-start
 				echo "" >> /jffs/scripts/services-start
-				echo "/jffs/scripts/$SCRIPT_NAME startup"' # '"$SCRIPT_NAME""_startup &" >> /jffs/scripts/services-start
+				echo "/jffs/scripts/$SCRIPT_NAME startup &"' # '"$SCRIPT_NAME""_startup" >> /jffs/scripts/services-start
 				chmod 0755 /jffs/scripts/services-start
 			fi
 		;;
