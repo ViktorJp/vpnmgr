@@ -2030,9 +2030,7 @@ Process_Upgrade(){
 		rm -f /opt/bin/nvpnmgr
 	fi
 	if [ -f /jffs/scripts/nvpnmgr ]; then
-		mv /jffs/scripts/nvpnmgr /jffs/scripts/vpnmgr
-		exec /jffs/scripts/vpnmgr
-		exit 1
+		rm -f /jffs/scripts/nvpnmgr
 	fi
 }
 
