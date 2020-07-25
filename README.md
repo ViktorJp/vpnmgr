@@ -16,9 +16,9 @@ Love the script and want to support future development? Any and all donations gr
 
 [**Buy me a coffee**](https://www.buymeacoffee.com/jackyaz)
 
-![Web UI](https://puu.sh/G3OOj/4e7694f737.png)
+![Web UI](https://puu.sh/GaMl6/58ab6cb489.png)
 
-![Menu UI](https://puu.sh/G3OJH/ce01dc18bc.png)
+![Menu UI](https://puu.sh/GaMkn/db5388acba.png)
 
 ## Supported firmware versions
 You must be running firmware Merlin 384.15/384.13_4 or Fork 43E5 (or later) [Asuswrt-Merlin](https://asuswrt.lostrealm.ca/)
