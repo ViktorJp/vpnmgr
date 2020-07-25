@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.com/jackyaz/vpnmgr.svg?branch=master)](https://travis-ci.com/jackyaz/vpnmgr)
 
 ## v2.0.0
-### Updated on 2020-07-12
+### Updated on 2020-07-25
 ## About
 The concept for this script was originally developed by [@h0me5k1n](https://github.com/h0me5k1n/asusmerlin-nvpnmgr)
 
@@ -47,7 +47,7 @@ If this does not work, you will need to use the full path:
 Launch vpnmgr and select option u
 
 ## Help
-Please post about any issues and problems here: [vpnmgr on SNBForums](https://www.snbforums.com/threads/vpnmgr-manage-and-update-vpn-clients.64930/)
+Please post about any issues and problems here: [vpnmgr on SNBForums](https://www.snbforums.com/threads/vpnmgr-manage-and-update-vpn-client-configurations-for-nordvpn-and-pia.64930/)
 
 ## FAQs
 ### I haven't used scripts before on AsusWRT-Merlin
