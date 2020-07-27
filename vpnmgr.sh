@@ -654,7 +654,7 @@ getOVPNArchives(){
 	wevpnchanged="$(CompareArchiveContents "/tmp/wevpn*.zip")"
 	
 	if [ "$wevpnchanged" = "true" ]; then
-		/opt/bin/7z -ba l "$OVPN_ARCHIVE_DIR/wevpn_udp_standard.zip" -- *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//;s/-UDP//;s/-TCP//;' | sort | awk '{$1=$1;print}' > "$SCRIPT_DIR/wevpn_countrydata"
+		/opt/bin/7z -ba l "$OVPN_ARCHIVE_DIR/wevpn_udp_standard.zip" -- *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//;s/-UDP//;s/-TCP//;s/_/ /;' | sort | awk '{$1=$1;print}' > "$SCRIPT_DIR/wevpn_countrydata"
 		Print_Output "true" "Changes detected in WeVPN OpenVPN file archives, local copies updated" "$PASS"
 	else
 		Print_Output "true" "No changes in WeVPN OpenVPN file archives" "$WARN"
@@ -783,10 +783,7 @@ UpdateVPNConfig(){
 		rm -f "/tmp/$OVPN_FILENAME.ovpn"
 	elif [ "$VPN_PROVIDER" = "WeVPN" ]; then
 		OVPNARCHIVE="$OVPN_ARCHIVE_DIR/wevpn_""$(echo "$VPN_PROT" | cut -f2 -d"_")""_$(echo "$VPN_TYPE" | cut -f2 -d"_").zip"
-		OVPN_FILENAME="$(echo "$VPN_COUNTRYNAME" | sedReverseCountryCodes)"
-		if [ -n "$VPN_CITYNAME" ]; then
-			OVPN_FILENAME="$OVPN_FILENAME $VPN_CITYNAME"
-		fi
+		OVPN_FILENAME="$(echo "$VPN_COUNTRYNAME" | sedReverseCountryCodes)_$VPN_CITYNAME"
 		/opt/bin/7z e -bsp0 -bso0 "$OVPNARCHIVE" -o/tmp "$OVPN_FILENAME.ovpn"
 		OVPN_DETAIL="$(cat "/tmp/$OVPN_FILENAME.ovpn")"
 		rm -f "/tmp/$OVPN_FILENAME.ovpn"
