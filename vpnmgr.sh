@@ -1169,7 +1169,7 @@ SetVPNParameters(){
 			printf "\\n\\e[1mPlease select a VPN provider:\\e[0m\\n"
 			printf "    1. NordVPN\\n"
 			printf "    2. Private Internet Access (PIA)\\n"
-			printf "    2. WeVPN\\n\\n"
+			printf "    3. WeVPN\\n\\n"
 			printf "Choose an option:    "
 			read -r "provmenu"
 			
