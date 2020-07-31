@@ -552,12 +552,12 @@ function BuildConfigTable(prefix,title){
 	
 	/* USERNAME ENABLED */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(3);">Username</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="text" class="input_25_table" onchange="" name="vpnmgr_'+prefix+'_usn" id="vpnmgr_'+prefix+'_usn"></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(3);">Username</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="text" class="input_30_table" onchange="" name="vpnmgr_'+prefix+'_usn" id="vpnmgr_'+prefix+'_usn"></td>';
 	charthtml+='</tr>';
 	
 	/* PASSWORD */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(4);">Password</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="password" class="input_25_table" onchange="" name="vpnmgr_'+prefix+'_pwd" id="vpnmgr_'+prefix+'_pwd"><input type="checkbox" name="show_pass_'+prefix+'" onclick="pass_checked(document.form.vpnmgr_'+prefix+'_pwd,document.form.show_pass_'+prefix+')">Show password</td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(4);">Password</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="password" class="input_30_table" onchange="" name="vpnmgr_'+prefix+'_pwd" id="vpnmgr_'+prefix+'_pwd"><input type="checkbox" name="show_pass_'+prefix+'" onclick="pass_checked(document.form.vpnmgr_'+prefix+'_pwd,document.form.show_pass_'+prefix+')">Show password</td>';
 	charthtml+='</tr>';
 	
 	/* TYPE */
