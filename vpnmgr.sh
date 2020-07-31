@@ -620,7 +620,11 @@ getClientCA(){
 }
 
 getClientCRT(){
-	echo "$1" | awk '/<tls-auth>/{flag=1;next}/<\/tls-auth>/{flag=0}flag' | sed '/^#/ d'
+	if [ "$2" = "NordVPN" ]; then
+		echo "$1" | awk '/<tls-auth>/{flag=1;next}/<\/tls-auth>/{flag=0}flag' | sed '/^#/ d'
+	elif [ "$2" = "WeVPN" ]; then
+		echo "$1" | awk '/<tls-crypt>/{flag=1;next}/<\/tls-crypt>/{flag=0}flag' | sed '/^#/ d'
+	fi
 }
 
 getKey(){
@@ -811,8 +815,8 @@ UpdateVPNConfig(){
 	
 	CRT_CLIENT_STATIC=""
 	if [ "$VPN_PROVIDER" != "PIA" ]; then
-		CRT_CLIENT_STATIC="$(getClientCRT "$OVPN_DETAIL")"
-		[ -z "$CRT_CLIENT_STATIC" ] && Print_Output "true" "Error determing VPN client certificate" "$ERR" && return 1
+		CRT_CLIENT_STATIC="$(getClientCRT "$OVPN_DETAIL" "$VPN_PROVIDER")"
+		[ -z "$CRT_CLIENT_STATIC" ] && Print_Output "true" "Error determing VPN static key" "$ERR" && return 1
 	fi
 	
 	CLIENT_KEY=""
