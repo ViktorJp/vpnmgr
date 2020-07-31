@@ -662,10 +662,17 @@ getOVPNArchives(){
 		Print_Output "true" "No changes in PIA OpenVPN file archives" "$WARN"
 	fi
 	
+	### WeVPN ###
+	# Standard UDP
+	Download_File https://wevpn.com/resources/openvpn/UDP.zip /tmp/wevpn_udp_standard.zip
+	# Standard TCP
+	Download_File https://wevpn.com/resources/openvpn/TCP.zip /tmp/wevpn_tcp_standard.zip
+	###########
+	
 	wevpnchanged="$(CompareArchiveContents "/tmp/wevpn*.zip")"
 	
 	if [ "$wevpnchanged" = "true" ]; then
-		/opt/bin/7z -ba l "$OVPN_ARCHIVE_DIR/wevpn_udp_standard.zip" -- *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//;s/-UDP//;s/-TCP//;s/_/ /;' | sort | awk '{$1=$1;print}' > "$SCRIPT_DIR/wevpn_countrydata"
+		/opt/bin/7z -ba l "$OVPN_ARCHIVE_DIR/wevpn_tcp_standard.zip" -- *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//;s/-UDP//;s/-TCP//;s/_/ /;' | sort | awk '{$1=$1;print}' > "$SCRIPT_DIR/wevpn_countrydata"
 		Print_Output "true" "Changes detected in WeVPN OpenVPN file archives, local copies updated" "$PASS"
 	else
 		Print_Output "true" "No changes in WeVPN OpenVPN file archives" "$WARN"
