@@ -854,7 +854,7 @@ UpdateVPNConfig(){
 		OVPN_HOSTNAME_SHORT="$(echo "$OVPN_ADDR" | cut -f1 -d'.' | awk '{print toupper(substr($0,0,1))tolower(substr($0,2))}')"
 	fi
 	
-	if [ "$OVPN_ADDR" != "$EXISTING_ADDR" ] || [ "$OVPN_PORT" != "$EXISTING_PORT" ] || [ "$VPN_PROT_SHORT" != "$EXISTING_PROTO" ]; then
+	if [ "$OVPN_ADDR" = "$EXISTING_ADDR" ] && [ "$OVPN_PORT" = "$EXISTING_PORT" ] && [ "$VPN_PROT_SHORT" = "$EXISTING_PROTO" ]; then
 		Print_Output "true" "VPN client $VPN_NO server - unchanged" "$WARN"
 	fi
 	
