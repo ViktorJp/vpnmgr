@@ -851,7 +851,7 @@ UpdateVPNConfig(){
 	if [ "$VPN_PROVIDER" = "NordVPN" ]; then
 		OVPN_HOSTNAME_SHORT="$(echo "$OVPN_HOSTNAME" | cut -f1 -d'.' | tr "a-z" "A-Z")"
 	elif [ "$VPN_PROVIDER" = "PIA" ] || [ "$VPN_PROVIDER" = "WeVPN" ]; then
-		OVPN_HOSTNAME_SHORT="$(echo "$OVPN_ADDR" | cut -f1 -d'.')"
+		OVPN_HOSTNAME_SHORT="$(echo "$OVPN_ADDR" | cut -f1 -d'.' | awk '{print toupper(substr($0,0,1))tolower(substr($0,2))}')"
 	fi
 	
 	if [ "$OVPN_ADDR" != "$EXISTING_ADDR" ] || [ "$OVPN_PORT" != "$EXISTING_PORT" ] || [ "$VPN_PROT_SHORT" != "$EXISTING_PROTO" ]; then
@@ -1456,7 +1456,7 @@ SetVPNParameters(){
 					#shellcheck disable=SC2039
 					IFS=$'\n'
 					for CITY in $LISTCITIES; do
-						printf "    %s. %s\\n" "$COUNTER" "$CITY"
+						printf "    %s. %s\\n" "$COUNTER" "$(echo "$CITY" | awk '{print toupper(substr($0,0,1))tolower(substr($0,2))}')"
 						COUNTER=$((COUNTER+1))
 					done
 					unset IFS
@@ -1845,7 +1845,7 @@ Menu_UpdateVPN(){
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_protocol.*$/vpn'"$GLOBAL_VPN_NO"'_protocol='"$VPN_PROT_SHORT"'/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_countryname.*$/vpn'"$GLOBAL_VPN_NO"'_countryname='"$GLOBAL_COUNTRY_NAME"'/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_countryid.*$/vpn'"$GLOBAL_VPN_NO"'_countryid='"$GLOBAL_COUNTRY_ID"'/' "$SCRIPT_CONF"
-		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_cityname.*$/vpn'"$GLOBAL_VPN_NO"'_cityname='"$GLOBAL_CITY_NAME"'/' "$SCRIPT_CONF"
+		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_cityname.*$/vpn'"$GLOBAL_VPN_NO"'_cityname='"$( echo "$GLOBAL_CITY_NAME" | awk '{print toupper(substr($0,0,1))tolower(substr($0,2))}')"'/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_cityid.*$/vpn'"$GLOBAL_VPN_NO"'_cityid='"$GLOBAL_CTIY_ID"'/' "$SCRIPT_CONF"
 		UpdateVPNConfig "$GLOBAL_VPN_NO"
 	else
