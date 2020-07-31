@@ -548,8 +548,15 @@ s/IE/Ireland/;s/IL/Israel/;s/IN/India/;s/IT/Italy/;s/JP/Japan/;s/MX/Mexico/;s/NL
 s/PL/Poland/;s/RO/Romania/;s/RS/Serbia/;s/SE/Sweden/;s/SG/Singapore/;s/ZA/South Africa/;'
 }
 
-sedReverseCountryCodes(){
+sedReverseCountryCodesPIA(){
 	sed 's/Australia/AU/;s/Canada/CA/;s/Germany/DE/;s/United Arab Emirates/UAE/;s/United Kingdom/UK/;s/United States/US/;'
+}
+
+sedReverseCountryCodesWeVPN(){
+	sed 's/Australia/AU/;s/Canada/CA/;s/Germany/DE/;s/United States/US/;s/United Arab Emirates/AE/;s/United Kingdom/GB/;
+s/Austria/AT/;s/Belgium/BE/;s/Bulgaria/BG/;s/Brazil/BR/;s/Switzerland/CH/;s/Czech Republic/CZ/;s/Denmark/DK/;s/Spain/ES/;s/France/FR/;
+s/Hong Kong/HK/;s/Hungary/HU/;s/Ireland/IE/;s/Israel/IL/;s/India/IN/;s/Italy/IT/;s/Japan/JP/;s/Mexico/MX/;s/Netherlands/NL/;s/New Zealand/NZ/;
+s/Poland/PL/;s/Romania/RO/;s/Serbia/RS/;s/Sweden/SE/;s/Singapore/SG/;s/South Africa/ZA/;'
 }
 
 getCountryNames(){
@@ -774,7 +781,7 @@ UpdateVPNConfig(){
 		OVPN_DETAIL="$(getOVPNcontents "$OVPNFILE" "$(echo "$VPN_PROT" | cut -f2 -d"_")")"
 	elif [ "$VPN_PROVIDER" = "PIA" ]; then
 		OVPNARCHIVE="$OVPN_ARCHIVE_DIR/pia_""$(echo "$VPN_PROT" | cut -f2 -d"_")""_$(echo "$VPN_TYPE" | cut -f2 -d"_").zip"
-		OVPN_FILENAME="$(echo "$VPN_COUNTRYNAME" | sedReverseCountryCodes)"
+		OVPN_FILENAME="$(echo "$VPN_COUNTRYNAME" | sedReverseCountryCodesPIA)"
 		if [ -n "$VPN_CITYNAME" ]; then
 			OVPN_FILENAME="$OVPN_FILENAME $VPN_CITYNAME"
 		fi
@@ -783,7 +790,7 @@ UpdateVPNConfig(){
 		rm -f "/tmp/$OVPN_FILENAME.ovpn"
 	elif [ "$VPN_PROVIDER" = "WeVPN" ]; then
 		OVPNARCHIVE="$OVPN_ARCHIVE_DIR/wevpn_""$(echo "$VPN_PROT" | cut -f2 -d"_")""_$(echo "$VPN_TYPE" | cut -f2 -d"_").zip"
-		OVPN_FILENAME="$(echo "$VPN_COUNTRYNAME" | sedReverseCountryCodes)_$VPN_CITYNAME"
+		OVPN_FILENAME="$(echo "$VPN_COUNTRYNAME" | sedReverseCountryCodesWeVPN)"'_'"$(echo "$VPN_CITYNAME" | tr "A-Z" "a-z")"'-'"$VPN_PROT_SHORT"
 		/opt/bin/7z e -bsp0 -bso0 "$OVPNARCHIVE" -o/tmp "$OVPN_FILENAME.ovpn"
 		OVPN_DETAIL="$(cat "/tmp/$OVPN_FILENAME.ovpn")"
 		rm -f "/tmp/$OVPN_FILENAME.ovpn"
