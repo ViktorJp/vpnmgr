@@ -826,51 +826,225 @@ function parseCountryData(rawcountrydata){
 	tmpcountries = tmpcountries.filter(Boolean);
 	
 	var tmpcountriessorted = [];
+	
 	var citiesAU = [];
 	var citiesCA = [];
 	var citiesDE = [];
+	var citiesUS = [];
 	var citiesUAE = [];
 	var citiesUK = [];
-	var citiesUS = [];
+	var citiesAT = [];
+	var citiesBE = [];
+	var citiesBG = [];
+	var citiesBR = [];
+	var citiesCH = [];
+	var citiesCZ = [];
+	var citiesDK = [];
+	var citiesES = [];
+	var citiesFR = [];
+	var citiesHK = [];
+	var citiesHU = [];
+	var citiesIE = [];
+	var citiesIL = [];
+	var citiesIN = [];
+	var citiesIT = [];
+	var citiesJP = [];
+	var citiesMX = [];
+	var citiesNL = [];
+	var citiesNZ = [];
+	var citiesPL = [];
+	var citiesRO = [];
+	var citiesRS = [];
+	var citiesSE = [];
+	var citiesSG = [];
+	var citiesZA = [];
 	
 	$j.each(tmpcountries, function (index, value) {
 		if(value.startsWith("AU") == true){
 			var obj = {};
-			obj["name"]=capitalizeFirstLetter(value.replace("AU ",""));
+			obj["name"] = capitalizeFirstLetter(value.replace("AU ",""));
 			citiesAU.push(obj);
 			value = "Australia";
 		}
 		else if(value.startsWith("CA") == true){
 			var obj = {};
-			obj["name"]=capitalizeFirstLetter(value.replace("CA ",""));
+			obj["name"] = capitalizeFirstLetter(value.replace("CA ",""));
 			citiesCA.push(obj);
 			value = "Canada";
 		}
 		else if(value.startsWith("DE") == true){
 			var obj = {};
-			obj["name"]=capitalizeFirstLetter(value.replace("DE ",""));
+			obj["name"] = capitalizeFirstLetter(value.replace("DE ",""));
 			citiesDE.push(obj);
 			value = "Germany";
 		}
+		else if(value.startsWith("US") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("US ",""));
+			citiesUS.push(obj);
+			value = "United States";
+		}
+		else if(value.startsWith("AT") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("AT ",""));
+			citiesAT.push(obj);
+			value = "Austria";
+		}
+		else if(value.startsWith("BE") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("BE ",""));
+			citiesBE.push(obj);
+			value = "Belgium";
+		}
+		else if(value.startsWith("BG") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("BG ",""));
+			citiesBG.push(obj);
+			value = "Bulgaria";
+		}
+		else if(value.startsWith("BR") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("BR ",""));
+			citiesBR.push(obj);
+			value = "Brazil";
+		}
+		else if(value.startsWith("CH") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("CH ",""));
+			citiesCH.push(obj);
+			value = "Switzerland";
+		}
+		else if(value.startsWith("CZ") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("CZ ",""));
+			citiesCZ.push(obj);
+			value = "Czech Republic";
+		}
+		else if(value.startsWith("DK") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("DK ",""));
+			citiesDK.push(obj);
+			value = "Denmark";
+		}
+		else if(value.startsWith("ES") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("ES ",""));
+			citiesES.push(obj);
+			value = "Spain";
+		}
+		else if(value.startsWith("FR") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("FR ",""));
+			citiesFR.push(obj);
+			value = "France";
+		}
+		else if(value.startsWith("HK") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("HK ",""));
+			citiesHK.push(obj);
+			value = "Hong Kong";
+		}
+		else if(value.startsWith("HU") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("HU ",""));
+			citiesHU.push(obj);
+			value = "Hungary";
+		}
+		else if(value.startsWith("IE") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("IE ",""));
+			citiesIE.push(obj);
+			value = "Ireland";
+		}
+		else if(value.startsWith("IL") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("IL ",""));
+			citiesIL.push(obj);
+			value = "Israel";
+		}
+		else if(value.startsWith("IN") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("IN ",""));
+			citiesIN.push(obj);
+			value = "India";
+		}
+		else if(value.startsWith("IT") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("IT ",""));
+			citiesIT.push(obj);
+			value = "Italy";
+		}
+		else if(value.startsWith("JP") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("JP ",""));
+			citiesJP.push(obj);
+			value = "Japan";
+		}
+		else if(value.startsWith("MX") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("MX ",""));
+			citiesMX.push(obj);
+			value = "Mexico";
+		}
+		else if(value.startsWith("NL") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("NL ",""));
+			citiesNL.push(obj);
+			value = "Netherlands";
+		}
+		else if(value.startsWith("NZ") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("NZ ",""));
+			citiesNZ.push(obj);
+			value = "New Zealand";
+		}
+		else if(value.startsWith("PL") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("PL ",""));
+			citiesPL.push(obj);
+			value = "Poland";
+		}
+		else if(value.startsWith("RO") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("RO ",""));
+			citiesRO.push(obj);
+			value = "Romania";
+		}
+		else if(value.startsWith("RS") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("RS ",""));
+			citiesRS.push(obj);
+			value = "Serbia";
+		}
+		else if(value.startsWith("SE") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("SE ",""));
+			citiesSE.push(obj);
+			value = "Sweden";
+		}
+		else if(value.startsWith("SG") == true){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replace("SG ",""));
+			citiesSG.push(obj);
+			value = "Singapore";
+		}
 		else if(value.startsWith("UAE") == true || value.startsWith("AE") == true){
 			var obj = {};
-			obj["name"]=capitalizeFirstLetter(value.replace("UAE ",""));
-			obj["name"]=capitalizeFirstLetter(value.replace("AE ",""));
+			obj["name"] = capitalizeFirstLetter(value.replace("UAE ","").replace("AE ",""));
 			citiesUAE.push(obj);
 			value = "United Arab Emirates";
 		}
 		else if(value.startsWith("UK") == true || value.startsWith("GB") == true){
 			var obj = {};
-			obj["name"]=capitalizeFirstLetter(value.replace("UK ",""));
-			obj["name"]=capitalizeFirstLetter(value.replace("GB ",""));
+			obj["name"] = capitalizeFirstLetter(value.replace("UK ","").replace("GB ",""));
 			citiesUK.push(obj);
 			value = "United Kingdom";
 		}
-		else if(value.startsWith("US") == true){
+		else if(value.startsWith("ZA") == true){
 			var obj = {};
-			obj["name"]=capitalizeFirstLetter(value.replace("US ",""));
-			citiesUS.push(obj);
-			value = "United States";
+			obj["name"] = capitalizeFirstLetter(value.replace("ZA ",""));
+			citiesZA.push(obj);
+			value = "South Africa";
 		}
 		
 		tmpcountriessorted.push(value)
@@ -897,14 +1071,89 @@ function parseCountryData(rawcountrydata){
 		else if(entry.name == "Germany"){
 			entry["cities"] = citiesDE;
 		}
+		else if(entry.name == "United States"){
+			entry["cities"] = citiesUS;
+		}
 		else if(entry.name == "United Arab Emirates"){
 			entry["cities"] = citiesUAE;
 		}
 		else if(entry.name == "United Kingdom"){
 			entry["cities"] = citiesUK;
 		}
-		else if(entry.name == "United States"){
-			entry["cities"] = citiesUS;
+		else if(entry.name == "Austria"){
+			entry["cities"] = citiesAT;
+		}
+		else if(entry.name == "Belgium"){
+			entry["cities"] = citiesBE;
+		}
+		else if(entry.name == "Bulgaria"){
+			entry["cities"] = citiesBG;
+		}
+		else if(entry.name == "Brazil"){
+			entry["cities"] = citiesBR;
+		}
+		else if(entry.name == "Switzerland"){
+			entry["cities"] = citiesCH;
+		}
+		else if(entry.name == "Czech Republic"){
+			entry["cities"] = citiesCZ;
+		}
+		else if(entry.name == "Denmark"){
+			entry["cities"] = citiesDK;
+		}
+		else if(entry.name == "Spain"){
+			entry["cities"] = citiesES;
+		}
+		else if(entry.name == "France"){
+			entry["cities"] = citiesFR;
+		}
+		else if(entry.name == "Hong Kong"){
+			entry["cities"] = citiesHK;
+		}
+		else if(entry.name == "Hungary"){
+			entry["cities"] = citiesHU;
+		}
+		else if(entry.name == "Ireland"){
+			entry["cities"] = citiesIE;
+		}
+		else if(entry.name == "Israel"){
+			entry["cities"] = citiesIL;
+		}
+		else if(entry.name == "India"){
+			entry["cities"] = citiesIN;
+		}
+		else if(entry.name == "Italy"){
+			entry["cities"] = citiesIT;
+		}
+		else if(entry.name == "Japan"){
+			entry["cities"] = citiesJP;
+		}
+		else if(entry.name == "Mexico"){
+			entry["cities"] = citiesMX;
+		}
+		else if(entry.name == "Netherlands"){
+			entry["cities"] = citiesNL;
+		}
+		else if(entry.name == "New Zealand"){
+			entry["cities"] = citiesNZ;
+		}
+		else if(entry.name == "Poland"){
+			entry["cities"] = citiesPL;
+		}
+		else if(entry.name == "Romania"){
+			entry["cities"] = citiesRO;
+		}
+		else if(entry.name == "Serbia"){
+			entry["cities"] = citiesRS;
+		}
+		else if(entry.name == "Sweden"){
+			entry["cities"] = citiesSE;
+		}
+		else if(entry.name == "Singapore"){
+			entry["cities"] = citiesSG;
+		}
+		else if(entry.name == "South Africa"){
+			entry["cities"] = citiesZA;
 		}
 		else {
 			entry["cities"] = [];
