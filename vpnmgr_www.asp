@@ -234,8 +234,23 @@ function VPNTypesToggle(forminput){
 		$j('label[for='+prefix+'_strong],#'+prefix+'_strong').hide();
 	}
 	$j('#'+prefix+'_standard').prop("checked", true);
-	PopulateCountryDropdown();
-	PopulateCityDropdown();
+	
+	PopulateCountryDropdown(prefix.replace("vpnmgr_vpn",""));
+	if($j('select[name='+prefix+'_countryname]').val() == ""){
+		$j('select[name='+prefix+'_cityname]').prop("disabled",true);
+	}
+	else if($j('select[name='+prefix+'_countryname]').val() != ""){
+		$j('select[name='+prefix+'_cityname]').prop("disabled",false);
+	}
+	
+	PopulateCityDropdown(prefix.replace("vpnmgr_vpn",""));
+	let dropdown = $j('select[name='+prefix+'_cityname]');
+	if(dropdown[0].length == 0 || dropdown.find("option:first-child").val().length == 0){
+		dropdown.prop("disabled",true);
+	}
+	else if(dropdown[0].length > 0){
+		dropdown.prop("disabled",false);
+	}
 }
 
 function ScheduleOptionsEnableDisable(forminput){
@@ -265,8 +280,13 @@ function ScheduleOptionsEnableDisable(forminput){
 	}
 }
 
-function PopulateCountryDropdown(){
+function PopulateCountryDropdown(vpnclient){
 	for (var vpnno = 1; vpnno < 6; vpnno++){
+		if(vpnclient != "all"){
+			if(vpnno != vpnclient){
+				continue;
+			}
+		}
 		let dropdown = $j('#vpnmgr_vpn'+vpnno+'_countryname');
 		dropdown.empty();
 		
@@ -290,8 +310,13 @@ function PopulateCountryDropdown(){
 	}
 }
 
-function PopulateCityDropdown(){
+function PopulateCityDropdown(vpnclient){
 	for (var vpnno = 1; vpnno < 6; vpnno++){
+		if(vpnclient != "all"){
+			if(vpnno != vpnclient){
+				continue;
+			}
+		}
 		let dropdown = $j('#vpnmgr_vpn'+vpnno+'_cityname');
 		dropdown.empty();
 		
@@ -431,7 +456,7 @@ function get_conf_file(){
 						}
 					}
 				}
-				PopulateCountryDropdown();
+				PopulateCountryDropdown("all");
 				for (var i = 1; i < 6; i++) {
 					eval("document.form.vpnmgr_vpn"+i+"_countryname").value = window["vpnmgr_settings"].filter(function(item) {
 						return item[0] == "vpn"+i+"_countryname";
@@ -445,7 +470,7 @@ function get_conf_file(){
 					}
 				}
 				
-				PopulateCityDropdown();
+				PopulateCityDropdown("all");
 				
 				for (var i = 1; i < 6; i++) {
 					eval("document.form.vpnmgr_vpn"+i+"_cityname").value = window["vpnmgr_settings"].filter(function(item) {
@@ -847,6 +872,7 @@ function parseCountryData(rawcountrydata){
 			citiesUS.push(obj);
 			value = "United States";
 		}
+		
 		tmpcountriessorted.push(value)
 	});
 	tmpcountriessorted.sort();
@@ -880,7 +906,7 @@ function parseCountryData(rawcountrydata){
 		else if(entry.name == "United States"){
 			entry["cities"] = citiesUS;
 		}
-		else{
+		else {
 			entry["cities"] = [];
 		}
 	});
@@ -898,7 +924,6 @@ function setCitiesforCountry(forminput){
 	
 	if(eval("document.form."+prefix+"_provider").value == "NordVPN"){
 		dropdown.append('<option selected="true"></option>');
-		dropdown.prop('selectedIndex', 0);
 		cityarray = nordvpncountries;
 	}
 	else if(eval("document.form."+prefix+"_provider").value == "PIA"){
@@ -916,8 +941,12 @@ function setCitiesforCountry(forminput){
 			$j.each(entry.cities, function (key2, entry2) {
 				dropdown.append($j('<option></option>').attr('value', entry2.name).text(entry2.name));
 			});
-			if(dropdown[0].length == 2){
+			
+			if(dropdown[0].length == 2 && dropdown.find("option:first-child").val().length == 0){
 				dropdown.prop('selectedIndex', 1);
+			}
+			else {
+				dropdown.prop('selectedIndex', 0);
 			}
 			
 			return false;
@@ -934,7 +963,7 @@ function setCitiesforCountry(forminput){
 	if(dropdown[0].length == 0){
 		dropdown.prop("disabled",true);
 	}
-	else{
+	else {
 		dropdown.prop("disabled",false);
 	}
 }
