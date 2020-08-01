@@ -772,93 +772,7 @@ function getPIACountryData(){
 			setTimeout("getPIACountryData();", 1000);
 		},
 		success: function(data){
-			tmppiacountries = data.split('\n');
-			tmppiacountries = tmppiacountries.filter(Boolean);
-			var tmppiacountriessorted = [];
-			var tmppiacountriesunique = [];
-			
-			var citiesAU = [];
-			var citiesCA = [];
-			var citiesDE = [];
-			var citiesUAE = [];
-			var citiesUK = [];
-			var citiesUS = [];
-			
-			$j.each(tmppiacountries, function (index, value) {
-				if(value.indexOf("AU") != -1){
-					var obj = {};
-					obj["name"]=value.replace("AU ","");
-					citiesAU.push(obj);
-					value = "Australia";
-				}
-				else if(value.indexOf("CA") != -1){
-					var obj = {};
-					obj["name"]=value.replace("CA ","");
-					citiesCA.push(obj);
-					value = "Canada";
-				}
-				else if(value.indexOf("DE") != -1){
-					var obj = {};
-					obj["name"]=value.replace("DE ","");
-					citiesDE.push(obj);
-					value = "Germany";
-				}
-				else if(value.indexOf("UAE") != -1){
-					var obj = {};
-					obj["name"]=value.replace("UAE ","");
-					citiesUAE.push(obj);
-					value = "United Arab Emirates";
-				}
-				else if(value.indexOf("UK") != -1){
-					var obj = {};
-					obj["name"]=value.replace("UK ","");
-					citiesUK.push(obj);
-					value = "United Kingdom";
-				}
-				else if(value.indexOf("US") != -1){
-					var obj = {};
-					obj["name"]=value.replace("US ","");
-					citiesUS.push(obj);
-					value = "United States";
-				}
-				tmppiacountriessorted.push(value)
-			});
-			tmppiacountriessorted.sort();
-			
-			var unique = [];
-			for( let i = 0; i < tmppiacountriessorted.length; i++ ){
-				if( !unique[tmppiacountriessorted[i]]){
-					var obj = {};
-					obj["name"]=tmppiacountriessorted[i];
-					piacountries.push(obj);
-					unique[tmppiacountriessorted[i]] = 1;
-				}
-			}
-			
-			$j.each(piacountries, function (key, entry) {
-				if(entry.name == "Australia"){
-					entry["cities"] = citiesAU;
-				}
-				else if(entry.name == "Canada"){
-					entry["cities"] = citiesCA;
-				}
-				else if(entry.name == "Germany"){
-					entry["cities"] = citiesDE;
-				}
-				else if(entry.name == "United Arab Emirates"){
-					entry["cities"] = citiesUAE;
-				}
-				else if(entry.name == "United Kingdom"){
-					entry["cities"] = citiesUK;
-				}
-				else if(entry.name == "United States"){
-					entry["cities"] = citiesUS;
-				}
-				else{
-					entry["cities"] = [];
-				}
-			});
-			
+			piacountries = parseCountryData(data);
 			getWeVPNCountryData();
 		}
 	});
@@ -873,96 +787,105 @@ function getWeVPNCountryData(){
 			setTimeout("getWeVPNCountryData();", 1000);
 		},
 		success: function(data){
-			tmpwevpncountries = data.split('\n');
-			tmpwevpncountries = tmpwevpncountries.filter(Boolean);
-			var tmpwevpncountriessorted = [];
-			var tmpwevpncountriesunique = [];
-			
-			var citiesAU = [];
-			var citiesCA = [];
-			var citiesDE = [];
-			var citiesUAE = [];
-			var citiesUK = [];
-			var citiesUS = [];
-			
-			$j.each(tmpwevpncountries, function (index, value) {
-				if(value.indexOf("AU") != -1){
-					var obj = {};
-					obj["name"]=value.replace("AU ","");
-					citiesAU.push(obj);
-					value = "Australia";
-				}
-				else if(value.indexOf("CA") != -1){
-					var obj = {};
-					obj["name"]=value.replace("CA ","");
-					citiesCA.push(obj);
-					value = "Canada";
-				}
-				else if(value.indexOf("DE") != -1){
-					var obj = {};
-					obj["name"]=value.replace("DE ","");
-					citiesDE.push(obj);
-					value = "Germany";
-				}
-				else if(value.indexOf("UAE") != -1){
-					var obj = {};
-					obj["name"]=value.replace("UAE ","");
-					citiesUAE.push(obj);
-					value = "United Arab Emirates";
-				}
-				else if(value.indexOf("UK") != -1){
-					var obj = {};
-					obj["name"]=value.replace("UK ","");
-					citiesUK.push(obj);
-					value = "United Kingdom";
-				}
-				else if(value.indexOf("US") != -1){
-					var obj = {};
-					obj["name"]=value.replace("US ","");
-					citiesUS.push(obj);
-					value = "United States";
-				}
-				tmpwevpncountriessorted.push(value)
-			});
-			tmpwevpncountriessorted.sort();
-			
-			var unique = [];
-			for( let i = 0; i < tmpwevpncountriessorted.length; i++ ){
-				if( !unique[tmpwevpncountriessorted[i]]){
-					var obj = {};
-					obj["name"]=tmpwevpncountriessorted[i];
-					wevpncountries.push(obj);
-					unique[tmpwevpncountriessorted[i]] = 1;
-				}
-			}
-			
-			$j.each(wevpncountries, function (key, entry) {
-				if(entry.name == "Australia"){
-					entry["cities"] = citiesAU;
-				}
-				else if(entry.name == "Canada"){
-					entry["cities"] = citiesCA;
-				}
-				else if(entry.name == "Germany"){
-					entry["cities"] = citiesDE;
-				}
-				else if(entry.name == "United Arab Emirates"){
-					entry["cities"] = citiesUAE;
-				}
-				else if(entry.name == "United Kingdom"){
-					entry["cities"] = citiesUK;
-				}
-				else if(entry.name == "United States"){
-					entry["cities"] = citiesUS;
-				}
-				else{
-					entry["cities"] = [];
-				}
-			});
-			
+			wevpncountries = parseCountryData(data);
 			get_conf_file();
 		}
 	});
+}
+
+function parseCountryData(rawcountrydata){
+	var parsedarray = [];
+	
+	var tmpcountries = [];
+	tmpcountries = rawcountrydata.split('\n');
+	tmpcountries = tmpcountries.filter(Boolean);
+	
+	var tmpcountriessorted = [];
+	var citiesAU = [];
+	var citiesCA = [];
+	var citiesDE = [];
+	var citiesUAE = [];
+	var citiesUK = [];
+	var citiesUS = [];
+	
+	$j.each(tmpcountries, function (index, value) {
+		if(value.startsWith("AU") == true){
+			var obj = {};
+			obj["name"]=capitalizeFirstLetter(value.replace("AU ",""));
+			citiesAU.push(obj);
+			value = "Australia";
+		}
+		else if(value.startsWith("CA") == true){
+			var obj = {};
+			obj["name"]=capitalizeFirstLetter(value.replace("CA ",""));
+			citiesCA.push(obj);
+			value = "Canada";
+		}
+		else if(value.startsWith("DE") == true){
+			var obj = {};
+			obj["name"]=capitalizeFirstLetter(value.replace("DE ",""));
+			citiesDE.push(obj);
+			value = "Germany";
+		}
+		else if(value.startsWith("UAE") == true || value.startsWith("AE") == true){
+			var obj = {};
+			obj["name"]=capitalizeFirstLetter(value.replace("UAE ",""));
+			obj["name"]=capitalizeFirstLetter(value.replace("AE ",""));
+			citiesUAE.push(obj);
+			value = "United Arab Emirates";
+		}
+		else if(value.startsWith("UK") == true || value.startsWith("GB") == true){
+			var obj = {};
+			obj["name"]=capitalizeFirstLetter(value.replace("UK ",""));
+			obj["name"]=capitalizeFirstLetter(value.replace("GB ",""));
+			citiesUK.push(obj);
+			value = "United Kingdom";
+		}
+		else if(value.startsWith("US") == true){
+			var obj = {};
+			obj["name"]=capitalizeFirstLetter(value.replace("US ",""));
+			citiesUS.push(obj);
+			value = "United States";
+		}
+		tmpcountriessorted.push(value)
+	});
+	tmpcountriessorted.sort();
+	
+	var unique = [];
+	for( let i = 0; i < tmpcountriessorted.length; i++ ){
+		if( !unique[tmpcountriessorted[i]]){
+			var obj = {};
+			obj["name"]=tmpcountriessorted[i];
+			parsedarray.push(obj);
+			unique[tmpcountriessorted[i]] = 1;
+		}
+	}
+	
+	$j.each(parsedarray, function (key, entry) {
+		if(entry.name == "Australia"){
+			entry["cities"] = citiesAU;
+		}
+		else if(entry.name == "Canada"){
+			entry["cities"] = citiesCA;
+		}
+		else if(entry.name == "Germany"){
+			entry["cities"] = citiesDE;
+		}
+		else if(entry.name == "United Arab Emirates"){
+			entry["cities"] = citiesUAE;
+		}
+		else if(entry.name == "United Kingdom"){
+			entry["cities"] = citiesUK;
+		}
+		else if(entry.name == "United States"){
+			entry["cities"] = citiesUS;
+		}
+		else{
+			entry["cities"] = [];
+		}
+	});
+	
+	return parsedarray;
 }
 
 function setCitiesforCountry(forminput){
@@ -1014,6 +937,10 @@ function setCitiesforCountry(forminput){
 	else{
 		dropdown.prop("disabled",false);
 	}
+}
+
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
 </script>
