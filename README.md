@@ -2,8 +2,8 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/50f9c2244ef74cefb3da37448dd69848)](https://www.codacy.com/manual/jackyaz/vpnmgr?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jackyaz/vpnmgr&amp;utm_campaign=Badge_Grade)
 [![Build Status](https://travis-ci.com/jackyaz/vpnmgr.svg?branch=master)](https://travis-ci.com/jackyaz/vpnmgr)
 
-## v2.0.0
-### Updated on 2020-07-25
+## v2.1.0
+### Updated on 2020-08-03
 ## About
 The concept for this script was originally developed by [@h0me5k1n](https://github.com/h0me5k1n/asusmerlin-nvpnmgr)
 
