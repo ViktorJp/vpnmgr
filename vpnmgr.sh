@@ -20,8 +20,8 @@
 
 ### Start of script variables ###
 readonly SCRIPT_NAME="vpnmgr"
-readonly SCRIPT_VERSION="v2.0.0"
-readonly SCRIPT_BRANCH="master"
+readonly SCRIPT_VERSION="v2.1.0"
+readonly SCRIPT_BRANCH="develop"
 readonly SCRIPT_REPO="https://raw.githubusercontent.com/jackyaz/""$SCRIPT_NAME""/""$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
 readonly SCRIPT_CONF="$SCRIPT_DIR/config"
@@ -448,6 +448,7 @@ Create_Symlinks(){
 	ln -s "$SCRIPT_DIR/config"  "$SCRIPT_WEB_DIR/config.htm" 2>/dev/null
 	ln -s "$SCRIPT_DIR/nordvpn_countrydata" "$SCRIPT_WEB_DIR/nordvpn_countrydata.htm" 2>/dev/null
 	ln -s "$SCRIPT_DIR/pia_countrydata" "$SCRIPT_WEB_DIR/pia_countrydata.htm" 2>/dev/null
+	ln -s "$SCRIPT_DIR/wevpn_countrydata" "$SCRIPT_WEB_DIR/wevpn_countrydata.htm" 2>/dev/null
 	
 	if [ ! -d "$SHARED_WEB_DIR" ]; then
 		ln -s "$SHARED_DIR" "$SHARED_WEB_DIR" 2>/dev/null
@@ -532,21 +533,36 @@ getCountryData(){
 }
 
 sedCountryCodesDestructive(){
-	sed 's/.*AU.*/Australia/;s/.*CA.*/Canada/;s/.*DE.*/Germany/;s/.*UAE.*/United Arab Emirates/;s/.*UK.*/United Kingdom/;s/.*US.*/United States/;'
+	sed 's/.*AU.*/Australia/;s/.*CA.*/Canada/;s/.*DE.*/Germany/;s/.*UAE.*/United Arab Emirates/;s/.*UK.*/United Kingdom/;s/.*US.*/United States/;
+s/.*AE.*/United Arab Emirates/;s/.*GB.*/United Kingdom/;s/.*AT.*/Austria/;s/.*BE.*/Belgium/;s/.*BG.*/Bulgaria/;s/.*BR.*/Brazil/;
+s/.*CH.*/Switzerland/;s/.*CZ.*/Czech Republic/;s/.*DK.*/Denmark/;s/.*ES.*/Spain/;s/.*FR.*/France/;s/.*HK.*/Hong Kong/;s/.*HU.*/Hungary/;
+s/.*IE.*/Ireland/;s/.*IL.*/Israel/;s/.*IN.*/India/;s/.*IT.*/Italy/;s/.*JP.*/Japan/;s/.*MX.*/Mexico/;s/.*NL.*/Netherlands/;s/.*NZ.*/New Zealand/;
+s/.*PL.*/Poland/;s/.*RO.*/Romania/;s/.*RS.*/Serbia/;s/.*SE.*/Sweden/;s/.*SG.*/Singapore/;s/.*ZA.*/South Africa/;'
 }
 
 sedCountryCodes(){
-	sed 's/AU/Australia/;s/CA/Canada/;s/DE/Germany/;s/UAE/United Arab Emirates/;s/UK/United Kingdom/;s/US/United States/;'
+	sed 's/AU/Australia/;s/CA/Canada/;s/DE/Germany/;s/UAE/United Arab Emirates/;s/UK/United Kingdom/;s/US/United States/;
+s/AE/United Arab Emirates/;s/GB/United Kingdom/;s/AT/Austria/;s/BE/Belgium/;s/BG/Bulgaria/;s/BR/Brazil/;
+s/CH/Switzerland/;s/CZ/Czech Republic/;s/DK/Denmark/;s/ES/Spain/;s/FR/France/;s/HK/Hong Kong/;s/HU/Hungary/;
+s/IE/Ireland/;s/IL/Israel/;s/IN/India/;s/IT/Italy/;s/JP/Japan/;s/MX/Mexico/;s/NL/Netherlands/;s/NZ/New Zealand/;
+s/PL/Poland/;s/RO/Romania/;s/RS/Serbia/;s/SE/Sweden/;s/SG/Singapore/;s/ZA/South Africa/;'
 }
 
-sedReverseCountryCodes(){
+sedReverseCountryCodesPIA(){
 	sed 's/Australia/AU/;s/Canada/CA/;s/Germany/DE/;s/United Arab Emirates/UAE/;s/United Kingdom/UK/;s/United States/US/;'
+}
+
+sedReverseCountryCodesWeVPN(){
+	sed 's/Australia/AU/;s/Canada/CA/;s/Germany/DE/;s/United States/US/;s/United Arab Emirates/AE/;s/United Kingdom/GB/;
+s/Austria/AT/;s/Belgium/BE/;s/Bulgaria/BG/;s/Brazil/BR/;s/Switzerland/CH/;s/Czech Republic/CZ/;s/Denmark/DK/;s/Spain/ES/;s/France/FR/;
+s/Hong Kong/HK/;s/Hungary/HU/;s/Ireland/IE/;s/Israel/IL/;s/India/IN/;s/Italy/IT/;s/Japan/JP/;s/Mexico/MX/;s/Netherlands/NL/;s/New Zealand/NZ/;
+s/Poland/PL/;s/Romania/RO/;s/Serbia/RS/;s/Sweden/SE/;s/Singapore/SG/;s/South Africa/ZA/;'
 }
 
 getCountryNames(){
 	if [ "$1" = "NordVPN" ]; then
 		echo "$2" | jq -r -e '.[] | .name // empty'
-	elif [ "$1" = "PIA" ]; then
+	elif [ "$1" = "PIA" ] || [ "$1" = "WeVPN" ]; then
 		echo "$2" | sort -u -k 1,1 | sedCountryCodesDestructive | sort | awk '{$1=$1;print}'
 	fi
 }
@@ -558,7 +574,7 @@ getCountryID(){
 getCityCount(){
 	if [ "$1" = "NordVPN" ]; then
 		echo "$2" | jq -r -e '.[] | select(.name=="'"$3"'") | .cities | length // empty'
-	elif [ "$1" = "PIA" ]; then
+	elif [ "$1" = "PIA" ] || [ "$1" = "WeVPN" ]; then
 		echo "$2" | sedCountryCodesDestructive | sort | grep -c "$3"
 	fi
 }
@@ -566,7 +582,7 @@ getCityCount(){
 getCityNames(){
 	if [ "$1" = "NordVPN" ]; then
 		echo "$2" | jq -r -e '.[] | select(.name=="'"$3"'") | .cities[] | .name // empty'
-	elif [ "$1" = "PIA" ]; then
+	elif [ "$1" = "PIA" ] || [ "$1" = "WeVPN" ]; then
 		echo "$2" | sedCountryCodes | sort | grep "$3" | sed "s/$3//" | awk '{$1=$1;print}'
 	fi
 }
@@ -604,7 +620,15 @@ getClientCA(){
 }
 
 getClientCRT(){
-	echo "$1" | awk '/<tls-auth>/{flag=1;next}/<\/tls-auth>/{flag=0}flag' | sed '/^#/ d'
+	if [ "$2" = "NordVPN" ]; then
+		echo "$1" | awk '/<tls-auth>/{flag=1;next}/<\/tls-auth>/{flag=0}flag' | sed '/^#/ d'
+	elif [ "$2" = "WeVPN" ]; then
+		echo "$1" | awk '/<tls-crypt>/{flag=1;next}/<\/tls-crypt>/{flag=0}flag' | sed '/^#/ d'
+	fi
+}
+
+getKey(){
+	echo "$1" | awk '/<key>/{flag=1;next}/<\/key>/{flag=0}flag' | sed '/^#/ d'
 }
 
 getCRL(){
@@ -629,8 +653,35 @@ getOVPNArchives(){
 	Download_File https://www.privateinternetaccess.com/openvpn/openvpn-strong-tcp.zip /tmp/pia_tcp_strong.zip
 	###########
 	
-	FILES="/tmp/pia*.zip"
+	piachanged="$(CompareArchiveContents "/tmp/pia*.zip")"
+	
+	if [ "$piachanged" = "true" ]; then
+		/opt/bin/7z -ba l "$OVPN_ARCHIVE_DIR/pia_udp_standard.zip" -- *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//' | sort | awk '{$1=$1;print}' > "$SCRIPT_DIR/pia_countrydata"
+		Print_Output "true" "Changes detected in PIA OpenVPN file archives, local copies updated" "$PASS"
+	else
+		Print_Output "true" "No changes in PIA OpenVPN file archives" "$WARN"
+	fi
+	
+	### WeVPN ###
+	# Standard UDP
+	Download_File https://wevpn.com/resources/openvpn/UDP.zip /tmp/wevpn_udp_standard.zip
+	# Standard TCP
+	Download_File https://wevpn.com/resources/openvpn/TCP.zip /tmp/wevpn_tcp_standard.zip
+	###########
+	
+	wevpnchanged="$(CompareArchiveContents "/tmp/wevpn*.zip")"
+	
+	if [ "$wevpnchanged" = "true" ]; then
+		/opt/bin/7z -ba l "$OVPN_ARCHIVE_DIR/wevpn_tcp_standard.zip" -- *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//;s/-UDP//;s/-TCP//;s/_/ /;' | sort | awk '{$1=$1;print}' > "$SCRIPT_DIR/wevpn_countrydata"
+		Print_Output "true" "Changes detected in WeVPN OpenVPN file archives, local copies updated" "$PASS"
+	else
+		Print_Output "true" "No changes in WeVPN OpenVPN file archives" "$WARN"
+	fi
+}
+
+CompareArchiveContents(){
 	archiveschanged="false"
+	FILES="$1"
 	for f in $FILES; do
 		if [ -f "$f" ]; then
 			if [ -f "$OVPN_ARCHIVE_DIR/$(basename "$f")" ]; then
@@ -648,13 +699,7 @@ getOVPNArchives(){
 			fi
 		fi
 	done
-	
-	if [ "$archiveschanged" = "true" ]; then
-		/opt/bin/7z -ba l "$OVPN_ARCHIVE_DIR/pia_udp_standard.zip" -- *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//' | sort | awk '{$1=$1;print}' > "$SCRIPT_DIR/pia_countrydata"
-		Print_Output "true" "Changes detected in OpenVPN file archives, local copies updated" "$PASS"
-	else
-		Print_Output "true" "No changes in OpenVPN file archives" "$WARN"
-	fi
+	echo "$archiveschanged"
 }
 
 ListVPNClients(){
@@ -747,10 +792,16 @@ UpdateVPNConfig(){
 		OVPN_DETAIL="$(getOVPNcontents "$OVPNFILE" "$(echo "$VPN_PROT" | cut -f2 -d"_")")"
 	elif [ "$VPN_PROVIDER" = "PIA" ]; then
 		OVPNARCHIVE="$OVPN_ARCHIVE_DIR/pia_""$(echo "$VPN_PROT" | cut -f2 -d"_")""_$(echo "$VPN_TYPE" | cut -f2 -d"_").zip"
-		OVPN_FILENAME="$(echo "$VPN_COUNTRYNAME" | sedReverseCountryCodes)"
+		OVPN_FILENAME="$(echo "$VPN_COUNTRYNAME" | sedReverseCountryCodesPIA)"
 		if [ -n "$VPN_CITYNAME" ]; then
 			OVPN_FILENAME="$OVPN_FILENAME $VPN_CITYNAME"
 		fi
+		/opt/bin/7z e -bsp0 -bso0 "$OVPNARCHIVE" -o/tmp "$OVPN_FILENAME.ovpn"
+		OVPN_DETAIL="$(cat "/tmp/$OVPN_FILENAME.ovpn")"
+		rm -f "/tmp/$OVPN_FILENAME.ovpn"
+	elif [ "$VPN_PROVIDER" = "WeVPN" ]; then
+		OVPNARCHIVE="$OVPN_ARCHIVE_DIR/wevpn_""$(echo "$VPN_PROT" | cut -f2 -d"_")""_$(echo "$VPN_TYPE" | cut -f2 -d"_").zip"
+		OVPN_FILENAME="$(echo "$VPN_COUNTRYNAME" | sedReverseCountryCodesWeVPN)"'_'"$(echo "$VPN_CITYNAME" | tr "A-Z" "a-z")"'-'"$VPN_PROT_SHORT"
 		/opt/bin/7z e -bsp0 -bso0 "$OVPNARCHIVE" -o/tmp "$OVPN_FILENAME.ovpn"
 		OVPN_DETAIL="$(cat "/tmp/$OVPN_FILENAME.ovpn")"
 		rm -f "/tmp/$OVPN_FILENAME.ovpn"
@@ -771,8 +822,14 @@ UpdateVPNConfig(){
 	
 	CRT_CLIENT_STATIC=""
 	if [ "$VPN_PROVIDER" != "PIA" ]; then
-		CRT_CLIENT_STATIC="$(getClientCRT "$OVPN_DETAIL")"
-		[ -z "$CRT_CLIENT_STATIC" ] && Print_Output "true" "Error determing VPN client certificate" "$ERR" && return 1
+		CRT_CLIENT_STATIC="$(getClientCRT "$OVPN_DETAIL" "$VPN_PROVIDER")"
+		[ -z "$CRT_CLIENT_STATIC" ] && Print_Output "true" "Error determing VPN static key" "$ERR" && return 1
+	fi
+	
+	CLIENT_KEY=""
+	if [ "$VPN_PROVIDER" = "WeVPN" ]; then
+		CLIENT_KEY="$(getKey "$OVPN_DETAIL")"
+		[ -z "$CLIENT_KEY" ] && Print_Output "true" "Error determing VPN client key" "$ERR" && return 1
 	fi
 	
 	CLIENT_CRL=""
@@ -793,11 +850,11 @@ UpdateVPNConfig(){
 	OVPN_HOSTNAME_SHORT=""
 	if [ "$VPN_PROVIDER" = "NordVPN" ]; then
 		OVPN_HOSTNAME_SHORT="$(echo "$OVPN_HOSTNAME" | cut -f1 -d'.' | tr "a-z" "A-Z")"
-	elif [ "$VPN_PROVIDER" = "PIA" ]; then
-		OVPN_HOSTNAME_SHORT="$(echo "$OVPN_ADDR" | cut -f1 -d'.')"
+	elif [ "$VPN_PROVIDER" = "PIA" ] || [ "$VPN_PROVIDER" = "WeVPN" ]; then
+		OVPN_HOSTNAME_SHORT="$(echo "$OVPN_ADDR" | cut -f1 -d'.' | awk '{print toupper(substr($0,0,1))tolower(substr($0,2))}')"
 	fi
 	
-	if [ "$OVPN_ADDR" != "$EXISTING_ADDR" ] || [ "$OVPN_PORT" != "$EXISTING_PORT" ] || [ "$VPN_PROT_SHORT" != "$EXISTING_PROTO" ]; then
+	if [ "$OVPN_ADDR" = "$EXISTING_ADDR" ] && [ "$OVPN_PORT" = "$EXISTING_PORT" ] && [ "$VPN_PROT_SHORT" = "$EXISTING_PROTO" ]; then
 		Print_Output "true" "VPN client $VPN_NO server - unchanged" "$WARN"
 	fi
 	
@@ -830,7 +887,6 @@ UpdateVPNConfig(){
 	nvram set vpn_client"$VPN_NO"_crypt="tls"
 	nvram set vpn_client"$VPN_NO"_digest="$OVPN_AUTHDIGEST"
 	nvram set vpn_client"$VPN_NO"_fw="1"
-	nvram set vpn_client"$VPN_NO"_hmac="1"
 	nvram set vpn_client"$VPN_NO"_if="tun"
 	nvram set vpn_client"$VPN_NO"_nat="1"
 	nvram set vpn_client"$VPN_NO"_ncp_ciphers="AES-256-GCM:AES-128-GCM:AES-256-CBC:AES-128-CBC"
@@ -840,10 +896,16 @@ UpdateVPNConfig(){
 	nvram set vpn_client"$VPN_NO"_userauth="1"
 	nvram set vpn_client"$VPN_NO"_useronly="0"
 	
-	if [ "$VPN_PROVIDER" = "NordVPN" ]; then
-	nvram set vpn_client"$VPN_NO"_comp="-1"
+	if [ "$VPN_PROVIDER" = "NordVPN" ] || [ "$VPN_PROVIDER" = "WeVPN" ]; then
+		nvram set vpn_client"$VPN_NO"_comp="-1"
 	elif [ "$VPN_PROVIDER" = "PIA" ]; then
-	nvram set vpn_client"$VPN_NO"_comp="no"
+		nvram set vpn_client"$VPN_NO"_comp="no"
+	fi
+	
+	if [ "$VPN_PROVIDER" = "NordVPN" ] || [ "$VPN_PROVIDER" = "PIA" ]; then
+		nvram set vpn_client"$VPN_NO"_hmac="1"
+	elif [ "$VPN_PROVIDER" = "WeVPN" ]; then
+		nvram set vpn_client"$VPN_NO"_hmac="3"
 	fi
 	
 	vpncustomoptions='remote-random
@@ -923,10 +985,17 @@ mssfix 1450"
 		echo "$CLIENT_CA" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_ca
 		echo "$CRT_CLIENT_STATIC" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_static
 		rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_crl
+		rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_key
 	elif [ "$VPN_PROVIDER" = "PIA" ]; then
 		echo "$CLIENT_CA" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_ca
 		echo "$CLIENT_CRL" > vpn_crt_client"$VPN_NO"_crl
 		rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_static
+		rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_key
+	elif [ "$VPN_PROVIDER" = "WeVPN" ]; then
+		echo "$CLIENT_CA" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_ca
+		echo "$CRT_CLIENT_STATIC" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_static
+		echo "$CLIENT_KEY" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_key
+		rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_crl
 	fi
 	
 	if nvram get vpn_clientx_eas | grep -q "$VPN_NO"; then
@@ -1114,7 +1183,8 @@ SetVPNParameters(){
 		while true; do
 			printf "\\n\\e[1mPlease select a VPN provider:\\e[0m\\n"
 			printf "    1. NordVPN\\n"
-			printf "    2. Private Internet Access (PIA)\\n\\n"
+			printf "    2. Private Internet Access (PIA)\\n"
+			printf "    3. WeVPN\\n\\n"
 			printf "Choose an option:    "
 			read -r "provmenu"
 			
@@ -1126,6 +1196,11 @@ SetVPNParameters(){
 				;;
 				2)
 					vpnprovider="PIA"
+					printf "\\n"
+					break
+				;;
+				3)
+					vpnprovider="WeVPN"
 					printf "\\n"
 					break
 				;;
@@ -1203,6 +1278,8 @@ SetVPNParameters(){
 					;;
 				esac
 			done
+		elif [ "$vpnprovider" = "WeVPN" ]; then
+			vpntype="standard"
 		fi
 	fi
 	
@@ -1255,7 +1332,7 @@ SetVPNParameters(){
 						printf "\\n\\e[31mPlease enter y or n\\e[0m\\n"
 					fi
 				done
-			elif [ "$vpnprovider" = "PIA" ]; then
+			elif [ "$vpnprovider" = "PIA" ] || [ "$vpnprovider" = "WeVPN" ]; then
 				choosecountry="true"
 			fi
 		fi
@@ -1270,6 +1347,10 @@ SetVPNParameters(){
 				countrydata="$(cat "$SCRIPT_DIR/pia_countrydata")"
 				[ -z "$countrydata" ] && Print_Output "true" "Error, country data from PIA is missing" "$ERR" && return 1
 				LISTCOUNTRIES="$(getCountryNames "PIA" "$countrydata")"
+			elif [ "$vpnprovider" = "WeVPN" ]; then
+				countrydata="$(cat "$SCRIPT_DIR/wevpn_countrydata")"
+				[ -z "$countrydata" ] && Print_Output "true" "Error, country data from WeVPN is missing" "$ERR" && return 1
+				LISTCOUNTRIES="$(getCountryNames "WeVPN" "$countrydata")"
 			fi
 			COUNTCOUNTRIES="$(echo "$LISTCOUNTRIES" | wc -l)"
 			while true; do
@@ -1314,6 +1395,9 @@ SetVPNParameters(){
 				elif [ "$vpnprovider" = "PIA" ]; then
 					countrydata="$(cat "$SCRIPT_DIR/pia_countrydata")"
 					citycount="$(getCityCount "PIA" "$countrydata" "$countryname")"
+				elif [ "$vpnprovider" = "WeVPN" ]; then
+					countrydata="$(cat "$SCRIPT_DIR/wevpn_countrydata")"
+					citycount="$(getCityCount "WeVPN" "$countrydata" "$countryname")"
 				fi
 				
 				if [ "$citycount" -eq "1" ]; then
@@ -1323,6 +1407,9 @@ SetVPNParameters(){
 					elif [ "$vpnprovider" = "PIA" ]; then
 						countrydata="$(cat "$SCRIPT_DIR/pia_countrydata")"
 						cityname="$(getCityNames "PIA" "$countrydata" "$countryname")"
+					elif [ "$vpnprovider" = "WeVPN" ]; then
+						countrydata="$(cat "$SCRIPT_DIR/wevpn_countrydata")"
+						cityname="$(getCityNames "WeVPN" "$countrydata" "$countryname")"
 					fi
 				elif [ "$citycount" -gt "1" ]; then
 					if [ "$vpnprovider" = "NordVPN" ]; then
@@ -1343,7 +1430,7 @@ SetVPNParameters(){
 								printf "\\n\\e[31mPlease enter y or n\\e[0m\\n"
 							fi
 						done
-					elif [ "$vpnprovider" = "PIA" ]; then
+					elif [ "$vpnprovider" = "PIA" ] || [ "$vpnprovider" = "WeVPN" ]; then
 						choosecity="true"
 					fi
 				fi
@@ -1357,6 +1444,9 @@ SetVPNParameters(){
 				elif [ "$vpnprovider" = "PIA" ]; then
 					countrydata="$(cat "$SCRIPT_DIR/pia_countrydata")"
 					LISTCITIES="$(getCityNames "PIA" "$countrydata" "$countryname")"
+				elif [ "$vpnprovider" = "WeVPN" ]; then
+					countrydata="$(cat "$SCRIPT_DIR/wevpn_countrydata")"
+					LISTCITIES="$(getCityNames "WeVPN" "$countrydata" "$countryname")"
 				fi
 				
 				COUNTCITIES="$(echo "$LISTCITIES" | wc -l)"
@@ -1366,7 +1456,7 @@ SetVPNParameters(){
 					#shellcheck disable=SC2039
 					IFS=$'\n'
 					for CITY in $LISTCITIES; do
-						printf "    %s. %s\\n" "$COUNTER" "$CITY"
+						printf "    %s. %s\\n" "$COUNTER" "$(echo "$CITY" | awk '{print toupper(substr($0,0,1))tolower(substr($0,2))}')"
 						COUNTER=$((COUNTER+1))
 					done
 					unset IFS
@@ -1755,7 +1845,7 @@ Menu_UpdateVPN(){
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_protocol.*$/vpn'"$GLOBAL_VPN_NO"'_protocol='"$VPN_PROT_SHORT"'/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_countryname.*$/vpn'"$GLOBAL_VPN_NO"'_countryname='"$GLOBAL_COUNTRY_NAME"'/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_countryid.*$/vpn'"$GLOBAL_VPN_NO"'_countryid='"$GLOBAL_COUNTRY_ID"'/' "$SCRIPT_CONF"
-		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_cityname.*$/vpn'"$GLOBAL_VPN_NO"'_cityname='"$GLOBAL_CITY_NAME"'/' "$SCRIPT_CONF"
+		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_cityname.*$/vpn'"$GLOBAL_VPN_NO"'_cityname='"$( echo "$GLOBAL_CITY_NAME" | awk '{print toupper(substr($0,0,1))tolower(substr($0,2))}')"'/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_cityid.*$/vpn'"$GLOBAL_VPN_NO"'_cityid='"$GLOBAL_CTIY_ID"'/' "$SCRIPT_CONF"
 		UpdateVPNConfig "$GLOBAL_VPN_NO"
 	else
