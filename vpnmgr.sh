@@ -20,7 +20,7 @@
 
 ### Start of script variables ###
 readonly SCRIPT_NAME="vpnmgr"
-readonly SCRIPT_VERSION="v2.1.0"
+readonly SCRIPT_VERSION="v2.1.1"
 readonly SCRIPT_BRANCH="master"
 readonly SCRIPT_REPO="https://raw.githubusercontent.com/jackyaz/""$SCRIPT_NAME""/""$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
@@ -885,7 +885,6 @@ UpdateVPNConfig(){
 	nvram set vpn_client"$VPN_NO"_desc="$VPN_PROVIDER $OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT"
 	
 	nvram set vpn_client"$VPN_NO"_cipher="$OVPN_CIPHER"
-	nvram set vpn_client"$VPN_NO"_connretry="-1"
 	nvram set vpn_client"$VPN_NO"_crypt="tls"
 	nvram set vpn_client"$VPN_NO"_digest="$OVPN_AUTHDIGEST"
 	nvram set vpn_client"$VPN_NO"_fw="1"
@@ -908,6 +907,12 @@ UpdateVPNConfig(){
 		nvram set vpn_client"$VPN_NO"_hmac="1"
 	elif [ "$VPN_PROVIDER" = "WeVPN" ]; then
 		nvram set vpn_client"$VPN_NO"_hmac="3"
+	fi
+	
+	if [ "$(Firmware_Number_Check "$(nvram get buildno)")" -lt "$(Firmware_Number_Check 384.19)" ]; then
+		nvram set vpn_client"$VPN_NO"_connretry="-1"
+	else
+		nvram set vpn_client"$VPN_NO"_connretry="0"
 	fi
 	
 	vpncustomoptions='remote-random
