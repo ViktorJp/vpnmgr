@@ -1088,6 +1088,8 @@ CancelScheduleVPN(){
 			sed -i "/$SCRIPT_NAME""_VPN""$VPN_NO/d" /jffs/scripts/services-start
 		fi
 		
+		sed -i 's/^vpn'"$VPN_NO"'_schenabled.*$/vpn'"$VPN_NO"'_schenabled=false/' "$SCRIPT_CONF"
+		
 		Print_Output "true" "Scheduled update cancelled for VPN client $VPN_NO" "$PASS"
 	else
 		printf "\\n"
@@ -1939,7 +1941,6 @@ Menu_CancelScheduleVPN(){
 			Print_Output "false" "VPN client $GLOBAL_VPN_NO is not managed, cannot cancel schedule" "$ERR"
 			return 1
 		fi
-		sed -i 's/^vpn'"$VPN_NO"'_schenabled.*$/vpn'"$VPN_NO"'_schenabled=false/' "$SCRIPT_CONF"
 		CancelScheduleVPN "$GLOBAL_VPN_NO"
 	else
 		printf "\\n"
