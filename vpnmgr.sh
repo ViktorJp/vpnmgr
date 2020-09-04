@@ -621,7 +621,11 @@ getClientCA(){
 	echo "$1" | awk '/<ca>/{flag=1;next}/<\/ca>/{flag=0}flag' | sed '/^#/ d'
 }
 
-getClientCRT(){
+getClientCert(){
+	echo "$1" | awk '/<cert>/{flag=1;next}/<\/cert>/{flag=0}flag' | sed '/^#/ d'
+}
+
+getStaticKey(){
 	if [ "$2" = "NordVPN" ]; then
 		echo "$1" | awk '/<tls-auth>/{flag=1;next}/<\/tls-auth>/{flag=0}flag' | sed '/^#/ d'
 	elif [ "$2" = "WeVPN" ]; then
@@ -822,16 +826,22 @@ UpdateVPNConfig(){
 	CLIENT_CA="$(getClientCA "$OVPN_DETAIL")"
 	[ -z "$CLIENT_CA" ] && Print_Output "true" "Error determing VPN server Certificate Authority certificate" "$ERR" && return 1
 	
-	CRT_CLIENT_STATIC=""
+	STATIC_KEY=""
 	if [ "$VPN_PROVIDER" != "PIA" ]; then
-		CRT_CLIENT_STATIC="$(getClientCRT "$OVPN_DETAIL" "$VPN_PROVIDER")"
-		[ -z "$CRT_CLIENT_STATIC" ] && Print_Output "true" "Error determing VPN static key" "$ERR" && return 1
+		STATIC_KEY="$(getStaticKey "$OVPN_DETAIL" "$VPN_PROVIDER")"
+		[ -z "$STATIC_KEY" ] && Print_Output "true" "Error determing VPN static key" "$ERR" && return 1
 	fi
 	
 	CLIENT_KEY=""
 	if [ "$VPN_PROVIDER" = "WeVPN" ]; then
 		CLIENT_KEY="$(getKey "$OVPN_DETAIL")"
 		[ -z "$CLIENT_KEY" ] && Print_Output "true" "Error determing VPN client key" "$ERR" && return 1
+	fi
+	
+	CLIENT_CRT=""
+	if [ "$VPN_PROVIDER" = "WeVPN" ]; then
+		CLIENT_CRT="$(getClientCert "$OVPN_DETAIL")"
+		[ -z "$CLIENT_CRT" ] && Print_Output "true" "Error determing VPN client cert" "$ERR" && return 1
 	fi
 	
 	CLIENT_CRL=""
@@ -990,17 +1000,20 @@ mssfix 1450"
 	
 	if [ "$VPN_PROVIDER" = "NordVPN" ]; then
 		echo "$CLIENT_CA" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_ca
-		echo "$CRT_CLIENT_STATIC" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_static
+		echo "$STATIC_KEY" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_static
 		rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_crl
 		rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_key
+		rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_crt
 	elif [ "$VPN_PROVIDER" = "PIA" ]; then
 		echo "$CLIENT_CA" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_ca
 		echo "$CLIENT_CRL" > vpn_crt_client"$VPN_NO"_crl
 		rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_static
 		rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_key
+		rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_crt
 	elif [ "$VPN_PROVIDER" = "WeVPN" ]; then
 		echo "$CLIENT_CA" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_ca
-		echo "$CRT_CLIENT_STATIC" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_static
+		echo "$CLIENT_CRT" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_crt
+		echo "$STATIC_KEY" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_static
 		echo "$CLIENT_KEY" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_key
 		rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_crl
 	fi
