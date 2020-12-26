@@ -15,26 +15,6 @@ p {
 font-weight: bolder;
 }
 
-thead.collapsible {
-  color: white;
-  padding: 0px;
-  width: 100%;
-  border: none;
-  text-align: left;
-  outline: none;
-  cursor: pointer;
-}
-
-thead.collapsibleparent {
-  color: white;
-  padding: 0px;
-  width: 100%;
-  border: none;
-  text-align: left;
-  outline: none;
-  cursor: pointer;
-}
-
 thead.collapsible-jquery {
   color: white;
   padding: 0px;
@@ -43,14 +23,6 @@ thead.collapsible-jquery {
   text-align: left;
   outline: none;
   cursor: pointer;
-}
-
-.collapsiblecontent {
-  padding: 0px;
-  max-height: 0;
-  overflow: hidden;
-  border: none;
-  transition: max-height 0.2s ease-out;
 }
 
 .SettingsTable {
@@ -552,7 +524,6 @@ function BuildConfigTable(prefix,title){
 	charthtml+='<td colspan="2">'+title+' Configuration (click to expand/collapse)</td>';
 	charthtml+='</tr>';
 	charthtml+='</thead>';
-	charthtml+='<div class="collapsiblecontent">';
 	charthtml+='<tr>';
 	charthtml+='<td colspan="2" align="center" style="padding: 0px;">';
 	
@@ -635,7 +606,6 @@ function BuildConfigTable(prefix,title){
 	charthtml+='</table>';
 	charthtml+='</td>';
 	charthtml+='</tr>';
-	charthtml+='</div>';
 	charthtml+='</table>';
 	charthtml+='<div style="line-height:10px;">&nbsp;</div>';
 	return charthtml;
@@ -1276,7 +1246,6 @@ function capitalizeFirstLetter(string) {
 <thead class="collapsible-jquery" id="scripttools">
 <tr><td colspan="2">Script Utilities (click to expand/collapse)</td></tr>
 </thead>
-<div class="collapsiblecontent">
 <tr>
 <th width="20%">Version information</th>
 <td>
@@ -1295,7 +1264,6 @@ function capitalizeFirstLetter(string) {
 <input type="button" class="button_gen" onclick="RefreshCachedData();" value="Refresh" id="btnRefreshCachedData">
 </td>
 </tr>
-</div>
 </table>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable" style="border:0px;" id="table_buttons">
 <tr class="apply_gen" valign="top" height="35px">
