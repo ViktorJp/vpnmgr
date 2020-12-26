@@ -659,7 +659,7 @@ getOVPNArchives(){
 	Download_File https://www.privateinternetaccess.com/openvpn/openvpn-strong-tcp.zip /tmp/pia_tcp_strong.zip
 	###########
 	
-	piachanged="$(CompareArchiveContents "/tmp/pia*.zip")"
+	piachanged="$(CompareArchiveContents /tmp/pia*.zip)"
 	
 	if [ "$piachanged" = "true" ]; then
 		/opt/bin/7z -ba l "$OVPN_ARCHIVE_DIR/pia_udp_standard.zip" -- *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//' | sort | awk '{$1=$1;print}' > "$SCRIPT_DIR/pia_countrydata"
@@ -675,7 +675,7 @@ getOVPNArchives(){
 	Download_File https://wevpn.com/resources/openvpn/TCP.zip /tmp/wevpn_tcp_standard.zip
 	###########
 	
-	wevpnchanged="$(CompareArchiveContents "/tmp/wevpn*.zip")"
+	wevpnchanged="$(CompareArchiveContents /tmp/wevpn*.zip)"
 	
 	if [ "$wevpnchanged" = "true" ]; then
 		/opt/bin/7z -ba l "$OVPN_ARCHIVE_DIR/wevpn_tcp_standard.zip" -- *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//;s/-UDP//;s/-TCP//;s/_/ /;' | sort | awk '{$1=$1;print}' > "$SCRIPT_DIR/wevpn_countrydata"
