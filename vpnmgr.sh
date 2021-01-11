@@ -257,29 +257,43 @@ Auto_Startup(){
 	case $1 in
 		create)
 			if [ -f /jffs/scripts/services-start ]; then
-				STARTUPLINECOUNT=$(grep -c '# '"$SCRIPT_NAME""_startup" /jffs/scripts/services-start)
-				STARTUPLINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME startup &"' # '"$SCRIPT_NAME" /jffs/scripts/services-start)
+				STARTUPLINECOUNT=$(grep -c '# '"${SCRIPT_NAME}_startup" /jffs/scripts/services-start)
+				
+				if [ "$STARTUPLINECOUNT" -gt 0 ]; then
+					sed -i -e '/# '"${SCRIPT_NAME}_startup"'/d' /jffs/scripts/services-start
+				fi
+			fi
+			if [ -f /jffs/scripts/post-mount ]; then
+				STARTUPLINECOUNT=$(grep -c '# '"${SCRIPT_NAME}_startup" /jffs/scripts/post-mount)
+				STARTUPLINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME startup"' "$@" & # '"$SCRIPT_NAME" /jffs/scripts/post-mount)
 				
 				if [ "$STARTUPLINECOUNT" -gt 1 ] || { [ "$STARTUPLINECOUNTEX" -eq 0 ] && [ "$STARTUPLINECOUNT" -gt 0 ]; }; then
-					sed -i -e '/# '"$SCRIPT_NAME""_startup"'/d' /jffs/scripts/services-start
+					sed -i -e '/# '"${SCRIPT_NAME}_startup"'/d' /jffs/scripts/post-mount
 				fi
 				
 				if [ "$STARTUPLINECOUNTEX" -eq 0 ]; then
-					echo "/jffs/scripts/$SCRIPT_NAME startup &"' # '"$SCRIPT_NAME""_startup" >> /jffs/scripts/services-start
+					echo "/jffs/scripts/$SCRIPT_NAME startup"' "$@" & # '"${SCRIPT_NAME}_startup" >> /jffs/scripts/post-mount
 				fi
 			else
-				echo "#!/bin/sh" > /jffs/scripts/services-start
-				echo "" >> /jffs/scripts/services-start
-				echo "/jffs/scripts/$SCRIPT_NAME startup &"' # '"$SCRIPT_NAME""_startup" >> /jffs/scripts/services-start
-				chmod 0755 /jffs/scripts/services-start
+				echo "#!/bin/sh" > /jffs/scripts/post-mount
+				echo "" >> /jffs/scripts/post-mount
+				echo "/jffs/scripts/$SCRIPT_NAME startup"' "$@" & # '"${SCRIPT_NAME}_startup" >> /jffs/scripts/post-mount
+				chmod 0755 /jffs/scripts/post-mount
 			fi
 		;;
 		delete)
 			if [ -f /jffs/scripts/services-start ]; then
-				STARTUPLINECOUNT=$(grep -c '# '"$SCRIPT_NAME""_startup" /jffs/scripts/services-start)
+				STARTUPLINECOUNT=$(grep -c '# '"${SCRIPT_NAME}_startup" /jffs/scripts/services-start)
 				
 				if [ "$STARTUPLINECOUNT" -gt 0 ]; then
 					sed -i -e '/# '"$SCRIPT_NAME""_startup"'/d' /jffs/scripts/services-start
+				fi
+			fi
+			if [ -f /jffs/scripts/post-mount ]; then
+				STARTUPLINECOUNT=$(grep -c '# '"${SCRIPT_NAME}_startup" /jffs/scripts/post-mount)
+				
+				if [ "$STARTUPLINECOUNT" -gt 0 ]; then
+					sed -i -e '/# '"${SCRIPT_NAME}_startup"'/d' /jffs/scripts/post-mount
 				fi
 			fi
 		;;
@@ -2038,6 +2052,26 @@ Menu_Install(){
 }
 
 Menu_Startup(){
+	if [ -z "$1" ]; then
+		Print_Output true "Missing argument for startup, not starting $SCRIPT_NAME" "$WARN"
+		exit 1
+	elif [ "$1" != "force" ]; then
+		if [ ! -f "$1/entware/bin/opkg" ]; then
+			Print_Output true "$1 does not contain Entware, not starting $SCRIPT_NAME" "$WARN"
+			exit 1
+		else
+			Print_Output true "$1 contains Entware, starting $SCRIPT_NAME" "$WARN"
+		fi
+	fi
+	
+	NTP_Ready
+	
+	Check_Lock
+	
+	if [ "$1" != "force" ]; then
+		sleep 25
+	fi
+	
 	Create_Dirs
 	Conf_Exists
 	Set_Version_Custom_Settings "local"
@@ -2078,27 +2112,22 @@ Menu_Uninstall(){
 }
 
 NTP_Ready(){
-	if [ "$1" = "service_event" ]; then
-		if [ -n "$2" ] && [ "$(echo "$3" | grep -c "$SCRIPT_NAME")" -eq 0 ]; then
-			exit 0
-		fi
-	fi
-	if [ "$(nvram get ntp_ready)" = "0" ]; then
+	if [ "$(nvram get ntp_ready)" -eq 0 ]; then
 		ntpwaitcount="0"
 		Check_Lock
-		while [ "$(nvram get ntp_ready)" = "0" ] && [ "$ntpwaitcount" -lt "300" ]; do
+		while [ "$(nvram get ntp_ready)" -eq 0 ] && [ "$ntpwaitcount" -lt 300 ]; do
 			ntpwaitcount="$((ntpwaitcount + 1))"
-			if [ "$ntpwaitcount" = "60" ]; then
-				Print_Output "true" "Waiting for NTP to sync..." "$WARN"
+			if [ "$ntpwaitcount" -eq 60 ]; then
+				Print_Output true "Waiting for NTP to sync..." "$WARN"
 			fi
 			sleep 1
 		done
-		if [ "$ntpwaitcount" -ge "300" ]; then
-			Print_Output "true" "NTP failed to sync after 5 minutes. Please resolve!" "$CRIT"
+		if [ "$ntpwaitcount" -ge 300 ]; then
+			Print_Output true "NTP failed to sync after 5 minutes. Please resolve!" "$CRIT"
 			Clear_Lock
 			exit 1
 		else
-			Print_Output "true" "NTP synced, $SCRIPT_NAME will now continue" "$PASS"
+			Print_Output true "NTP synced, $SCRIPT_NAME will now continue" "$PASS"
 			Clear_Lock
 		fi
 	fi
@@ -2106,26 +2135,20 @@ NTP_Ready(){
 
 ### function based on @Adamm00's Skynet USB wait function ###
 Entware_Ready(){
-	if [ "$1" = "service_event" ]; then
-		if [ -n "$2" ] && [ "$(echo "$3" | grep -c "$SCRIPT_NAME")" -eq 0 ]; then
-			exit 0
-		fi
-	fi
-	
-	if [ ! -f "/opt/bin/opkg" ] && ! echo "$@" | grep -wqE "(install|uninstall|update|forceupdate)"; then
+	if [ ! -f /opt/bin/opkg ]; then
 		Check_Lock
 		sleepcount=1
-		while [ ! -f "/opt/bin/opkg" ] && [ "$sleepcount" -le 10 ]; do
-			Print_Output "true" "Entware not found, sleeping for 10s (attempt $sleepcount of 10)" "$ERR"
+		while [ ! -f /opt/bin/opkg ] && [ "$sleepcount" -le 10 ]; do
+			Print_Output true "Entware not found, sleeping for 10s (attempt $sleepcount of 10)" "$ERR"
 			sleepcount="$((sleepcount + 1))"
 			sleep 10
 		done
-		if [ ! -f "/opt/bin/opkg" ]; then
-			Print_Output "true" "Entware not found and is required for $SCRIPT_NAME to run, please resolve" "$CRIT"
+		if [ ! -f /opt/bin/opkg ]; then
+			Print_Output true "Entware not found and is required for $SCRIPT_NAME to run, please resolve" "$CRIT"
 			Clear_Lock
 			exit 1
 		else
-			Print_Output "true" "Entware found, $SCRIPT_NAME will now continue" "$PASS"
+			Print_Output true "Entware found, $SCRIPT_NAME will now continue" "$PASS"
 			Clear_Lock
 		fi
 	fi
@@ -2160,6 +2183,8 @@ NTP_Ready "$@"
 Entware_Ready "$@"
 
 if [ -z "$1" ]; then
+	NTP_Ready
+	Entware_Ready
 	if [ ! -f /opt/bin/7z ]; then
 		opkg update
 		opkg install p7zip
@@ -2193,19 +2218,20 @@ case "$1" in
 		exit 0
 	;;
 	updatevpn)
-		UpdateVPNConfig "unattended" "$2"
+		NTP_Ready
+		Entware_Ready
+		UpdateVPNConfig unattended "$2"
 		exit 0
 	;;
 	refreshcacheddata)
+		NTP_Ready
+		Entware_Ready
 		getCountryData
 		getOVPNArchives
 		exit 0
 	;;
 	startup)
-		Check_Lock
-		Print_Output "true" "Sleeping for 30s before running startup routine" ""
-		sleep 30
-		Menu_Startup
+		Menu_Startup "$2"
 		exit 0
 	;;
 	service_event)
