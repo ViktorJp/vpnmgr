@@ -2225,7 +2225,7 @@ case "$1" in
 					elif [ "$(grep "vpn${i}_schenabled" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
 						CancelScheduleVPN "$i"
 					fi
-					UpdateVPNConfig "unattended" "$i"
+					UpdateVPNConfig unattended "$i"
 				elif [ "$(grep "vpn${i}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
 					UnmanageVPN "$i"
 				fi
