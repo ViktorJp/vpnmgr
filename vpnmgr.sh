@@ -901,6 +901,7 @@ UpdateVPNConfig(){
 	
 	if [ "$OVPN_ADDR" = "$EXISTING_ADDR" ] && [ "$OVPN_PORT" = "$EXISTING_PORT" ] && [ "$VPN_PROT_SHORT" = "$EXISTING_PROTO" ]; then
 		Print_Output true "VPN client $VPN_NO server - unchanged" "$WARN"
+		return 1
 	fi
 	
 	Print_Output true "Updating VPN client $VPN_NO to $VPN_PROVIDER server" "$PASS"
