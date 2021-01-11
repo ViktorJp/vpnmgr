@@ -481,13 +481,18 @@ function get_conf_file(){
 	});
 }
 
-function GetCookie(cookiename) {
+function GetCookie(cookiename,returntype){
 	var s;
-	if ((s = cookie.get("vpnmgr_"+cookiename)) != null) {
+	if((s = cookie.get("vpnmgr_"+cookiename)) != null){
 		return cookie.get("vpnmgr_"+cookiename);
 	}
-	else {
-		return "";
+	else{
+		if(returntype == "string"){
+			return "";
+		}
+		else if(returntype == "number"){
+			return 0;
+		}
 	}
 }
 
