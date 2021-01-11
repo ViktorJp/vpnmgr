@@ -101,14 +101,11 @@ thead.collapsible-jquery {
 <script language="JavaScript" type="text/javascript" src="/validator.js"></script>
 <script language="JavaScript" type="text/javascript" src="/base64.js"></script>
 <script>
-var $j = jQuery.noConflict();
 var custom_settings;
-var daysofweek = ["Mon","Tues","Wed","Thurs","Fri","Sat","Sun"];
-
 function LoadCustomSettings(){
 	custom_settings = <% get_custom_settings(); %>;
-	for (var prop in custom_settings) {
-		if (Object.prototype.hasOwnProperty.call(custom_settings, prop)) {
+	for (var prop in custom_settings){
+		if (Object.prototype.hasOwnProperty.call(custom_settings, prop)){
 			if(prop.indexOf("vpnmgr") != -1 && prop.indexOf("version") == -1){
 				eval("delete custom_settings."+prop)
 			}
@@ -116,7 +113,13 @@ function LoadCustomSettings(){
 	}
 }
 
-function SettingHint(hintid) {
+var $j = jQuery.noConflict();
+var daysofweek = ["Mon","Tues","Wed","Thurs","Fri","Sat","Sun"];
+
+var nordvpncountries = [];
+var piacountries = [];
+var wevpncountries = [];
+
 	var tag_name = document.getElementsByTagName('a');
 	for (var i=0;i<tag_name.length;i++){
 		tag_name[i].onmouseout=nd;
@@ -743,7 +746,6 @@ function GetVersionNumber(versiontype)
 	}
 }
 
-var nordvpncountries = [];
 function getNordVPNCountryData(){
 	$j.ajax({
 		url: '/ext/vpnmgr/nordvpn_countrydata.htm',
@@ -758,7 +760,6 @@ function getNordVPNCountryData(){
 	});
 }
 
-var piacountries = [];
 function getPIACountryData(){
 	$j.ajax({
 		url: '/ext/vpnmgr/pia_countrydata.htm',
@@ -773,7 +774,6 @@ function getPIACountryData(){
 	});
 }
 
-var wevpncountries = [];
 function getWeVPNCountryData(){
 	$j.ajax({
 		url: '/ext/vpnmgr/wevpn_countrydata.htm',
