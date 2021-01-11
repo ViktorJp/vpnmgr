@@ -2,8 +2,8 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/50f9c2244ef74cefb3da37448dd69848)](https://www.codacy.com/manual/jackyaz/vpnmgr?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jackyaz/vpnmgr&amp;utm_campaign=Badge_Grade)
 [![Build Status](https://travis-ci.com/jackyaz/vpnmgr.svg?branch=master)](https://travis-ci.com/jackyaz/vpnmgr)
 
-## v2.1.1
-### Updated on 2020-08-15
+## v2.2.0
+### Updated on 2021-01-11
 ## About
 The concept for this script was originally developed by [@h0me5k1n](https://github.com/h0me5k1n/asusmerlin-nvpnmgr)
 
@@ -31,7 +31,7 @@ Using your preferred SSH client/terminal, copy and paste the following command, 
 ```
 
 ## Usage
-vpnmgr adds a tab to the WebUI in the VPN area.
+vpnmgr adds a tab to VPN menu of the WebUI.
 
 Otherwise, to launch the vpnmgr menu, use:
 ```sh
@@ -42,9 +42,6 @@ If this does not work, you will need to use the full path:
 ```sh
 /jffs/scripts/vpnmgr
 ```
-
-## Updating
-Launch vpnmgr and select option u
 
 ## Help
 Please post about any issues and problems here: [vpnmgr on SNBForums](https://www.snbforums.com/threads/vpnmgr-manage-and-update-vpn-client-configurations-for-nordvpn-and-pia.64930/)
