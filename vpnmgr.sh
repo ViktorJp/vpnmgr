@@ -1038,7 +1038,7 @@ mssfix 1450"
 		rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_crt
 	elif [ "$VPN_PROVIDER" = "PIA" ]; then
 		echo "$CLIENT_CA" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_ca
-		echo "$CLIENT_CRL" > vpn_crt_client"$VPN_NO"_crl
+		echo "$CLIENT_CRL" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_crl
 		rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_static
 		rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_key
 		rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_crt
