@@ -2032,8 +2032,6 @@ Menu_Install(){
 		exit 1
 	fi
 	
-	Process_Upgrade
-	
 	Create_Dirs
 	Conf_Exists
 	Create_Symlinks
@@ -2155,33 +2153,6 @@ Entware_Ready(){
 }
 ### ###
 
-Process_Upgrade(){
-	if grep -q "^nvpnmgr" /jffs/addons/custom_settings.txt; then
-		sed -i "s/nvpnmgr/vpnmgr/g" /jffs/addons/custom_settings.txt
-	fi
-	if grep -q "nvpnmgr" "/var/spool/cron/crontabs/$USER"; then
-		sed -i "s/nvpnmgr/vpnmgr/g" "/var/spool/cron/crontabs/$USER"
-	fi
-	if [ -d /jffs/addons/nvpnmgr.d ]; then
-		mv /jffs/addons/nvpnmgr.d /jffs/addons/vpnmgr.d
-	fi
-	if [ -f /jffs/addons/vpnmgr.d/nvpnmgr_www.asp ]; then
-		rm -f /jffs/addons/vpnmgr.d/nvpnmgr_www.asp
-	fi
-	if [ -f /jffs/addons/vpnmgr.d/nvpncountrydata ]; then
-		rm -f /jffs/addons/vpnmgr.d/nvpncountrydata
-	fi
-	if [ -f /opt/bin/nvpnmgr ]; then
-		rm -f /opt/bin/nvpnmgr
-	fi
-	if [ -f /jffs/scripts/nvpnmgr ]; then
-		rm -f /jffs/scripts/nvpnmgr
-	fi
-}
-
-NTP_Ready "$@"
-Entware_Ready "$@"
-
 if [ -z "$1" ]; then
 	NTP_Ready
 	Entware_Ready
@@ -2190,7 +2161,6 @@ if [ -z "$1" ]; then
 		opkg install p7zip
 		opkg install column
 	fi
-	Process_Upgrade
 	Create_Dirs
 	Conf_Exists
 	Set_Version_Custom_Settings "local"
