@@ -476,6 +476,8 @@ Create_Symlinks(){
 	ln -s "$SCRIPT_DIR/pia_countrydata" "$SCRIPT_WEB_DIR/pia_countrydata.htm" 2>/dev/null
 	ln -s "$SCRIPT_DIR/wevpn_countrydata" "$SCRIPT_WEB_DIR/wevpn_countrydata.htm" 2>/dev/null
 	
+	ln -s /tmp/detect_vpnmgr.js "$SCRIPT_WEB_DIR/detect_vpnmgr.js" 2>/dev/null
+	
 	if [ ! -d "$SHARED_WEB_DIR" ]; then
 		ln -s "$SHARED_DIR" "$SHARED_WEB_DIR" 2>/dev/null
 	fi
