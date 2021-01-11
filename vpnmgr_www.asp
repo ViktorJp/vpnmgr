@@ -129,6 +129,7 @@ var nordvpncountries = [];
 var piacountries = [];
 var wevpncountries = [];
 
+function SettingHint(hintid){
 	var tag_name = document.getElementsByTagName('a');
 	for (var i=0;i<tag_name.length;i++){
 		tag_name[i].onmouseout=nd;
@@ -169,7 +170,7 @@ function OptionsEnableDisable(forminput){
 		$j('input[name='+prefix+'_schhours]').prop("disabled",true);
 		$j('input[name='+prefix+'_schmins]').addClass("disabled");
 		$j('input[name='+prefix+'_schmins]').prop("disabled",true);
-		for (var i = 0; i < daysofweek.length; i++) {
+		for (var i = 0; i < daysofweek.length; i++){
 			$j('#'+prefix+'_'+daysofweek[i].toLowerCase()).prop("disabled",true);
 		}
 	}
@@ -188,7 +189,7 @@ function OptionsEnableDisable(forminput){
 		$j('input[name='+prefix+'_schhours]').prop("disabled",false);
 		$j('input[name='+prefix+'_schmins]').removeClass("disabled");
 		$j('input[name='+prefix+'_schmins]').prop("disabled",false);
-		for (var i = 0; i < daysofweek.length; i++) {
+		for (var i = 0; i < daysofweek.length; i++){
 			$j('#'+prefix+'_'+daysofweek[i].toLowerCase()).prop("disabled",false);
 		}
 	}
@@ -248,7 +249,7 @@ function ScheduleOptionsEnableDisable(forminput){
 			$j('input[name='+prefix+'_schhours]').prop("disabled",true);
 			$j('input[name='+prefix+'_schmins]').addClass("disabled");
 			$j('input[name='+prefix+'_schmins]').prop("disabled",true);
-			for (var i = 0; i < daysofweek.length; i++) {
+			for (var i = 0; i < daysofweek.length; i++){
 				$j('#'+prefix+'_'+daysofweek[i].toLowerCase()).prop("disabled",true);
 			}
 		}
@@ -257,7 +258,7 @@ function ScheduleOptionsEnableDisable(forminput){
 			$j('input[name='+prefix+'_schhours]').prop("disabled",false);
 			$j('input[name='+prefix+'_schmins]').removeClass("disabled");
 			$j('input[name='+prefix+'_schmins]').prop("disabled",false);
-			for (var i = 0; i < daysofweek.length; i++) {
+			for (var i = 0; i < daysofweek.length; i++){
 				$j('#'+prefix+'_'+daysofweek[i].toLowerCase()).prop("disabled",false);
 			}
 		}
@@ -288,7 +289,7 @@ function PopulateCountryDropdown(vpnclient){
 			countryarray = wevpncountries;
 		}
 		
-		$j.each(countryarray, function (key, entry) {
+		$j.each(countryarray, function (key, entry){
 			dropdown.append($j('<option></option>').attr('value', entry.name).text(entry.name));
 		});
 	}
@@ -316,12 +317,12 @@ function PopulateCityDropdown(vpnclient){
 			cityarray = wevpncountries;
 		}
 		
-		$j.each(cityarray, function (key, entry) {
+		$j.each(cityarray, function (key, entry){
 			if(entry.name != eval("document.form.vpnmgr_vpn"+vpnno+"_countryname").value){
 				return true;
 			}
-			else {
-				$j.each(entry.cities, function (key2, entry2) {
+			else{
+				$j.each(entry.cities, function (key2, entry2){
 					dropdown.append($j('<option></option>').attr('value', entry2.name).text(entry2.name));
 				});
 				return false;
@@ -361,7 +362,7 @@ function Validate_Schedule(forminput,hoursmins){
 				validationfailed = "true";
 			}
 		}
-		else {
+		else{
 			validationfailed = "true";
 		}
 	}
@@ -370,7 +371,7 @@ function Validate_Schedule(forminput,hoursmins){
 		$j(forminput).addClass("invalid");
 		return false;
 	}
-	else {
+	else{
 		$j(forminput).removeClass("invalid");
 		return true;
 	}
@@ -386,7 +387,7 @@ function Validate_All(){
 		alert("Validation for some fields failed. Please correct invalid values and try again.");
 		return false;
 	}
-	else {
+	else{
 		return true;
 	}
 }
@@ -396,15 +397,15 @@ function get_conf_file(){
 		url: '/ext/vpnmgr/config.htm',
 		dataType: 'text',
 		error: function(xhr){
-			setTimeout("get_conf_file();", 1000);
+			setTimeout(get_conf_file, 1000);
 		},
 		success: function(data){
 			var settings = data.split("\n");
 			settings.reverse();
 			settings = settings.filter(Boolean);
 			var settingcount = settings.length;
-			window["vpnmgr_settings"] = new Array();
-			for (var i = 0; i < settingcount; i++) {
+			window["vpnmgr_settings"] = [];
+			for (var i = 0; i < settingcount; i++){
 				if (settings[i].indexOf("#") != -1){
 					continue
 				}
@@ -416,7 +417,7 @@ function get_conf_file(){
 					$j("#table_scripttools").after(BuildConfigTable("vpn"+vpnno,"VPN Client "+vpnno));
 				}
 				
-				for (var i = 0; i < window["vpnmgr_settings"].length; i++) {
+				for (var i = 0; i < window["vpnmgr_settings"].length; i++){
 					let settingname = window["vpnmgr_settings"][i][0];
 					let settingvalue = window["vpnmgr_settings"][i][1];
 					if(settingname.indexOf("cityid") != -1 || settingname.indexOf("countryid") != -1 || settingname.indexOf("countryname") != -1 || settingname.indexOf("cityname") != -1) continue;
@@ -426,23 +427,23 @@ function get_conf_file(){
 						if(settingname.indexOf("schenabled") != -1) ScheduleOptionsEnableDisable($j("#vpnmgr_"+settingname.replace("_schenabled","")+"_sch_"+settingvalue)[0]);
 						if(settingname.indexOf("provider") != -1) VPNTypesToggle($j("#vpnmgr_"+settingname.replace("_provider","")+"_prov_"+settingvalue.toLowerCase())[0]);
 					}
-					else {
+					else{
 						if(settingvalue == "*"){
-							for (var i2 = 0; i2 < daysofweek.length; i2++) {
+							for (var i2 = 0; i2 < daysofweek.length; i2++){
 								$j("#vpnmgr_"+settingname.substring(0,vpnmgr_settings[i][0].indexOf('_'))+"_"+daysofweek[i2].toLowerCase()).prop("checked",true);
 							}
 						}
-						else {
+						else{
 							var schdayarray = settingvalue.split(',');
-							for (var i2 = 0; i2 < schdayarray.length; i2++) {
+							for (var i2 = 0; i2 < schdayarray.length; i2++){
 								$j("#vpnmgr_"+settingname.substring(0,vpnmgr_settings[i][0].indexOf('_'))+"_"+schdayarray[i2].toLowerCase()).prop("checked",true);
 							}
 						}
 					}
 				}
 				PopulateCountryDropdown("all");
-				for (var i = 1; i < 6; i++) {
-					eval("document.form.vpnmgr_vpn"+i+"_countryname").value = window["vpnmgr_settings"].filter(function(item) {
+				for (var i = 1; i < 6; i++){
+					eval("document.form.vpnmgr_vpn"+i+"_countryname").value = window["vpnmgr_settings"].filter(function(item){
 						return item[0] == "vpn"+i+"_countryname";
 					})[0][1];
 					
@@ -456,8 +457,8 @@ function get_conf_file(){
 				
 				PopulateCityDropdown("all");
 				
-				for (var i = 1; i < 6; i++) {
-					eval("document.form.vpnmgr_vpn"+i+"_cityname").value = window["vpnmgr_settings"].filter(function(item) {
+				for (var i = 1; i < 6; i++){
+					eval("document.form.vpnmgr_vpn"+i+"_cityname").value = window["vpnmgr_settings"].filter(function(item){
 						return item[0] == "vpn"+i+"_cityname";
 					})[0][1];
 					
@@ -496,7 +497,7 @@ function GetCookie(cookiename,returntype){
 	}
 }
 
-function SetCookie(cookiename,cookievalue) {
+function SetCookie(cookiename,cookievalue){
 	cookie.set("vpnmgr_"+cookiename, cookievalue, 31);
 }
 
@@ -505,7 +506,7 @@ function SetCurrentPage(){
 	document.form.current_page.value = window.location.pathname.substring(1);
 }
 
-function reload() {
+function reload(){
 	location.reload(true);
 }
 
@@ -524,7 +525,7 @@ function SaveConfig(){
 		showLoading();
 		document.form.submit();
 	}
-	else {
+	else{
 		return false;
 	}
 }
@@ -628,7 +629,6 @@ function BuildConfigTable(prefix,title){
 	charthtml+='</td>';
 	charthtml+='</tr>';
 	charthtml+='</table>';
-	charthtml+='<div style="line-height:10px;">&nbsp;</div>';
 	return charthtml;
 }
 
@@ -638,7 +638,7 @@ function AddEventHandlers(){
 			if($j(this).css("display") == "none"){
 				SetCookie($j(this).siblings()[0].id,"collapsed");
 			}
-			else {
+			else{
 				SetCookie($j(this).siblings()[0].id,"expanded");
 			}
 		})
@@ -647,7 +647,7 @@ function AddEventHandlers(){
 		if(GetCookie($j(this)[0].id,"string") == "collapsed"){
 			$j(this).siblings().toggle(false);
 		}
-		else {
+		else{
 			$j(this).siblings().toggle(true);
 		}
 	});
@@ -656,9 +656,9 @@ function AddEventHandlers(){
 $j.fn.serializeObject = function(){
 	var o = custom_settings;
 	var a = this.serializeArray();
-	$j.each(a, function() {
-		if (o[this.name] !== undefined && this.name.indexOf("vpnmgr") != -1 && this.name.indexOf("version") == -1 && this.name.indexOf("schdays") == -1 && this.name.indexOf("countryid") == -1 && this.name.indexOf("cityid") == -1) {
-			if (!o[this.name].push) {
+	$j.each(a, function(){
+		if (o[this.name] !== undefined && this.name.indexOf("vpnmgr") != -1 && this.name.indexOf("version") == -1 && this.name.indexOf("schdays") == -1 && this.name.indexOf("countryid") == -1 && this.name.indexOf("cityid") == -1){
+			if (!o[this.name].push){
 				o[this.name] = [o[this.name]];
 			}
 			o[this.name].push(this.value || '');
@@ -685,20 +685,20 @@ $j.fn.serializeObject = function(){
 			o["vpnmgr_vpn"+i+"_countryid"] = 0;
 			o["vpnmgr_vpn"+i+"_cityid"] = 0;
 		}
-		else {
-			o["vpnmgr_vpn"+i+"_countryid"] = nordvpncountries.filter(function(item) {
+		else{
+			o["vpnmgr_vpn"+i+"_countryid"] = nordvpncountries.filter(function(item){
 				return item.name == $j("select[name='vpnmgr_vpn"+i+"_countryname']").val();
-			}).map(function(d) {return d.id})[0];
+			}).map(function(d){return d.id})[0];
 			
 			if($j("select[name='vpnmgr_vpn"+i+"_cityname']").val() == ""){
 				o["vpnmgr_vpn"+i+"_cityid"] = 0;
 			}
-			else {
-				o["vpnmgr_vpn"+i+"_cityid"] = nordvpncountries.filter(function(item) {
+			else{
+				o["vpnmgr_vpn"+i+"_cityid"] = nordvpncountries.filter(function(item){
 					return item.name == $j("select[name='vpnmgr_vpn"+i+"_countryname']").val();
-				})[0].cities.filter(function(item) {
+				})[0].cities.filter(function(item){
 					return item.name == $j("select[name='vpnmgr_vpn"+i+"_cityname']").val();
-				}).map(function(d) {return d.id})[0];
+				}).map(function(d){return d.id})[0];
 			}
 		}
 	}
@@ -840,7 +840,7 @@ function GetVersionNumber(versiontype){
 	if(typeof versionprop == 'undefined' || versionprop == null){
 		return "N/A";
 	}
-	else {
+	else{
 		return versionprop;
 	}
 }
@@ -850,7 +850,7 @@ function getNordVPNCountryData(){
 		url: '/ext/vpnmgr/nordvpn_countrydata.htm',
 		dataType: 'json',
 		error: function(xhr){
-			setTimeout("getNordVPNCountryData();", 1000);
+			setTimeout(getNordVPNCountryData, 1000);
 		},
 		success: function(data){
 			nordvpncountries = data;
@@ -864,7 +864,7 @@ function getPIACountryData(){
 		url: '/ext/vpnmgr/pia_countrydata.htm',
 		dataType: 'text',
 		error: function(xhr){
-			setTimeout("getPIACountryData();", 1000);
+			setTimeout(getPIACountryData, 1000);
 		},
 		success: function(data){
 			piacountries = parseCountryData(data);
@@ -878,7 +878,7 @@ function getWeVPNCountryData(){
 		url: '/ext/vpnmgr/wevpn_countrydata.htm',
 		dataType: 'text',
 		error: function(xhr){
-			setTimeout("getWeVPNCountryData();", 1000);
+			setTimeout(getWeVPNCountryData, 1000);
 		},
 		success: function(data){
 			wevpncountries = parseCountryData(data);
@@ -1140,7 +1140,7 @@ function parseCountryData(rawcountrydata){
 		}
 	}
 	
-	$j.each(parsedarray, function (key, entry) {
+	$j.each(parsedarray, function (key, entry){
 		if(entry.name == "Australia"){
 			entry["cities"] = citiesAU;
 		}
@@ -1237,7 +1237,7 @@ function parseCountryData(rawcountrydata){
 		else if(entry.name == "South Africa"){
 			entry["cities"] = citiesZA;
 		}
-		else {
+		else{
 			entry["cities"] = [];
 		}
 	});
@@ -1264,19 +1264,20 @@ function setCitiesforCountry(forminput){
 		cityarray = wevpncountries;
 	}
 	
-	$j.each(cityarray, function (key, entry) {
+	$j.each(cityarray, function (key, entry){
 		if(entry.name != $j('select[name='+prefix+'_countryname]').val()){
 			return true;
 		}
-		else {
-			$j.each(entry.cities, function (key2, entry2) {
+		else{
+			$j.each(entry.cities, function (key2, entry2){
 				dropdown.append($j('<option></option>').attr('value', entry2.name).text(entry2.name));
 			});
 			
 			if(dropdown[0].length == 2 && dropdown.find("option:first-child").val().length == 0){
-				dropdown.prop('selectedIndex', 1);
+				//dropdown.find("option:first-child").remove();
+				dropdown.prop('selectedIndex', 0);
 			}
-			else {
+			else{
 				dropdown.prop('selectedIndex', 0);
 			}
 			
@@ -1294,7 +1295,7 @@ function setCitiesforCountry(forminput){
 	if(dropdown[0].length == 0){
 		dropdown.prop("disabled",true);
 	}
-	else {
+	else{
 		dropdown.prop("disabled",false);
 	}
 }
