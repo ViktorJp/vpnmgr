@@ -1372,7 +1372,7 @@ String.prototype.replaceAll = function(strReplace, strWith){
 <div class="formfontdesc">Management of your VPN Client connections for various VPN providers</div>
 <table width="100%" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#6b8fa3" class="FormTable" style="border:0px;" id="table_scripttools">
 <thead class="collapsible-jquery" id="scripttools">
-<tr><td colspan="2">Script Utilities (click to expand/collapse)</td></tr>
+<tr><td colspan="2">Utilities (click to expand/collapse)</td></tr>
 </thead>
 <tr>
 <th width="20%">Version information</th>
