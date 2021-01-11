@@ -559,37 +559,37 @@ getCountryData(){
 }
 
 sedCountryCodesDestructive(){
-	sed 's/.*AU.*/Australia/;s/.*CA.*/Canada/;s/.*DE.*/Germany/;s/.*UAE.*/United Arab Emirates/;s/.*UK.*/United Kingdom/;s/.*US.*/United States/;
-s/.*AE.*/United Arab Emirates/;s/.*GB.*/United Kingdom/;s/.*AT.*/Austria/;s/.*BE.*/Belgium/;s/.*BG.*/Bulgaria/;s/.*BR.*/Brazil/;
-s/.*CH.*/Switzerland/;s/.*CZ.*/Czech Republic/;s/.*DK.*/Denmark/;s/.*ES.*/Spain/;s/.*FR.*/France/;s/.*HK.*/Hong Kong/;s/.*HU.*/Hungary/;
-s/.*IE.*/Ireland/;s/.*IL.*/Israel/;s/.*IN.*/India/;s/.*IT.*/Italy/;s/.*JP.*/Japan/;s/.*MX.*/Mexico/;s/.*NL.*/Netherlands/;s/.*NZ.*/New Zealand/;
-s/.*PL.*/Poland/;s/.*RO.*/Romania/;s/.*RS.*/Serbia/;s/.*SE.*/Sweden/;s/.*SG.*/Singapore/;s/.*ZA.*/South Africa/;'
+	sed 's/ /_/g;s/^AU_.*/Australia/I;s/^CA_.*/Canada/I;s/^DE_.*/Germany/I;s/^UAE_.*/United Arab Emirates/I;s/^UK_.*/United Kingdom/I;s/^US_.*/United States/I;
+s/^AE_.*/United Arab Emirates/I;s/^GB_.*/United Kingdom/I;s/^AT_.*/Austria/I;s/^BE_.*/Belgium/I;s/^BG_.*/Bulgaria/I;s/^BR_.*/Brazil/I;
+s/^CH_.*/Switzerland/I;s/^CZ_.*/Czech Republic/I;s/^DK_.*/Denmark/I;s/^ES_.*/Spain/I;s/^FR_.*/France/I;s/^HK_.*/Hong Kong/I;s/^HU_.*/Hungary/I;
+s/^IE_.*/Ireland/I;s/^IL_.*/Israel/I;s/^IN_.*/India/I;s/^IT_.*/Italy/I;s/^JP_.*/Japan/I;s/^MX_.*/Mexico/I;s/^NL_.*/Netherlands/I;s/^NO_.*/Norway/I;s/^NZ_.*/New Zealand/I;
+s/^PL_.*/Poland/I;s/^RO_.*/Romania/I;s/^RS_.*/Serbia/I;s/^SE_.*/Sweden/I;s/^SG_.*/Singapore/I;s/^ZA_.*/South Africa/I;s/_/ /g;'
 }
 
 sedCountryCodes(){
-	sed 's/AU/Australia/;s/CA/Canada/;s/DE/Germany/;s/UAE/United Arab Emirates/;s/UK/United Kingdom/;s/US/United States/;
-s/AE/United Arab Emirates/;s/GB/United Kingdom/;s/AT/Austria/;s/BE/Belgium/;s/BG/Bulgaria/;s/BR/Brazil/;
-s/CH/Switzerland/;s/CZ/Czech Republic/;s/DK/Denmark/;s/ES/Spain/;s/FR/France/;s/HK/Hong Kong/;s/HU/Hungary/;
-s/IE/Ireland/;s/IL/Israel/;s/IN/India/;s/IT/Italy/;s/JP/Japan/;s/MX/Mexico/;s/NL/Netherlands/;s/NZ/New Zealand/;
-s/PL/Poland/;s/RO/Romania/;s/RS/Serbia/;s/SE/Sweden/;s/SG/Singapore/;s/ZA/South Africa/;'
+	sed 's/ /_/g;s/^AU_/Australia/I;s/^CA_/Canada/I;s/^DE_/Germany/I;s/^UAE_/United Arab Emirates/I;s/^UK_/United Kingdom/I;s/^US_/United States/I;
+s/^AE_/United Arab Emirates/I;s/^GB_/United Kingdom/I;s/^AT_/Austria/I;s/^BE_/Belgium/I;s/^BG_/Bulgaria/I;s/^BR_/Brazil/I;
+s/^CH_/Switzerland/I;s/^CZ_/Czech Republic/I;s/^DK_/Denmark/I;s/^ES_/Spain/I;s/^FR_/France/I;s/^HK_/Hong Kong/I;s/^HU_/Hungary/I;
+s/^IE_/Ireland/I;s/^IL_/Israel/I;s/^IN_/India/I;s/^IT_/Italy/I;s/^JP_/Japan/I;s/^MX_/Mexico/I;s/^NL_/Netherlands/I;s/^NO_/Norway/I;s/^NZ_/New Zealand/I;
+s/^PL_/Poland/I;s/^RO_/Romania/I;s/^RS_/Serbia/I;s/^SE_/Sweden/I;s/^SG_/Singapore/I;s/^ZA_/South Africa/I;s/_/ /g;'
 }
 
 sedReverseCountryCodesPIA(){
-	sed 's/Australia/AU/;s/Canada/CA/;s/Germany/DE/;s/United Arab Emirates/UAE/;s/United Kingdom/UK/;s/United States/US/;'
+	sed 's/Australia/AU/;s/Canada/CA/;s/Germany/DE/;s/United Kingdom/UK/;s/United States/US/;'
 }
 
 sedReverseCountryCodesWeVPN(){
 	sed 's/Australia/AU/;s/Canada/CA/;s/Germany/DE/;s/United States/US/;s/United Arab Emirates/AE/;s/United Kingdom/GB/;
 s/Austria/AT/;s/Belgium/BE/;s/Bulgaria/BG/;s/Brazil/BR/;s/Switzerland/CH/;s/Czech Republic/CZ/;s/Denmark/DK/;s/Spain/ES/;s/France/FR/;
-s/Hong Kong/HK/;s/Hungary/HU/;s/Ireland/IE/;s/Israel/IL/;s/India/IN/;s/Italy/IT/;s/Japan/JP/;s/Mexico/MX/;s/Netherlands/NL/;s/New Zealand/NZ/;
-s/Poland/PL/;s/Romania/RO/;s/Serbia/RS/;s/Sweden/SE/;s/Singapore/SG/;s/South Africa/ZA/;'
+s/Hong Kong/HK/;s/Hungary/HU/;s/Ireland/IE/;s/Israel/IL/;s/India/IN/;s/Italy/IT/;s/Japan/JP/;s/Mexico/MX/;s/Netherlands/NL/;s/Norway/NO/;s/New Zealand/NZ/;
+s/Poland/PL/;s/Romania/RO/;s/Serbia/RS/;s/Sweden/SE/;s/Singapore/SG/;s/South Africa/ZA/;s/_/ /g;'
 }
 
 getCountryNames(){
 	if [ "$1" = "NordVPN" ]; then
 		echo "$2" | jq -r -e '.[] | .name // empty'
 	elif [ "$1" = "PIA" ] || [ "$1" = "WeVPN" ]; then
-		echo "$2" | sort -u -k 1,1 | sedCountryCodesDestructive | sort | awk '{$1=$1;print}'
+		echo "$2" | sedCountryCodesDestructive | awk '{$1=$1;print}' | awk '{for(i=1;i<=NF;i++){ $i=toupper(substr($i,1,1)) substr($i,2) }}1' | sort -u
 	fi
 }
 
@@ -609,7 +609,7 @@ getCityNames(){
 	if [ "$1" = "NordVPN" ]; then
 		echo "$2" | jq -r -e '.[] | select(.name=="'"$3"'") | .cities[] | .name // empty'
 	elif [ "$1" = "PIA" ] || [ "$1" = "WeVPN" ]; then
-		echo "$2" | sedCountryCodes | sort | grep "$3" | sed "s/$3//" | awk '{$1=$1;print}'
+		echo "$2" | sedCountryCodes | grep "$3" | sed "s/$3//" | awk '{$1=$1;print}' | awk '{for(i=1;i<=NF;i++){ $i=toupper(substr($i,1,1)) substr($i,2) }}1' | sort
 	fi
 }
 
@@ -886,7 +886,13 @@ UpdateVPNConfig(){
 	OVPN_HOSTNAME_SHORT=""
 	if [ "$VPN_PROVIDER" = "NordVPN" ]; then
 		OVPN_HOSTNAME_SHORT="$(echo "$OVPN_HOSTNAME" | cut -f1 -d'.' | tr "a-z" "A-Z")"
-	elif [ "$VPN_PROVIDER" = "PIA" ] || [ "$VPN_PROVIDER" = "WeVPN" ]; then
+	elif [ "$VPN_PROVIDER" = "PIA" ]; then
+		if echo "$OVPN_ADDR" | grep -q "-" ; then
+			OVPN_HOSTNAME_SHORT="$(echo "$OVPN_ADDR" | cut -f1 -d'.' | awk '{print toupper(substr($0,0,2))tolower(substr($0,3))}')"
+		else
+			OVPN_HOSTNAME_SHORT="$(echo "$OVPN_ADDR" | cut -f1 -d'.' | awk '{print toupper(substr($0,0,1))tolower(substr($0,2))}')"
+		fi
+	elif [ "$VPN_PROVIDER" = "WeVPN" ]; then
 		OVPN_HOSTNAME_SHORT="$(echo "$OVPN_ADDR" | cut -f1 -d'.' | awk '{print toupper(substr($0,0,1))tolower(substr($0,2))}')"
 	fi
 	
