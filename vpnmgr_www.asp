@@ -1213,6 +1213,9 @@ function parseCountryData(rawcountrydata){
 		else if(entry.name == "Netherlands"){
 			entry["cities"] = citiesNL;
 		}
+		else if(entry.name == "Norway"){
+			entry["cities"] = citiesNO;
+		}
 		else if(entry.name == "New Zealand"){
 			entry["cities"] = citiesNZ;
 		}
