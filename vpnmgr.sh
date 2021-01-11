@@ -2210,24 +2210,22 @@ case "$1" in
 	;;
 	service_event)
 		if [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME" ]; then
-			Check_Lock
 			Conf_FromSettings
 			for i in 1 2 3 4 5; do
-				if [ "$(grep "vpn""$i""_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
+				if [ "$(grep "vpn${i}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
 					ManageVPN "$i"
-					if [ "$(grep "vpn""$i""_schenabled" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
+					if [ "$(grep "vpn${i}_schenabled" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
 						ScheduleVPN "$i"
-					elif [ "$(grep "vpn""$i""_schenabled" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+					elif [ "$(grep "vpn${i}_schenabled" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
 						CancelScheduleVPN "$i"
 					fi
 					UpdateVPNConfig "unattended" "$i"
-				elif [ "$(grep "vpn""$i""_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+				elif [ "$(grep "vpn${i}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
 					UnmanageVPN "$i"
 				fi
 			done
-			Clear_Lock
 			exit 0
-		elif [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME""refreshcacheddata" ]; then
+		elif [ "$2" = "start" ] && [ "$3" = "${SCRIPT_NAME}refreshcacheddata" ]; then
 			Check_Lock webui
 			echo 'var refreshcacheddatastatus = "InProgress";' > /tmp/detect_vpnmgr.js
 			sleep 1
@@ -2238,59 +2236,46 @@ case "$1" in
 			echo 'var refreshcacheddatastatus = "Done";' > /tmp/detect_vpnmgr.js
 			Clear_Lock
 			exit 0
-		elif [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME""doupdate" ]; then
-			Check_Lock
-			Update_Version "force" "unattended"
-			Clear_Lock
+		elif [ "$2" = "start" ] && [ "$3" = "${SCRIPT_NAME}checkupdate" ]; then
+			Update_Check
+			exit 0
+		elif [ "$2" = "start" ] && [ "$3" = "${SCRIPT_NAME}doupdate" ]; then
+			Update_Version force unattended
 			exit 0
 		fi
 		exit 0
 	;;
 	develop)
-		Check_Lock
 		sed -i 's/^readonly SCRIPT_BRANCH.*$/readonly SCRIPT_BRANCH="develop"/' "/jffs/scripts/$SCRIPT_NAME"
-		Clear_Lock
-		exec "$0" "update"
+		Update_Version force
 		exit 0
 	;;
 	stable)
-		Check_Lock
 		sed -i 's/^readonly SCRIPT_BRANCH.*$/readonly SCRIPT_BRANCH="master"/' "/jffs/scripts/$SCRIPT_NAME"
-		Clear_Lock
-		exec "$0" "update"
+		Update_Version force
 		exit 0
 	;;
 	update)
-		Check_Lock
-		Update_Version "unattended"
-		Clear_Lock
+		Update_Version unattended
 		exit 0
 	;;
 	forceupdate)
-		Check_Lock
-		Update_Version "force" "unattended"
-		Clear_Lock
+		Update_Version force unattended
 		exit 0
 	;;
 	setversion)
-		Check_Lock
-		Set_Version_Custom_Settings "local"
-		Set_Version_Custom_Settings "server" "$SCRIPT_VERSION"
-		Clear_Lock
+		Set_Version_Custom_Settings local
+		Set_Version_Custom_Settings server "$SCRIPT_VERSION"
 		if [ -z "$2" ]; then
 			exec "$0"
 		fi
 		exit 0
 	;;
 	checkupdate)
-		Check_Lock
-		#shellcheck disable=SC2034
-		updatecheckresult="$(Update_Check)"
-		Clear_Lock
+		Update_Check
 		exit 0
 	;;
 	uninstall)
-		Check_Lock
 		Menu_Uninstall
 		exit 0
 	;;
