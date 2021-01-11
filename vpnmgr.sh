@@ -89,6 +89,10 @@ Check_Lock(){
 			if [ -z "$1" ]; then
 				exit 1
 			else
+				if [ "$1" = "webui" ]; then
+					echo 'var vpnmgrstatus = "LOCKED";' > /tmp/detect_vpnmgr.js
+					exit 1
+				fi
 				return 1
 			fi
 		fi
@@ -2218,12 +2222,14 @@ case "$1" in
 			Clear_Lock
 			exit 0
 		elif [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME""refreshcacheddata" ]; then
+			Check_Lock webui
+			echo 'var refreshcacheddatastatus = "InProgress";' > /tmp/detect_vpnmgr.js
+			sleep 1
 			getCountryData
+			sleep 1
 			getOVPNArchives
-			exit 0
-		elif [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME""checkupdate" ]; then
-			Check_Lock
-			updatecheckresult="$(Update_Check)"
+			sleep 1
+			echo 'var refreshcacheddatastatus = "Done";' > /tmp/detect_vpnmgr.js
 			Clear_Lock
 			exit 0
 		elif [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME""doupdate" ]; then
