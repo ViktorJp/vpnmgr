@@ -412,8 +412,8 @@ function get_conf_file(){
 				window["vpnmgr_settings"].unshift(setting);
 				}
 				
-				for (var vpnno = 1; vpnno < 6; vpnno++){
-					$j("#table_buttons").before(BuildConfigTable("vpn"+vpnno,"VPN Client "+vpnno));
+				for (var vpnno = 5; vpnno >= 1; vpnno--){
+					$j("#table_scripttools").after(BuildConfigTable("vpn"+vpnno,"VPN Client "+vpnno));
 				}
 				
 				for (var i = 0; i < window["vpnmgr_settings"].length; i++) {
@@ -1394,6 +1394,7 @@ String.prototype.replaceAll = function(strReplace, strWith){
 </td>
 </tr>
 </table>
+<div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable" style="border:0px;" id="table_buttons">
 <tr class="apply_gen" valign="top" height="35px">
 <td style="background-color:rgb(77, 89, 93);border:0px;">
