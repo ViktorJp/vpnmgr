@@ -88,6 +88,15 @@ thead.collapsible-jquery {
   background-color: #CCCCCC !important;
   color: #888888 !important;
 }
+
+input.settingvalue {
+  margin-left: 3px !important;
+}
+
+label.settingvalue {
+  margin-right: 10px !important;
+  vertical-align: top !important;
+}
 </style>
 <script language="JavaScript" type="text/javascript" src="/ext/shared-jy/jquery.js"></script>
 <script language="JavaScript" type="text/javascript" src="/state.js"></script>
@@ -585,19 +594,19 @@ function BuildConfigTable(prefix,title){
 	
 	/* SCHEDULE ENABLED */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(9);">Scheduled update/reload?</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" onchange="ScheduleOptionsEnableDisable(this)" name="vpnmgr_'+prefix+'_schenabled" id="vpnmgr_'+prefix+'_sch_true" class="input" value="true"><label for="vpnmgr_'+prefix+'_sch_true">Yes</label><input autocomplete="off" autocapitalize="off" type="radio"  onchange="ScheduleOptionsEnableDisable(this)" name="vpnmgr_'+prefix+'_schenabled" id="vpnmgr_'+prefix+'_sch_false" class="input" value="false" checked><label for="vpnmgr_'+prefix+'_sch_false">No</label></td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(9);">Scheduled update/reload?</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="radio" onchange="ScheduleOptionsEnableDisable(this)" name="vpnmgr_'+prefix+'_schenabled" id="vpnmgr_'+prefix+'_sch_true" class="input" value="true"><label class="settingvalue" for="vpnmgr_'+prefix+'_sch_true">Yes</label><input autocomplete="off" autocapitalize="off" type="radio"  onchange="ScheduleOptionsEnableDisable(this)" name="vpnmgr_'+prefix+'_schenabled" id="vpnmgr_'+prefix+'_sch_false" class="input" value="false" checked><label class="settingvalue" for="vpnmgr_'+prefix+'_sch_false">No</label></td>';
 	charthtml+='</tr>';
 	
 	/* SCHEDULE DAYS */
 	charthtml+='<tr>';
 	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(10);">Schedule Days</a></td><td class="settingvalue">';
-	charthtml+='<input autocomplete="off" autocapitalize="off" type="checkbox" name="vpnmgr_'+prefix+'_schdays" id="vpnmgr_'+prefix+'_mon" class="input" value="Mon"><label for="vpnmgr_'+prefix+'_mon">Mon</label>';
-	charthtml+='<input autocomplete="off" autocapitalize="off" type="checkbox" name="vpnmgr_'+prefix+'_schdays" id="vpnmgr_'+prefix+'_tues" class="input" value="Tues"><label for="vpnmgr_'+prefix+'_tues">Tues</label>';
-	charthtml+='<input autocomplete="off" autocapitalize="off" type="checkbox" name="vpnmgr_'+prefix+'_schdays" id="vpnmgr_'+prefix+'_wed" class="input" value="Wed"><label for="vpnmgr_'+prefix+'_wed">Wed</label>';
-	charthtml+='<input autocomplete="off" autocapitalize="off" type="checkbox" name="vpnmgr_'+prefix+'_schdays" id="vpnmgr_'+prefix+'_thurs" class="input" value="Thurs"><label for="vpnmgr_'+prefix+'_thurs">Thurs</label>';
-	charthtml+='<input autocomplete="off" autocapitalize="off" type="checkbox" name="vpnmgr_'+prefix+'_schdays" id="vpnmgr_'+prefix+'_fri" class="input" value="Fri"><label for="vpnmgr_'+prefix+'_fri">Fri</label>';
-	charthtml+='<input autocomplete="off" autocapitalize="off" type="checkbox" name="vpnmgr_'+prefix+'_schdays" id="vpnmgr_'+prefix+'_sat" class="input" value="Sat"><label for="vpnmgr_'+prefix+'_sat">Sat</label>';
-	charthtml+='<input autocomplete="off" autocapitalize="off" type="checkbox" name="vpnmgr_'+prefix+'_schdays" id="vpnmgr_'+prefix+'_sun" class="input" value="Sun"><label for="vpnmgr_'+prefix+'_sun">Sun</label>';
+	charthtml+='<input autocomplete="off" autocapitalize="off" type="checkbox" name="vpnmgr_'+prefix+'_schdays" id="vpnmgr_'+prefix+'_mon" class="input" value="Mon"><label class="settingvalue" for="vpnmgr_'+prefix+'_mon">Mon</label>';
+	charthtml+='<input autocomplete="off" autocapitalize="off" type="checkbox" name="vpnmgr_'+prefix+'_schdays" id="vpnmgr_'+prefix+'_tues" class="input" value="Tues"><label class="settingvalue" for="vpnmgr_'+prefix+'_tues">Tues</label>';
+	charthtml+='<input autocomplete="off" autocapitalize="off" type="checkbox" name="vpnmgr_'+prefix+'_schdays" id="vpnmgr_'+prefix+'_wed" class="input" value="Wed"><label class="settingvalue" for="vpnmgr_'+prefix+'_wed">Wed</label>';
+	charthtml+='<input autocomplete="off" autocapitalize="off" type="checkbox" name="vpnmgr_'+prefix+'_schdays" id="vpnmgr_'+prefix+'_thurs" class="input" value="Thurs"><label class="settingvalue" for="vpnmgr_'+prefix+'_thurs">Thurs</label>';
+	charthtml+='<input autocomplete="off" autocapitalize="off" type="checkbox" name="vpnmgr_'+prefix+'_schdays" id="vpnmgr_'+prefix+'_fri" class="input" value="Fri"><label class="settingvalue" for="vpnmgr_'+prefix+'_fri">Fri</label>';
+	charthtml+='<input autocomplete="off" autocapitalize="off" type="checkbox" name="vpnmgr_'+prefix+'_schdays" id="vpnmgr_'+prefix+'_sat" class="input" value="Sat"><label class="settingvalue" for="vpnmgr_'+prefix+'_sat">Sat</label>';
+	charthtml+='<input autocomplete="off" autocapitalize="off" type="checkbox" name="vpnmgr_'+prefix+'_schdays" id="vpnmgr_'+prefix+'_sun" class="input" value="Sun"><label class="settingvalue" for="vpnmgr_'+prefix+'_sun">Sun</label>';
 	charthtml+='</td></tr>';
 	
 	/* SCHEDULE HOURS */
