@@ -508,7 +508,7 @@ function pass_checked(obj,showobj){
 switchType(obj, showobj.checked, true);
 }
 
-function applyRule() {
+function SaveConfig(){
 	if(Validate_All()){
 		$j('[name*=vpnmgr_]').prop("disabled",false);
 		document.getElementById('amng_custom').value = JSON.stringify($j('form').serializeObject());
@@ -1366,7 +1366,7 @@ function capitalizeFirstLetter(string) {
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable" style="border:0px;" id="table_buttons">
 <tr class="apply_gen" valign="top" height="35px">
 <td style="background-color:rgb(77, 89, 93);border:0px;">
-<input name="button" type="button" class="button_gen" onclick="applyRule();" value="Apply"/>
+<input name="button" type="button" class="button_gen" onclick="SaveConfig();" value="Save"/>
 </td>
 </tr>
 </table>
