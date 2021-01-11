@@ -463,6 +463,10 @@ function get_conf_file(){
 					eval("document.form.vpnmgr_vpn"+i+"_pwd").value = eval("document.form.vpn"+i+"_pwd").value;
 				}
 				
+				showhide("imgRefreshCachedData", false);
+				showhide("refreshcacheddata_text", false);
+				showhide("btnRefreshCachedData", true);
+				
 				AddEventHandlers();
 			}
 	});
@@ -690,7 +694,6 @@ $j.fn.serializeObject = function(){
 function ScriptUpdateLayout(){
 	var localver = GetVersionNumber("local");
 	var serverver = GetVersionNumber("server");
-	$j("#scripttitle").text($j("#scripttitle").text()+" - "+localver);
 	$j("#vpnmgr_version_local").text(localver);
 	
 	if (localver != serverver && serverver != "N/A"){
@@ -701,35 +704,117 @@ function ScriptUpdateLayout(){
 	}
 }
 
-function RefreshCachedData(){
-	var action_script_tmp = "start_vpnmgrrefreshcacheddata";
-	document.form.action_script.value = action_script_tmp;
-	var restart_time = 10;
-	document.form.action_wait.value = restart_time;
-	showLoading();
-	document.form.submit();
+function CheckUpdate(){
+	showhide("btnChkUpdate", false);
+	document.formScriptActions.action_script.value="start_vpnmgrcheckupdate";
+	document.formScriptActions.submit();
+	document.getElementById("imgChkUpdate").style.display = "";
+	setTimeout(update_status, 2000);
+}
+
+function update_status(){
+	$j.ajax({
+		url: '/ext/vpnmgr/detect_update.js',
+		dataType: 'script',
+		timeout: 3000,
+		error: function(xhr){
+			setTimeout(update_status, 1000);
+		},
+		success: function(){
+			if (updatestatus == "InProgress"){
+				setTimeout(update_status, 1000);
+			}
+			else{
+				document.getElementById("imgChkUpdate").style.display = "none";
+				showhide("vpnmgr_version_server", true);
+				if(updatestatus != "None"){
+					$j("#vpnmgr_version_server").text("Updated version available: "+updatestatus);
+					showhide("btnChkUpdate", false);
+					showhide("btnDoUpdate", true);
+				}
+				else{
+					$j("#vpnmgr_version_server").text("No update available");
+					showhide("btnChkUpdate", true);
+					showhide("btnDoUpdate", false);
+				}
+			}
+		}
+	});
 }
 
 function CheckUpdate(){
-	var action_script_tmp = "start_vpnmgrcheckupdate";
-	document.form.action_script.value = action_script_tmp;
-	var restart_time = 10;
-	document.form.action_wait.value = restart_time;
-	showLoading();
-	document.form.submit();
+	showhide("btnChkUpdate", false);
+	document.formScriptActions.action_script.value="start_vpnmgrcheckupdate";
+	document.formScriptActions.submit();
+	document.getElementById("imgChkUpdate").style.display = "";
+	setTimeout(update_status, 2000);
 }
 
 function DoUpdate(){
 	var action_script_tmp = "start_vpnmgrdoupdate";
 	document.form.action_script.value = action_script_tmp;
-	var restart_time = 20;
+	var restart_time = 10;
 	document.form.action_wait.value = restart_time;
 	showLoading();
 	document.form.submit();
 }
 
-function GetVersionNumber(versiontype)
-{
+function RefreshCachedData(){
+	showhide("btnRefreshCachedData", false);
+	document.formScriptActions.action_script.value = "start_vpnmgrrefreshcacheddata";
+	document.formScriptActions.submit();
+	showhide("imgRefreshCachedData", true);
+	showhide("refreshcacheddata_text", false);
+	setTimeout(StartRefreshCachedDataInterval, 1000);
+}
+
+var myinterval;
+function StartRefreshCachedDataInterval(){
+	myinterval = setInterval(refreshcacheddata_status, 1000);
+}
+
+var refreshcount=1;
+function refreshcacheddata_status(){
+	refreshcount++;
+	$j.ajax({
+		url: '/ext/vpnmgr/detect_vpnmgr.js',
+		dataType: 'script',
+		timeout: 1000,
+		error: function(xhr){
+			//do nothing
+		},
+		success: function(){
+			if (refreshcacheddatastatus == "InProgress"){
+				showhide("imgRefreshCachedData", true);
+				showhide("refreshcacheddata_text", true);
+				document.getElementById("refreshcacheddata_text").innerHTML = "Cached data refresh in progress - " + refreshcount + "s elapsed";
+			}
+			else if (refreshcacheddatastatus == "Done"){
+				document.getElementById("refreshcacheddata_text").innerHTML = "Refreshing data...";
+				refreshcount=1;
+				clearInterval(myinterval);
+				PostRefreshCachedData();
+			}
+			else if (refreshcacheddatastatus == "LOCKED"){
+				showhide("imgRefreshCachedData", false);
+				document.getElementById("refreshcacheddata_text").innerHTML = "Cached data refresh already running!";
+				showhide("refreshcacheddata_text", true);
+				showhide("btnRefreshCachedData", true);
+				clearInterval(myinterval);
+			}
+		}
+	});
+}
+
+function PostRefreshCachedData(){
+	for (var vpnno = 1; vpnno < 6; vpnno++){
+		$j("#table_config_vpn"+vpnno).prev("div").remove();
+		$j("#table_config_vpn"+vpnno).remove();
+	}
+	setTimeout(getNordVPNCountryData, 3000);
+}
+
+function GetVersionNumber(versiontype){
 	var versionprop;
 	if(versiontype == "local"){
 		versionprop = custom_settings.vpnmgr_version_local;
@@ -1254,6 +1339,7 @@ function capitalizeFirstLetter(string) {
 <span id="vpnmgr_version_server" style="display:none;">Update version</span>
 &nbsp;&nbsp;&nbsp;
 <input type="button" class="button_gen" onclick="CheckUpdate();" value="Check" id="btnChkUpdate">
+<img id="imgChkUpdate" style="display:none;vertical-align:middle;" src="images/InternetScan.gif"/>
 <input type="button" class="button_gen" onclick="DoUpdate();" value="Update" id="btnDoUpdate" style="display:none;">
 &nbsp;&nbsp;&nbsp;
 </td>
@@ -1262,6 +1348,9 @@ function capitalizeFirstLetter(string) {
 <th width="20%">Cached data</th>
 <td>
 <input type="button" class="button_gen" onclick="RefreshCachedData();" value="Refresh" id="btnRefreshCachedData">
+<img id="imgRefreshCachedData" style="display:none;vertical-align:middle;" src="images/InternetScan.gif"/>
+&nbsp;&nbsp;&nbsp;
+<span id="refreshcacheddata_text" style="display:none;">Cached data updated</span>
 </td>
 </tr>
 </table>
@@ -1281,6 +1370,14 @@ function capitalizeFirstLetter(string) {
 </td>
 </tr>
 </table>
+</form>
+<form method="post" name="formScriptActions" action="/start_apply.htm" target="hidden_frame">
+<input type="hidden" name="productid" value="<% nvram_get("productid"); %>">
+<input type="hidden" name="current_page" value="">
+<input type="hidden" name="next_page" value="">
+<input type="hidden" name="action_mode" value="apply">
+<input type="hidden" name="action_script" value="">
+<input type="hidden" name="action_wait" value="">
 </form>
 <div id="footer"></div>
 </body>
