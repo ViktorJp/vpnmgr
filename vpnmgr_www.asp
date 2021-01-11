@@ -920,6 +920,7 @@ function parseCountryData(rawcountrydata){
 	var citiesJP = [];
 	var citiesMX = [];
 	var citiesNL = [];
+	var citiesNO = [];
 	var citiesNZ = [];
 	var citiesPL = [];
 	var citiesRO = [];
@@ -928,192 +929,201 @@ function parseCountryData(rawcountrydata){
 	var citiesSG = [];
 	var citiesZA = [];
 	
-	$j.each(tmpcountries, function (index, value) {
-		if(value.startsWith("AU") == true){
+	$j.each(tmpcountries, function (index, value){
+		if(getCountryCode(value) == "AU"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("AU ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("AU ",""));
 			citiesAU.push(obj);
 			value = "Australia";
 		}
-		else if(value.startsWith("CA") == true){
+		else if(getCountryCode(value) == "CA"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("CA ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("CA ",""));
 			citiesCA.push(obj);
 			value = "Canada";
 		}
-		else if(value.startsWith("DE") == true){
+		else if(getCountryCode(value) == "DE"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("DE ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("DE ",""));
 			citiesDE.push(obj);
 			value = "Germany";
 		}
-		else if(value.startsWith("US") == true){
+		else if(getCountryCode(value) == "US"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("US ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("US ",""));
 			citiesUS.push(obj);
 			value = "United States";
 		}
-		else if(value.startsWith("AT") == true){
+		else if(getCountryCode(value) == "AT"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("AT ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("AT ",""));
 			citiesAT.push(obj);
 			value = "Austria";
 		}
-		else if(value.startsWith("BE") == true){
+		else if(getCountryCode(value) == "BE"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("BE ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("BE ",""));
 			citiesBE.push(obj);
 			value = "Belgium";
 		}
-		else if(value.startsWith("BG") == true){
+		else if(getCountryCode(value) == "BG"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("BG ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("BG ",""));
 			citiesBG.push(obj);
 			value = "Bulgaria";
 		}
-		else if(value.startsWith("BR") == true){
+		else if(getCountryCode(value) == "BR"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("BR ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("BR ",""));
 			citiesBR.push(obj);
 			value = "Brazil";
 		}
-		else if(value.startsWith("CH") == true){
+		else if(getCountryCode(value) == "CH"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("CH ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("CH ",""));
 			citiesCH.push(obj);
 			value = "Switzerland";
 		}
-		else if(value.startsWith("CZ") == true){
+		else if(getCountryCode(value) == "CZ"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("CZ ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("CZ ",""));
 			citiesCZ.push(obj);
 			value = "Czech Republic";
 		}
-		else if(value.startsWith("DK") == true){
+		else if(getCountryCode(value) == "DK"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("DK ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("DK ",""));
 			citiesDK.push(obj);
 			value = "Denmark";
 		}
-		else if(value.startsWith("ES") == true){
+		else if(getCountryCode(value) == "ES"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("ES ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("ES ",""));
 			citiesES.push(obj);
 			value = "Spain";
 		}
-		else if(value.startsWith("FR") == true){
+		else if(getCountryCode(value) == "FR"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("FR ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("FR ",""));
 			citiesFR.push(obj);
 			value = "France";
 		}
-		else if(value.startsWith("HK") == true){
+		else if(getCountryCode(value) == "HK"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("HK ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("HK ",""));
 			citiesHK.push(obj);
 			value = "Hong Kong";
 		}
-		else if(value.startsWith("HU") == true){
+		else if(getCountryCode(value) == "HU"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("HU ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("HU ",""));
 			citiesHU.push(obj);
 			value = "Hungary";
 		}
-		else if(value.startsWith("IE") == true){
+		else if(getCountryCode(value) == "IE"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("IE ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("IE ",""));
 			citiesIE.push(obj);
 			value = "Ireland";
 		}
-		else if(value.startsWith("IL") == true){
+		else if(getCountryCode(value) == "IL"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("IL ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("IL ",""));
 			citiesIL.push(obj);
 			value = "Israel";
 		}
-		else if(value.startsWith("IN") == true){
+		else if(getCountryCode(value) == "IN"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("IN ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("IN ",""));
 			citiesIN.push(obj);
 			value = "India";
 		}
-		else if(value.startsWith("IT") == true){
+		else if(getCountryCode(value) == "IT"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("IT ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("IT ",""));
 			citiesIT.push(obj);
 			value = "Italy";
 		}
-		else if(value.startsWith("JP") == true){
+		else if(getCountryCode(value) == "JP"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("JP ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("JP ",""));
 			citiesJP.push(obj);
 			value = "Japan";
 		}
-		else if(value.startsWith("MX") == true){
+		else if(getCountryCode(value) == "MX"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("MX ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("MX ",""));
 			citiesMX.push(obj);
 			value = "Mexico";
 		}
-		else if(value.startsWith("NL") == true){
+		else if(getCountryCode(value) == "NL"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("NL ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("NL ",""));
 			citiesNL.push(obj);
 			value = "Netherlands";
 		}
-		else if(value.startsWith("NZ") == true){
+		else if(getCountryCode(value) == "NO"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("NZ ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("NO ",""));
+			citiesNO.push(obj);
+			value = "Norway";
+		}
+		else if(getCountryCode(value) == "NZ"){
+			var obj = {};
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("NZ ",""));
 			citiesNZ.push(obj);
 			value = "New Zealand";
 		}
-		else if(value.startsWith("PL") == true){
+		else if(getCountryCode(value) == "PL"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("PL ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("PL ",""));
 			citiesPL.push(obj);
 			value = "Poland";
 		}
-		else if(value.startsWith("RO") == true){
+		else if(getCountryCode(value) == "RO"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("RO ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("RO ",""));
 			citiesRO.push(obj);
 			value = "Romania";
 		}
-		else if(value.startsWith("RS") == true){
+		else if(getCountryCode(value) == "RS"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("RS ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("RS ",""));
 			citiesRS.push(obj);
 			value = "Serbia";
 		}
-		else if(value.startsWith("SE") == true){
+		else if(getCountryCode(value) == "SE"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("SE ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("SE ",""));
 			citiesSE.push(obj);
 			value = "Sweden";
 		}
-		else if(value.startsWith("SG") == true){
+		else if(getCountryCode(value) == "SG"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("SG ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("SG ",""));
 			citiesSG.push(obj);
 			value = "Singapore";
 		}
-		else if(value.startsWith("UAE") == true || value.startsWith("AE") == true){
+		else if(getCountryCode(value) == "UAE" || getCountryCode(value) == "AE"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("UAE ","").replace("AE ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("UAE ","").replaceAll("AE ",""));
 			citiesUAE.push(obj);
 			value = "United Arab Emirates";
 		}
-		else if(value.startsWith("UK") == true || value.startsWith("GB") == true){
+		else if(getCountryCode(value) == "UK" || getCountryCode(value) == "GB"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("UK ","").replace("GB ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("UK ","").replaceAll("GB ",""));
 			citiesUK.push(obj);
 			value = "United Kingdom";
 		}
-		else if(value.startsWith("ZA") == true){
+		else if(getCountryCode(value) == "ZA"){
 			var obj = {};
-			obj["name"] = capitalizeFirstLetter(value.replace("ZA ",""));
+			obj["name"] = capitalizeFirstLetter(value.replaceAll("_"," ").replaceAll("ZA ",""));
 			citiesZA.push(obj);
 			value = "South Africa";
+		}
+		else{
+			value = capitalizeFirstLetter(value.replaceAll("_"," "));
 		}
 		
 		tmpcountriessorted.push(value)
@@ -1286,10 +1296,26 @@ function setCitiesforCountry(forminput){
 	}
 }
 
-function capitalizeFirstLetter(string) {
-  return string.charAt(0).toUpperCase() + string.slice(1);
+function capitalizeFirstLetter(string){
+	return string.replace(/(^\w{1})|(\s{1}\w{1})/g, match => match.toUpperCase());
 }
 
+function getCountryCode(string){
+	string = string.replaceAll(" ","_");
+	if(string.indexOf("_") != -1){
+		return string.substring(0,string.indexOf("_")).toUpperCase();
+	}
+	else{
+		return string.toUpperCase();
+	}
+}
+
+String.prototype.replaceAll = function(strReplace, strWith){
+	// See http://stackoverflow.com/a/3561711/556609
+	var esc = strReplace.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+	var reg = new RegExp(esc, 'ig');
+	return this.replace(reg, strWith);
+};
 </script>
 </head>
 <body onload="initial();" onunload="return unload_body();">
