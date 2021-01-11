@@ -901,6 +901,7 @@ UpdateVPNConfig(){
 	
 	if [ "$OVPN_ADDR" = "$EXISTING_ADDR" ] && [ "$OVPN_PORT" = "$EXISTING_PORT" ] && [ "$VPN_PROT_SHORT" = "$EXISTING_PROTO" ]; then
 		Print_Output true "VPN client $VPN_NO server - unchanged" "$WARN"
+		return 1
 	fi
 	
 	Print_Output true "Updating VPN client $VPN_NO to $VPN_PROVIDER server" "$PASS"
@@ -2224,7 +2225,7 @@ case "$1" in
 					elif [ "$(grep "vpn${i}_schenabled" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
 						CancelScheduleVPN "$i"
 					fi
-					UpdateVPNConfig "unattended" "$i"
+					UpdateVPNConfig unattended "$i"
 				elif [ "$(grep "vpn${i}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
 					UnmanageVPN "$i"
 				fi
