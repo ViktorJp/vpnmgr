@@ -1555,6 +1555,7 @@ SetVPNParameters(){
 SetScheduleParameters(){
 	exitmenu=""
 	vpnnum=""
+	formattype=""
 	crudays=""
 	cruhours=""
 	crumins=""
@@ -1595,6 +1596,8 @@ SetScheduleParameters(){
 				crudays="$day_choice"
 				printf "\\n"
 				break
+			elif [ -z "$day_choice" ]; then
+				printf "\\n\\e[31mPlease enter a valid number (0-6) or comma separated values\\e[0m\\n"
 			else
 				crudaystmp="$(echo "$day_choice" | sed "s/,/ /g")"
 				crudaysvalidated="true"
@@ -1619,79 +1622,194 @@ SetScheduleParameters(){
 			fi
 		done
 	fi
-		
+	
 	if [ "$exitmenu" != "exit" ]; then
 		while true; do
-			printf "\\n\\e[1mPlease choose which hour(s) to update VPN configuration (0-23, * for every hour, or comma separated hours):\\e[0m    "
-			read -r hour_choice
+			printf "\\n\\e[1mPlease choose the format to specify the hour/minute(s) to update VPN configuration:\\e[0m\\n"
+			printf "    1. Every X hours/minutes\\n"
+			printf "    2. Custom\\n\\n"
+			printf "Choose an option:    "
+			read -r formatmenu
 			
-			if [ "$hour_choice" = "e" ]; then
-				exitmenu="exit"
-				break
-			elif [ "$hour_choice" = "*" ]; then
-				cruhours="$hour_choice"
-				printf "\\n"
-				break
-			else
-				cruhourstmp="$(echo "$hour_choice" | sed "s/,/ /g")"
-				cruhoursvalidated="true"
-				for i in $cruhourstmp; do
-					if ! Validate_Number "" "$i" silent; then
-						printf "\\n\\e[31mPlease enter a valid number (0-23) or comma separated values\\e[0m\\n"
-						cruhoursvalidated="false"
-						break
-					else
-						if [ "$i" -lt 0 ] || [ "$i" -gt 23 ]; then
-							printf "\\n\\e[31mPlease enter a number between 0 and 23 or comma separated values\\e[0m\\n"
-							cruhoursvalidated="false"
-							break
-						fi
-					fi
-				done
-				if [ "$cruhoursvalidated" = "true" ]; then
-					cruhours="$hour_choice"
+			case "$formatmenu" in
+				1)
+					formattype="everyx"
 					printf "\\n"
 					break
-				fi
-			fi
+				;;
+				2)
+					formattype="custom"
+					printf "\\n"
+					break
+				;;
+				e)
+					exitmenu="exit"
+					break
+				;;
+				*)
+					printf "\\n\\e[31mPlease enter a valid choice (1-2)\\e[0m\\n"
+				;;
+			esac
 		done
 	fi
 	
 	if [ "$exitmenu" != "exit" ]; then
-		while true; do
-			printf "\\n\\e[1mPlease choose which minutes(s) to update VPN configuration (0-59, * for every minute, or comma separated minutes):\\e[0m    "
-			read -r min_choice
-			
-			if [ "$min_choice" = "e" ]; then
-				exitmenu="exit"
-				break
-			elif [ "$min_choice" = "*" ]; then
-				crumins="$min_choice"
-				printf "\\n"
-				break
-			else
-				cruminstmp="$(echo "$min_choice" | sed "s/,/ /g")"
-				cruminsvalidated="true"
-				for i in $cruminstmp; do
-					if ! Validate_Number "" "$i" silent; then
-						printf "\\n\\e[31mPlease enter a valid number (0-59) or comma separated values\\e[0m\\n"
-						cruminsvalidated="false"
+		if [ "$formattype" = "everyx" ]; then
+			while true; do
+				printf "\\n\\e[1mPlease choose whether to specify every X hours or every X minutes to update VPN configuration:\\e[0m\\n"
+				printf "    1. Hours\\n"
+				printf "    2. Minutes\\n\\n"
+				printf "Choose an option:    "
+				read -r formatmenu
+				
+				case "$formatmenu" in
+					1)
+						formattype="hours"
+						printf "\\n"
+						break
+					;;
+					2)
+						formattype="mins"
+						printf "\\n"
+						break
+					;;
+					e)
+						exitmenu="exit"
+						break
+					;;
+					*)
+						printf "\\n\\e[31mPlease enter a valid choice (1-2)\\e[0m\\n"
+					;;
+				esac
+			done
+		fi
+	fi
+	
+	if [ "$exitmenu" != "exit" ]; then
+		if [ "$formattype" = "hours" ]; then
+			while true; do
+				printf "\\n\\e[1mPlease choose how often to update VPN configuration (every X hours, where X is 1-24):\\e[0m    "
+				read -r hour_choice
+				
+				if [ "$hour_choice" = "e" ]; then
+					exitmenu="exit"
+					break
+				elif ! Validate_Number "" "$hour_choice" silent; then
+						printf "\\n\\e[31mPlease enter a valid number (1-24)\\e[0m\\n"
+				elif [ "$hour_choice" -lt 1 ] || [ "$hour_choice" -gt 24 ]; then
+					printf "\\n\\e[31mPlease enter a number between 1 and 24\\e[0m\\n"
+				else
+					if [ "$hour_choice" -eq 24 ]; then
+						cruhours="0"
+						crumins="0"
+						printf "\\n"
 						break
 					else
-						if [ "$i" -lt 0 ] || [ "$i" -gt 59 ]; then
-							printf "\\n\\e[31mPlease enter a number between 0 and 59 or comma separated values\\e[0m\\n"
-							cruminsvalidated="false"
-							break
-						fi
+						cruhours="*/$hour_choice"
+						crumins="0"
+						printf "\\n"
+						break
 					fi
-				done
-				if [ "$cruminsvalidated" = "true" ]; then
-					crumins="$min_choice"
+				fi
+			done
+		elif [ "$formattype" = "mins" ]; then
+			while true; do
+				printf "\\n\\e[1mPlease choose how often to update VPN configuration (every X minutes, where X is 1-30):\\e[0m    "
+				read -r min_choice
+				
+				if [ "$min_choice" = "e" ]; then
+					exitmenu="exit"
+					break
+				elif ! Validate_Number "" "$min_choice" silent; then
+						printf "\\n\\e[31mPlease enter a valid number (1-30)\\e[0m\\n"
+				elif [ "$min_choice" -lt 1 ] || [ "$min_choice" -gt 30 ]; then
+					printf "\\n\\e[31mPlease enter a number between 1 and 30\\e[0m\\n"
+				else
+					crumins="*/$min_choice"
+					cruhours="*"
 					printf "\\n"
 					break
 				fi
-			fi
-		done
+			done
+		fi
+	fi
+	
+	if [ "$exitmenu" != "exit" ]; then
+		if [ "$formattype" = "custom" ]; then
+			while true; do
+				printf "\\n\\e[1mPlease choose which hour(s) to update VPN configuration (0-23, * for every hour, or comma separated hours):\\e[0m    "
+				read -r hour_choice
+				
+				if [ "$hour_choice" = "e" ]; then
+					exitmenu="exit"
+					break
+				elif [ "$hour_choice" = "*" ]; then
+					cruhours="$hour_choice"
+					printf "\\n"
+					break
+				else
+					cruhourstmp="$(echo "$hour_choice" | sed "s/,/ /g")"
+					cruhoursvalidated="true"
+					for i in $cruhourstmp; do
+						if ! Validate_Number "" "$i" silent; then
+							printf "\\n\\e[31mPlease enter a valid number (0-23) or comma separated values\\e[0m\\n"
+							cruhoursvalidated="false"
+							break
+						else
+							if [ "$i" -lt 0 ] || [ "$i" -gt 23 ]; then
+								printf "\\n\\e[31mPlease enter a number between 0 and 23 or comma separated values\\e[0m\\n"
+								cruhoursvalidated="false"
+								break
+							fi
+						fi
+					done
+					if [ "$cruhoursvalidated" = "true" ]; then
+						cruhours="$hour_choice"
+						printf "\\n"
+						break
+					fi
+				fi
+			done
+		fi
+	fi
+	
+	if [ "$exitmenu" != "exit" ]; then
+		if [ "$formattype" = "custom" ]; then
+			while true; do
+				printf "\\n\\e[1mPlease choose which minutes(s) to update VPN configuration (0-59, * for every minute, or comma separated minutes):\\e[0m    "
+				read -r min_choice
+				
+				if [ "$min_choice" = "e" ]; then
+					exitmenu="exit"
+					break
+				elif [ "$min_choice" = "*" ]; then
+					crumins="$min_choice"
+					printf "\\n"
+					break
+				else
+					cruminstmp="$(echo "$min_choice" | sed "s/,/ /g")"
+					cruminsvalidated="true"
+					for i in $cruminstmp; do
+						if ! Validate_Number "" "$i" silent; then
+							printf "\\n\\e[31mPlease enter a valid number (0-59) or comma separated values\\e[0m\\n"
+							cruminsvalidated="false"
+							break
+						else
+							if [ "$i" -lt 0 ] || [ "$i" -gt 59 ]; then
+								printf "\\n\\e[31mPlease enter a number between 0 and 59 or comma separated values\\e[0m\\n"
+								cruminsvalidated="false"
+								break
+							fi
+						fi
+					done
+					if [ "$cruminsvalidated" = "true" ]; then
+						crumins="$min_choice"
+						printf "\\n"
+						break
+					fi
+				fi
+			done
+		fi
 	fi
 	
 	if [ "$exitmenu" != "exit" ]; then
@@ -1954,8 +2072,8 @@ Menu_ScheduleVPN(){
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_managed.*$/vpn'"$GLOBAL_VPN_NO"'_managed=true/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_schenabled.*$/vpn'"$GLOBAL_VPN_NO"'_schenabled=true/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_schdays.*$/vpn'"$GLOBAL_VPN_NO"'_schdays='"$(echo "$GLOBAL_CRU_DAYNUMBERS" | sed 's/0/Sun/;s/1/Mon/;s/2/Tues/;s/3/Wed/;s/4/Thurs/;s/5/Fri/;s/6/Sat/;')"'/' "$SCRIPT_CONF"
-		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_schhours.*$/vpn'"$GLOBAL_VPN_NO"'_schhours='"$GLOBAL_CRU_HOURS"'/' "$SCRIPT_CONF"
-		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_schmins.*$/vpn'"$GLOBAL_VPN_NO"'_schmins='"$GLOBAL_CRU_MINS"'/' "$SCRIPT_CONF"
+		sed -i 's~^vpn'"$GLOBAL_VPN_NO"'_schhours.*$~vpn'"$GLOBAL_VPN_NO"'_schhours='"$GLOBAL_CRU_HOURS"'~' "$SCRIPT_CONF"
+		sed -i 's~^vpn'"$GLOBAL_VPN_NO"'_schmins.*$~vpn'"$GLOBAL_VPN_NO"'_schmins='"$GLOBAL_CRU_MINS"'~' "$SCRIPT_CONF"
 		ScheduleVPN "$GLOBAL_VPN_NO"
 	else
 		printf "\\n"
