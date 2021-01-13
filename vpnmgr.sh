@@ -1127,22 +1127,17 @@ CancelScheduleVPN(){
 	
 	sed -i 's/^vpn'"$VPN_NO"'_schenabled.*$/vpn'"$VPN_NO"'_schenabled=false/' "$SCRIPT_CONF"
 	
-	if [ "$SCHEDULESTATE" = "Scheduled" ]; then
-		Print_Output true "Removing scheduled update for VPN client $VPN_NO" "$PASS"
+	Print_Output true "Removing scheduled update for VPN client $VPN_NO" "$PASS"
 		
-		if cru l | grep -q "${SCRIPT_NAME}_VPN${VPN_NO}"; then
-			cru d "${SCRIPT_NAME}_VPN${VPN_NO}"
-		fi
-		
-		if grep -q "${SCRIPT_NAME}_VPN${VPN_NO}" /jffs/scripts/services-start; then
-			sed -i "/$SCRIPT_NAME""_VPN""$VPN_NO/d" /jffs/scripts/services-start
-		fi
-		
-		Print_Output true "Scheduled update cancelled for VPN client $VPN_NO" "$PASS"
-	else
-		printf "\\n"
-		Print_Output false "No schedule to cancel for VPN client $VPN_NO" "$WARN"
+	if cru l | grep -q "${SCRIPT_NAME}_VPN${VPN_NO}"; then
+		cru d "${SCRIPT_NAME}_VPN${VPN_NO}"
 	fi
+	
+	if grep -q "${SCRIPT_NAME}_VPN${VPN_NO}" /jffs/scripts/services-start; then
+		sed -i "/$SCRIPT_NAME""_VPN""$VPN_NO/d" /jffs/scripts/services-start
+	fi
+	
+	Print_Output true "Scheduled update cancelled for VPN client $VPN_NO" "$PASS"
 }
 
 Shortcut_Script(){
