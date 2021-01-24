@@ -21,8 +21,8 @@
 ### Start of script variables ###
 readonly SCRIPT_NAME="vpnmgr"
 readonly SCRIPT_VERSION="v2.2.0"
-readonly SCRIPT_BRANCH="develop"
-readonly SCRIPT_REPO="https://raw.githubusercontent.com/jackyaz/$SCRIPT_NAME/$SCRIPT_BRANCH"
+SCRIPT_BRANCH="develop"
+SCRIPT_REPO="https://raw.githubusercontent.com/jackyaz/$SCRIPT_NAME/$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
 readonly SCRIPT_CONF="$SCRIPT_DIR/config"
 readonly OVPN_ARCHIVE_DIR="$SCRIPT_DIR/ovpn"
@@ -2364,14 +2364,8 @@ case "$1" in
 		fi
 		exit 0
 	;;
-	develop)
-		sed -i 's/^readonly SCRIPT_BRANCH.*$/readonly SCRIPT_BRANCH="develop"/' "/jffs/scripts/$SCRIPT_NAME"
-		Update_Version force
-		exit 0
-	;;
-	stable)
-		sed -i 's/^readonly SCRIPT_BRANCH.*$/readonly SCRIPT_BRANCH="master"/' "/jffs/scripts/$SCRIPT_NAME"
-		Update_Version force
+	checkupdate)
+		Update_Check
 		exit 0
 	;;
 	update)
@@ -2390,8 +2384,16 @@ case "$1" in
 		fi
 		exit 0
 	;;
-	checkupdate)
-		Update_Check
+	develop)
+		SCRIPT_BRANCH="develop"
+		SCRIPT_REPO="https://raw.githubusercontent.com/jackyaz/$SCRIPT_NAME/$SCRIPT_BRANCH"
+		Update_Version force
+		exit 0
+	;;
+	stable)
+		SCRIPT_BRANCH="master"
+		SCRIPT_REPO="https://raw.githubusercontent.com/jackyaz/$SCRIPT_NAME/$SCRIPT_BRANCH"
+		Update_Version force
 		exit 0
 	;;
 	uninstall)
