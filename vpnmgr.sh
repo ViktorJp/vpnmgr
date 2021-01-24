@@ -429,7 +429,7 @@ Conf_FromSettings(){
 				elif echo "$SETTINGNAME" | grep -q "pwd"; then
 					nvram set vpn_client"$SETTINGVPNNO"_password="$SETTINGVALUE"
 				else
-					sed -i "s/$SETTINGNAME=.*/$SETTINGNAME=$SETTINGVALUE/" "$SCRIPT_CONF"
+					sed -i "s~$SETTINGNAME=.*~$SETTINGNAME=$SETTINGVALUE~" "$SCRIPT_CONF"
 				fi
 			done < "$TMPFILE"
 			grep 'vpnmgr_version' "$SETTINGSFILE" > "$TMPFILE"
