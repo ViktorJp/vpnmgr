@@ -538,7 +538,7 @@ getRecommendedServers(){
 
 getServerLoad(){
 	curlstring="https://api.nordvpn.com/server/stats/"
-	serverhostname="$(echo $1 | cut -f2 -d ' ' | tr "A-Z" "a-z").nordvpn.com"
+	serverhostname="$(echo "$1" | cut -f2 -d ' ' | tr "A-Z" "a-z").nordvpn.com"
 	/usr/sbin/curl -fsL --retry 3 "$curlstring$serverhostname" | jq -r -e '.percent // "Unknown"'
 }
 
