@@ -477,6 +477,7 @@ Create_Symlinks(){
 	ln -s "$SCRIPT_DIR/wevpn_countrydata" "$SCRIPT_WEB_DIR/wevpn_countrydata.htm" 2>/dev/null
 	
 	ln -s /tmp/detect_vpnmgr.js "$SCRIPT_WEB_DIR/detect_vpnmgr.js" 2>/dev/null
+	ln -s /tmp/vpnmgrserverloads "$SCRIPT_WEB_DIR/vpnmgrserverloads.js" 2>/dev/null
 	
 	if [ ! -d "$SHARED_WEB_DIR" ]; then
 		ln -s "$SHARED_DIR" "$SHARED_WEB_DIR" 2>/dev/null
@@ -533,6 +534,12 @@ getRecommendedServers(){
 	fi
 	curlstring="${curlstring}&limit=1"
 	/usr/sbin/curl -fsL --retry 3 "$curlstring" | jq -r -e '.[] // empty'
+}
+
+getServerLoad(){
+	curlstring="https://api.nordvpn.com/server/stats/"
+	serverhostname="$(echo $1 | cut -f2 -d ' ' | tr "A-Z" "a-z").nordvpn.com"
+	/usr/sbin/curl -fsL --retry 3 "$curlstring$serverhostname" | jq -r -e '.percent // "Unknown"'
 }
 
 getServersforCity(){
@@ -735,9 +742,20 @@ CompareArchiveContents(){
 }
 
 ListVPNClients(){
+	showload="$1"
+	
+	if [ "$showload" = "true" ]; then
+		printf "Checking server loads using NordVPN API...\\n\\n"
+	fi
+	
 	printf "VPN client list:\\n\\n"
 	for i in 1 2 3 4 5; do
 		VPN_CLIENTDESC="$(nvram get vpn_client"$i"_desc)"
+		if [ "$showload" = "true" ]; then
+			if ! echo "$VPN_CLIENTDESC" | grep -iq "nordvpn"; then
+				continue
+			fi
+		fi
 		MANAGEDSTATE=""
 		CONNECTSTATE=""
 		SCHEDULESTATE=""
@@ -760,7 +778,15 @@ ListVPNClients(){
 		[ -z "$COUNTRYNAME" ] && COUNTRYNAME="None"
 		CITYNAME="$(grep "vpn${i}_cityname" "$SCRIPT_CONF" | cut -f2 -d"=")"
 		[ -z "$CITYNAME" ] && CITYNAME="None"
+		
+		if [ "$showload" = "true" ]; then
+			SERVERLOAD="$(getServerLoad "$VPN_CLIENTDESC")"
+		fi
+		
 		printf "%s.    %s (%s, %s and %s)\\n" "$i" "$VPN_CLIENTDESC" "$MANAGEDSTATE" "$CONNECTSTATE" "$SCHEDULESTATE"
+		if [ "$showload" = "true" ]; then
+			printf "      Current server load: %s%%\\n" "$SERVERLOAD"
+		fi
 		printf "      Chosen country: %s - Preferred city: %s\\n\\n" "$COUNTRYNAME" "$CITYNAME"
 	done
 	printf "\\n"
@@ -1158,7 +1184,7 @@ Shortcut_Script(){
 
 SetVPNClient(){
 	ScriptHeader
-	ListVPNClients
+	ListVPNClients "false"
 	printf "Choose options as follows:\\n"
 	printf "    - VPN client [1-5]\\n"
 	printf "\\n"
@@ -1857,7 +1883,8 @@ ScriptHeader(){
 }
 
 MainMenu(){
-	printf "1.    List VPN client configurations\\n\\n"
+	printf "1.    List VPN client configurations\\n"
+	printf "1l.   List NordVPN clients with server load percentages\\n\\n"
 	printf "2.    Update configuration for a managed VPN client\\n\\n"
 	printf "3.    Enable management for a VPN client\\n"
 	printf "4.    Disable management for a VPN client\\n\\n"
@@ -1881,6 +1908,12 @@ MainMenu(){
 			1)
 				printf "\\n"
 				Menu_ListVPN
+				PressEnter
+				break
+			;;
+			1l)
+				printf "\\n"
+				Menu_ListVPN_WithLoad
 				PressEnter
 				break
 			;;
@@ -1985,12 +2018,17 @@ MainMenu(){
 
 Menu_ListVPN(){
 	ScriptHeader
-	ListVPNClients
+	ListVPNClients "false"
+}
+
+Menu_ListVPN_WithLoad(){
+	ScriptHeader
+	ListVPNClients "true"
 }
 
 Menu_UpdateVPN(){
 	ScriptHeader
-	ListVPNClients
+	ListVPNClients "false"
 	printf "Choose options as follows:\\n"
 	printf "    - VPN client [1-5]\\n"
 	printf "    - VPN provider (pick from list)\\n"
@@ -2059,7 +2097,7 @@ Menu_UnmanageVPN(){
 
 Menu_ScheduleVPN(){
 	ScriptHeader
-	ListVPNClients
+	ListVPNClients "false"
 	printf "Choose options as follows:\\n"
 	printf "    - VPN client [1-5]\\n"
 	printf "    - day(s) to update [0-6]\\n"
@@ -2355,6 +2393,16 @@ case "$1" in
 			echo 'var refreshcacheddatastatus = "Done";' > /tmp/detect_vpnmgr.js
 			Clear_Lock
 			exit 0
+		elif [ "$2" = "start" ] && [ "$3" = "${SCRIPT_NAME}getserverload" ]; then
+			rm -f /tmp/vpnmgrserverloads
+			for i in 1 2 3 4 5; do
+				VPN_CLIENTDESC="$(nvram get vpn_client"$i"_desc)"
+				if ! echo "$VPN_CLIENTDESC" | grep -iq "nordvpn"; then
+					continue
+				fi
+				printf "var vpn%s_serverload=%s;\\r\\n" "$i" "$(getServerLoad "$VPN_CLIENTDESC")" >> /tmp/vpnmgrserverloads.tmp
+			done
+			mv /tmp/vpnmgrserverloads.tmp /tmp/vpnmgrserverloads
 		elif [ "$2" = "start" ] && [ "$3" = "${SCRIPT_NAME}checkupdate" ]; then
 			Update_Check
 			exit 0
