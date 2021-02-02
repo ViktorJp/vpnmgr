@@ -1039,6 +1039,32 @@ mssfix 1450"
 			Print_Output true "No password set for VPN client $VPN_NO" "$WARN"
 		fi
 	else
+		if [ -n "$(nvram get vpn_client"$VPN_NO"_username)" ] && [ -n "$(nvram get vpn_client"$VPN_NO"_password)" ]; then
+			while true; do
+				printf "\\n\\e[1mDo you want to update the username and password for the VPN client? (y/n)\\e[0m\\n"
+				read -r confirm
+				case "$confirm" in
+					y|Y)
+						printf "Please enter username:    "
+						read -r vpnusn
+						nvram set vpn_client"$VPN_NO"_username="$vpnusn"
+						printf "\\n"
+						printf "Please enter password:    "
+						read -r vpnpwd
+						nvram set vpn_client"$VPN_NO"_password="$vpnpwd"
+						printf "\\n"
+						break
+					;;
+					n|N)
+						break
+					;;
+					*)
+						printf "\\n\\e[1mPlease enter a valid choice (y/n)\\e[0m\\n"
+					;;
+				esac
+			done
+		fi
+		
 		if [ -z "$(nvram get vpn_client"$VPN_NO"_username)" ]; then
 			printf "\\n\\e[1mNo username set for VPN client %s\\e[0m\\n" "$VPN_NO"
 			printf "Please enter username:    "
