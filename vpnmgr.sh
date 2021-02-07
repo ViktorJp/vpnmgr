@@ -20,9 +20,9 @@
 
 ### Start of script variables ###
 readonly SCRIPT_NAME="vpnmgr"
-readonly SCRIPT_VERSION="v2.1.1"
-readonly SCRIPT_BRANCH="master"
-readonly SCRIPT_REPO="https://raw.githubusercontent.com/jackyaz/""$SCRIPT_NAME""/""$SCRIPT_BRANCH"
+readonly SCRIPT_VERSION="v2.2.0"
+SCRIPT_BRANCH="master"
+SCRIPT_REPO="https://raw.githubusercontent.com/jackyaz/$SCRIPT_NAME/$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
 readonly SCRIPT_CONF="$SCRIPT_DIR/config"
 readonly OVPN_ARCHIVE_DIR="$SCRIPT_DIR/ovpn"
@@ -79,16 +79,20 @@ Check_Lock(){
 	if [ -f "/tmp/$SCRIPT_NAME.lock" ]; then
 		ageoflock=$(($(date +%s) - $(date +%s -r /tmp/$SCRIPT_NAME.lock)))
 		if [ "$ageoflock" -gt 600 ]; then
-			Print_Output "true" "Stale lock file found (>600 seconds old) - purging lock" "$ERR"
+			Print_Output true "Stale lock file found (>600 seconds old) - purging lock" "$ERR"
 			kill "$(sed -n '1p' /tmp/$SCRIPT_NAME.lock)" >/dev/null 2>&1
 			Clear_Lock
 			echo "$$" > "/tmp/$SCRIPT_NAME.lock"
 			return 0
 		else
-			Print_Output "true" "Lock file found (age: $ageoflock seconds) - stopping to prevent duplicate runs" "$ERR"
+			Print_Output true "Lock file found (age: $ageoflock seconds) - stopping to prevent duplicate runs" "$ERR"
 			if [ -z "$1" ]; then
 				exit 1
 			else
+				if [ "$1" = "webui" ]; then
+					echo 'var vpnmgrstatus = "LOCKED";' > /tmp/detect_vpnmgr.js
+					exit 1
+				fi
 				return 1
 			fi
 		fi
@@ -138,20 +142,26 @@ Set_Version_Custom_Settings(){
 }
 
 Update_Check(){
+	echo 'var updatestatus = "InProgress";' > "$SCRIPT_WEB_DIR/detect_update.js"
 	doupdate="false"
 	localver=$(grep "SCRIPT_VERSION=" /jffs/scripts/"$SCRIPT_NAME" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
-	/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep -qF "jackyaz" || { Print_Output "true" "404 error detected - stopping update" "$ERR"; return 1; }
+	/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep -qF "jackyaz" || { Print_Output true "404 error detected - stopping update" "$ERR"; return 1; }
 	serverver=$(/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep "SCRIPT_VERSION=" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 	if [ "$localver" != "$serverver" ]; then
 		doupdate="version"
-		Set_Version_Custom_Settings "server" "$serverver"
+		Set_Version_Custom_Settings server "$serverver"
+		echo 'var updatestatus = "'"$serverver"'";'  > "$SCRIPT_WEB_DIR/detect_update.js"
 	else
 		localmd5="$(md5sum "/jffs/scripts/$SCRIPT_NAME" | awk '{print $1}')"
 		remotemd5="$(curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | md5sum | awk '{print $1}')"
 		if [ "$localmd5" != "$remotemd5" ]; then
 			doupdate="md5"
-			Set_Version_Custom_Settings "server" "$serverver-hotfix"
+			Set_Version_Custom_Settings server "$serverver-hotfix"
+			echo 'var updatestatus = "'"$serverver-hotfix"'";'  > "$SCRIPT_WEB_DIR/detect_update.js"
 		fi
+	fi
+	if [ "$doupdate" = "false" ]; then
+		echo 'var updatestatus = "None";'  > "$SCRIPT_WEB_DIR/detect_update.js"
 	fi
 	echo "$doupdate,$localver,$serverver"
 }
@@ -164,42 +174,42 @@ Update_Version(){
 		serverver="$(echo "$updatecheckresult" | cut -f3 -d',')"
 		
 		if [ "$isupdate" = "version" ]; then
-			Print_Output "true" "New version of $SCRIPT_NAME available - updating to $serverver" "$PASS"
+			Print_Output true "New version of $SCRIPT_NAME available - updating to $serverver" "$PASS"
 		elif [ "$isupdate" = "md5" ]; then
-			Print_Output "true" "MD5 hash of $SCRIPT_NAME does not match - downloading updated $serverver" "$PASS"
+			Print_Output true "MD5 hash of $SCRIPT_NAME does not match - downloading updated $serverver" "$PASS"
 		fi
 		
-		Update_File "shared-jy.tar.gz"
+		Update_File shared-jy.tar.gz
 		
 		if [ "$isupdate" != "false" ]; then
-			Update_File "vpnmgr_www.asp"
-			/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output "true" "$SCRIPT_NAME successfully updated"
+			Update_File vpnmgr_www.asp
+			/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
 			chmod 0755 /jffs/scripts/"$SCRIPT_NAME"
 			Clear_Lock
 			if [ -z "$1" ]; then
-				exec "$0" "setversion"
+				exec "$0" setversion
 			elif [ "$1" = "unattended" ]; then
-				exec "$0" "setversion" "unattended"
+				exec "$0" setversion unattended
 			fi
 			exit 0
 		else
-			Print_Output "true" "No new version - latest is $localver" "$WARN"
+			Print_Output true "No new version - latest is $localver" "$WARN"
 			Clear_Lock
 		fi
 	fi
 	
 	if [ "$1" = "force" ]; then
 		serverver=$(/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep "SCRIPT_VERSION=" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
-		Print_Output "true" "Downloading latest version ($serverver) of $SCRIPT_NAME" "$PASS"
-		Update_File "shared-jy.tar.gz"
-		Update_File "vpnmgr_www.asp"
-		/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output "true" "$SCRIPT_NAME successfully updated"
+		Print_Output true "Downloading latest version ($serverver) of $SCRIPT_NAME" "$PASS"
+		Update_File shared-jy.tar.gz
+		Update_File vpnmgr_www.asp
+		/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
 		chmod 0755 /jffs/scripts/"$SCRIPT_NAME"
 		Clear_Lock
 		if [ -z "$2" ]; then
-			exec "$0" "setversion"
+			exec "$0" setversion
 		elif [ "$2" = "unattended" ]; then
-			exec "$0" "setversion" "unattended"
+			exec "$0" setversion unattended
 		fi
 		exit 0
 	fi
@@ -212,7 +222,7 @@ Update_File(){
 			Download_File "$SHARED_REPO/$1.md5" "$SHARED_DIR/$1.md5"
 			tar -xzf "$SHARED_DIR/$1" -C "$SHARED_DIR"
 			rm -f "$SHARED_DIR/$1"
-			Print_Output "true" "New version of $1 downloaded" "$PASS"
+			Print_Output true "New version of $1 downloaded" "$PASS"
 		else
 			localmd5="$(cat "$SHARED_DIR/$1.md5")"
 			remotemd5="$(curl -fsL --retry 3 "$SHARED_REPO/$1.md5")"
@@ -221,7 +231,7 @@ Update_File(){
 				Download_File "$SHARED_REPO/$1.md5" "$SHARED_DIR/$1.md5"
 				tar -xzf "$SHARED_DIR/$1" -C "$SHARED_DIR"
 				rm -f "$SHARED_DIR/$1"
-				Print_Output "true" "New version of $1 downloaded" "$PASS"
+				Print_Output true "New version of $1 downloaded" "$PASS"
 			fi
 		fi
 	elif [ "$1" = "vpnmgr_www.asp" ]; then
@@ -234,7 +244,7 @@ Update_File(){
 				rm -f "$SCRIPT_WEBPAGE_DIR/$MyPage" 2>/dev/null
 			fi
 			Download_File "$SCRIPT_REPO/$1" "$SCRIPT_DIR/$1"
-			Print_Output "true" "New version of $1 downloaded" "$PASS"
+			Print_Output true "New version of $1 downloaded" "$PASS"
 			Mount_WebUI
 		fi
 		rm -f "$tmpfile"
@@ -247,29 +257,43 @@ Auto_Startup(){
 	case $1 in
 		create)
 			if [ -f /jffs/scripts/services-start ]; then
-				STARTUPLINECOUNT=$(grep -c '# '"$SCRIPT_NAME""_startup" /jffs/scripts/services-start)
-				STARTUPLINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME startup &"' # '"$SCRIPT_NAME" /jffs/scripts/services-start)
+				STARTUPLINECOUNT=$(grep -c '# '"${SCRIPT_NAME}_startup" /jffs/scripts/services-start)
+				
+				if [ "$STARTUPLINECOUNT" -gt 0 ]; then
+					sed -i -e '/# '"${SCRIPT_NAME}_startup"'/d' /jffs/scripts/services-start
+				fi
+			fi
+			if [ -f /jffs/scripts/post-mount ]; then
+				STARTUPLINECOUNT=$(grep -c '# '"${SCRIPT_NAME}_startup" /jffs/scripts/post-mount)
+				STARTUPLINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME startup"' "$@" & # '"$SCRIPT_NAME" /jffs/scripts/post-mount)
 				
 				if [ "$STARTUPLINECOUNT" -gt 1 ] || { [ "$STARTUPLINECOUNTEX" -eq 0 ] && [ "$STARTUPLINECOUNT" -gt 0 ]; }; then
-					sed -i -e '/# '"$SCRIPT_NAME""_startup"'/d' /jffs/scripts/services-start
+					sed -i -e '/# '"${SCRIPT_NAME}_startup"'/d' /jffs/scripts/post-mount
 				fi
 				
 				if [ "$STARTUPLINECOUNTEX" -eq 0 ]; then
-					echo "/jffs/scripts/$SCRIPT_NAME startup &"' # '"$SCRIPT_NAME""_startup" >> /jffs/scripts/services-start
+					echo "/jffs/scripts/$SCRIPT_NAME startup"' "$@" & # '"${SCRIPT_NAME}_startup" >> /jffs/scripts/post-mount
 				fi
 			else
-				echo "#!/bin/sh" > /jffs/scripts/services-start
-				echo "" >> /jffs/scripts/services-start
-				echo "/jffs/scripts/$SCRIPT_NAME startup &"' # '"$SCRIPT_NAME""_startup" >> /jffs/scripts/services-start
-				chmod 0755 /jffs/scripts/services-start
+				echo "#!/bin/sh" > /jffs/scripts/post-mount
+				echo "" >> /jffs/scripts/post-mount
+				echo "/jffs/scripts/$SCRIPT_NAME startup"' "$@" & # '"${SCRIPT_NAME}_startup" >> /jffs/scripts/post-mount
+				chmod 0755 /jffs/scripts/post-mount
 			fi
 		;;
 		delete)
 			if [ -f /jffs/scripts/services-start ]; then
-				STARTUPLINECOUNT=$(grep -c '# '"$SCRIPT_NAME""_startup" /jffs/scripts/services-start)
+				STARTUPLINECOUNT=$(grep -c '# '"${SCRIPT_NAME}_startup" /jffs/scripts/services-start)
 				
 				if [ "$STARTUPLINECOUNT" -gt 0 ]; then
 					sed -i -e '/# '"$SCRIPT_NAME""_startup"'/d' /jffs/scripts/services-start
+				fi
+			fi
+			if [ -f /jffs/scripts/post-mount ]; then
+				STARTUPLINECOUNT=$(grep -c '# '"${SCRIPT_NAME}_startup" /jffs/scripts/post-mount)
+				
+				if [ "$STARTUPLINECOUNT" -gt 0 ]; then
+					sed -i -e '/# '"${SCRIPT_NAME}_startup"'/d' /jffs/scripts/post-mount
 				fi
 			fi
 		;;
@@ -282,7 +306,7 @@ Auto_ServiceEvent(){
 			if [ -f /jffs/scripts/service-event ]; then
 				STARTUPLINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/service-event)
 				# shellcheck disable=SC2016
-				STARTUPLINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME service_event"' "$1" "$2" &'' # '"$SCRIPT_NAME" /jffs/scripts/service-event)
+				STARTUPLINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME service_event"' "$@" & # '"$SCRIPT_NAME" /jffs/scripts/service-event)
 				
 				if [ "$STARTUPLINECOUNT" -gt 1 ] || { [ "$STARTUPLINECOUNTEX" -eq 0 ] && [ "$STARTUPLINECOUNT" -gt 0 ]; }; then
 					sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/service-event
@@ -290,13 +314,13 @@ Auto_ServiceEvent(){
 				
 				if [ "$STARTUPLINECOUNTEX" -eq 0 ]; then
 					# shellcheck disable=SC2016
-					echo "/jffs/scripts/$SCRIPT_NAME service_event"' "$1" "$2" &'' # '"$SCRIPT_NAME" >> /jffs/scripts/service-event
+					echo "/jffs/scripts/$SCRIPT_NAME service_event"' "$@" & # '"$SCRIPT_NAME" >> /jffs/scripts/service-event
 				fi
 			else
 				echo "#!/bin/sh" > /jffs/scripts/service-event
 				echo "" >> /jffs/scripts/service-event
 				# shellcheck disable=SC2016
-				echo "/jffs/scripts/$SCRIPT_NAME service_event"' "$1" "$2" &'' # '"$SCRIPT_NAME" >> /jffs/scripts/service-event
+				echo "/jffs/scripts/$SCRIPT_NAME service_event"' "$@" & # '"$SCRIPT_NAME" >> /jffs/scripts/service-event
 				chmod 0755 /jffs/scripts/service-event
 			fi
 		;;
@@ -315,20 +339,20 @@ Auto_ServiceEvent(){
 Auto_Cron(){
 	case $1 in
 		create)
-			STARTUPLINECOUNT=$(cru l | grep -c "$SCRIPT_NAME""_countrydata")
+			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_countrydata")
 			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
-				cru d "$SCRIPT_NAME""_countrydata"
+				cru d "${SCRIPT_NAME}_countrydata"
 			fi
 		
-			STARTUPLINECOUNT=$(cru l | grep -c "$SCRIPT_NAME""_cacheddata")
+			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_cacheddata")
 			if [ "$STARTUPLINECOUNT" -eq 0 ]; then
-				cru a "$SCRIPT_NAME""_cacheddata" "0 0 * * * /jffs/scripts/$SCRIPT_NAME refreshcacheddata"
+				cru a "${SCRIPT_NAME}_cacheddata" "0 0 * * * /jffs/scripts/$SCRIPT_NAME refreshcacheddata"
 			fi
 		;;
 		delete)
-			STARTUPLINECOUNT=$(cru l | grep -c "$SCRIPT_NAME""_cacheddata")
+			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_cacheddata")
 			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
-				cru d "$SCRIPT_NAME""_cacheddata"
+				cru d "${SCRIPT_NAME}_cacheddata"
 			fi
 		;;
 	esac
@@ -340,7 +364,7 @@ Download_File(){
 
 Get_WebUI_Page(){
 	MyPage="none"
-	for i in 1 2 3 4 5 6 7 8 9 10; do
+	for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
 		page="/www/user/user$i.asp"
 		if [ -f "$page" ] && [ "$(md5sum < "$1")" = "$(md5sum < "$page")" ]; then
 			MyPage="user$i.asp"
@@ -351,15 +375,20 @@ Get_WebUI_Page(){
 	done
 }
 
+### locking mechanism code credit to Martineau (@MartineauUK) ###
 Mount_WebUI(){
+	LOCKFILE=/tmp/addonwebui.lock
+	FD=386
+	eval exec "$FD>$LOCKFILE"
+	flock -x "$FD"
 	Get_WebUI_Page "$SCRIPT_DIR/vpnmgr_www.asp"
 	if [ "$MyPage" = "none" ]; then
-		Print_Output "true" "Unable to mount $SCRIPT_NAME WebUI page, exiting" "$CRIT"
+		Print_Output true "Unable to mount $SCRIPT_NAME WebUI page, exiting" "$CRIT"
+		flock -u "$FD"
 		return 1
 	fi
-	Print_Output "true" "Mounting $SCRIPT_NAME WebUI page as $MyPage" "$PASS"
 	cp -f "$SCRIPT_DIR/vpnmgr_www.asp" "$SCRIPT_WEBPAGE_DIR/$MyPage"
-	echo "VPN Manager" > "$SCRIPT_WEBPAGE_DIR/$(echo $MyPage | cut -f1 -d'.').title"
+	echo "vpnmgr" > "$SCRIPT_WEBPAGE_DIR/$(echo $MyPage | cut -f1 -d'.').title"
 	
 	if [ "$(uname -o)" = "ASUSWRT-Merlin" ]; then
 		if [ ! -f "/tmp/menuTree.js" ]; then
@@ -367,12 +396,13 @@ Mount_WebUI(){
 		fi
 		
 		sed -i "\\~$MyPage~d" /tmp/menuTree.js
-		
-		sed -i "/url: \"Advanced_OpenVPNClient_Content.asp\", tabName:/a {url: \"$MyPage\", tabName: \"VPN Manager\"}," /tmp/menuTree.js
+		sed -i "/url: \"Advanced_OpenVPNClient_Content.asp\", tabName:/a {url: \"$MyPage\", tabName: \"vpnmgr\"}," /tmp/menuTree.js
 		
 		umount /www/require/modules/menuTree.js 2>/dev/null
 		mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
 	fi
+	flock -u "$FD"
+	Print_Output true "Mounted $SCRIPT_NAME WebUI page as $MyPage" "$PASS"
 }
 
 Validate_Number(){
@@ -381,7 +411,7 @@ Validate_Number(){
 	else
 		formatted="$(echo "$1" | sed -e 's/|/ /g')"
 		if [ -z "$3" ]; then
-			Print_Output "false" "$formatted - $2 is not a number" "$ERR"
+			Print_Output false "$formatted - $2 is not a number" "$ERR"
 		fi
 		return 1
 	fi
@@ -392,7 +422,7 @@ Conf_FromSettings(){
 	TMPFILE="/tmp/vpnmgr_settings.txt"
 	if [ -f "$SETTINGSFILE" ]; then
 		if [ "$(grep "vpnmgr_" $SETTINGSFILE | grep -v "version" -c)" -gt 0 ]; then
-			Print_Output "true" "Updated settings from WebUI found, merging into $SCRIPT_CONF" "$PASS"
+			Print_Output true "Updated settings from WebUI found, merging into $SCRIPT_CONF" "$PASS"
 			cp -a "$SCRIPT_CONF" "$SCRIPT_CONF.bak"
 			grep "vpnmgr_" "$SETTINGSFILE" | grep -v "version" > "$TMPFILE"
 			sed -i "s/vpnmgr_//g;s/ /=/g" "$TMPFILE"
@@ -405,7 +435,7 @@ Conf_FromSettings(){
 				elif echo "$SETTINGNAME" | grep -q "pwd"; then
 					nvram set vpn_client"$SETTINGVPNNO"_password="$SETTINGVALUE"
 				else
-					sed -i "s/$SETTINGNAME=.*/$SETTINGNAME=$SETTINGVALUE/" "$SCRIPT_CONF"
+					sed -i "s~$SETTINGNAME=.*~$SETTINGNAME=$SETTINGVALUE~" "$SCRIPT_CONF"
 				fi
 			done < "$TMPFILE"
 			grep 'vpnmgr_version' "$SETTINGSFILE" > "$TMPFILE"
@@ -415,9 +445,9 @@ Conf_FromSettings(){
 			rm -f "$TMPFILE"
 			rm -f "$SETTINGSFILE.bak"
 			nvram commit
-			Print_Output "true" "Merge of updated settings from WebUI completed successfully" "$PASS"
+			Print_Output true "Merge of updated settings from WebUI completed successfully" "$PASS"
 		else
-			Print_Output "false" "No updated settings from WebUI found, no merge into $SCRIPT_CONF necessary" "$PASS"
+			Print_Output false "No updated settings from WebUI found, no merge into $SCRIPT_CONF necessary" "$PASS"
 		fi
 	fi
 }
@@ -447,10 +477,13 @@ Create_Dirs(){
 Create_Symlinks(){
 	rm -rf "${SCRIPT_WEB_DIR:?}/"* 2>/dev/null
 	
-	ln -s "$SCRIPT_DIR/config"  "$SCRIPT_WEB_DIR/config.htm" 2>/dev/null
+	ln -s "$SCRIPT_DIR/config" "$SCRIPT_WEB_DIR/config.htm" 2>/dev/null
 	ln -s "$SCRIPT_DIR/nordvpn_countrydata" "$SCRIPT_WEB_DIR/nordvpn_countrydata.htm" 2>/dev/null
 	ln -s "$SCRIPT_DIR/pia_countrydata" "$SCRIPT_WEB_DIR/pia_countrydata.htm" 2>/dev/null
 	ln -s "$SCRIPT_DIR/wevpn_countrydata" "$SCRIPT_WEB_DIR/wevpn_countrydata.htm" 2>/dev/null
+	
+	ln -s /tmp/detect_vpnmgr.js "$SCRIPT_WEB_DIR/detect_vpnmgr.js" 2>/dev/null
+	ln -s /tmp/vpnmgrserverloads "$SCRIPT_WEB_DIR/vpnmgrserverloads.js" 2>/dev/null
 	
 	if [ ! -d "$SHARED_WEB_DIR" ]; then
 		ln -s "$SHARED_DIR" "$SHARED_WEB_DIR" 2>/dev/null
@@ -480,18 +513,18 @@ Conf_Exists(){
 		for i in 1 2 3 4 5; do
 			{
 				echo "##### VPN Client $i #####"
-				echo "vpn$i""_managed=false"
-				echo "vpn$i""_provider=NordVPN"
-				echo "vpn$i""_protocol=UDP"
-				echo "vpn$i""_type=Standard"
-				echo "vpn$i""_schenabled=false"
-				echo "vpn$i""_schdays=*"
-				echo "vpn$i""_schhours=0"
-				echo "vpn$i""_schmins=$i"
-				echo "vpn$i""_countryname="
-				echo "vpn$i""_cityname="
-				echo "vpn$i""_countryid=0"
-				echo "vpn$i""_cityid=0"
+				echo "vpn${i}_managed=false"
+				echo "vpn${i}_provider=NordVPN"
+				echo "vpn${i}_protocol=UDP"
+				echo "vpn${i}_type=Standard"
+				echo "vpn${i}_schenabled=false"
+				echo "vpn${i}_schdays=*"
+				echo "vpn${i}_schhours=0"
+				echo "vpn${i}_schmins=$i"
+				echo "vpn${i}_countryname="
+				echo "vpn${i}_cityname="
+				echo "vpn${i}_countryid=0"
+				echo "vpn${i}_cityid=0"
 				echo "#########################"
 			} >> "$SCRIPT_CONF"
 		done
@@ -501,71 +534,77 @@ Conf_Exists(){
 
 # use to create content of vJSON variable; $1 VPN type, $2 VPN protocol, $3 country id
 getRecommendedServers(){
-	curlstring="https://api.nordvpn.com/v1/servers/recommendations?filters\[servers_groups\]\[identifier\]=$1&filters\[servers_technologies\]\[identifier\]=$2"
+	curlstring="https://api.nordvpn.com/v1/servers/recommendations?filters\[servers_groups\]\[identifier\]=${1}&filters\[servers_technologies\]\[identifier\]=${2}"
 	if [ "$3" != "0" ]; then
-		curlstring="$curlstring&filters\[country_id\]=$3"
+		curlstring="${curlstring}&filters\[country_id\]=$3"
 	fi
-	curlstring="$curlstring&limit=1"
+	curlstring="${curlstring}&limit=1"
 	/usr/sbin/curl -fsL --retry 3 "$curlstring" | jq -r -e '.[] // empty'
 }
 
+getServerLoad(){
+	curlstring="https://api.nordvpn.com/server/stats/"
+	serverhostname="$(echo "$1" | cut -f2 -d ' ' | tr "A-Z" "a-z").nordvpn.com"
+	/usr/sbin/curl -fsL --retry 3 "$curlstring$serverhostname" | jq -r -e '.percent // "Unknown"'
+}
+
 getServersforCity(){
-	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/recommendations?filters\[servers_groups\]\[identifier\]=$1&filters\[servers_technologies\]\[identifier\]=$2&filters\[country_id\]=$3&limit=2500" | jq -r -e ' [ .[] | select(.locations[].country.city.id=='"$4"')][0] // empty'
+	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/recommendations?filters\[servers_groups\]\[identifier\]=${1}&filters\[servers_technologies\]\[identifier\]=${2}&filters\[country_id\]=${3}&limit=2500" | jq -r -e ' [ .[] | select(.locations[].country.city.id=='"$4"')][0] // empty'
 }
 
 getCountryData(){
-	Print_Output "true" "Refreshing NordVPN country data..." "$PASS"
+	Print_Output true "Refreshing NordVPN country data..." "$PASS"
 	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/countries" | jq -r > /tmp/nordvpn_countrydata
 	countrydata="$(cat /tmp/nordvpn_countrydata)"
-	[ -z "$countrydata" ] && Print_Output "true" "Error, country data from NordVPN failed to download" "$ERR" && return 1
+	[ -z "$countrydata" ] && Print_Output true "Error, country data from NordVPN failed to download" "$ERR" && return 1
 	if [ -f "$SCRIPT_DIR/nordvpn_countrydata" ]; then
 		if ! diff -q /tmp/nordvpn_countrydata "$SCRIPT_DIR/nordvpn_countrydata" >/dev/null 2>&1; then
 			mv /tmp/nordvpn_countrydata "$SCRIPT_DIR/nordvpn_countrydata"
-			Print_Output "true" "Changes detected in NordVPN country data found, updating now" "$PASS"
+			Print_Output true "Changes detected in NordVPN country data found, updating now" "$PASS"
 			Create_Symlinks
 		else
 			rm -f /tmp/nordvpn_countrydata
-			Print_Output "true" "No changes in NordVPN country data" "$WARN"
+			Print_Output true "No changes in NordVPN country data" "$WARN"
 		fi
 	else
 		mv /tmp/nordvpn_countrydata "$SCRIPT_DIR/nordvpn_countrydata"
 		Create_Symlinks
-		Print_Output "true" "No previous NordVPN country data found, updating now" "$PASS"
+		Print_Output true "No previous NordVPN country data found, updating now" "$PASS"
 	fi
 }
 
 sedCountryCodesDestructive(){
-	sed 's/.*AU.*/Australia/;s/.*CA.*/Canada/;s/.*DE.*/Germany/;s/.*UAE.*/United Arab Emirates/;s/.*UK.*/United Kingdom/;s/.*US.*/United States/;
-s/.*AE.*/United Arab Emirates/;s/.*GB.*/United Kingdom/;s/.*AT.*/Austria/;s/.*BE.*/Belgium/;s/.*BG.*/Bulgaria/;s/.*BR.*/Brazil/;
-s/.*CH.*/Switzerland/;s/.*CZ.*/Czech Republic/;s/.*DK.*/Denmark/;s/.*ES.*/Spain/;s/.*FR.*/France/;s/.*HK.*/Hong Kong/;s/.*HU.*/Hungary/;
-s/.*IE.*/Ireland/;s/.*IL.*/Israel/;s/.*IN.*/India/;s/.*IT.*/Italy/;s/.*JP.*/Japan/;s/.*MX.*/Mexico/;s/.*NL.*/Netherlands/;s/.*NZ.*/New Zealand/;
-s/.*PL.*/Poland/;s/.*RO.*/Romania/;s/.*RS.*/Serbia/;s/.*SE.*/Sweden/;s/.*SG.*/Singapore/;s/.*ZA.*/South Africa/;'
+	sed 's/ /_/g;s/^AU_.*/Australia/I;s/^CA_.*/Canada/I;s/^DE_.*/Germany/I;s/^UAE_.*/United Arab Emirates/I;s/^UK_.*/United Kingdom/I;s/^US_.*/United States/I;
+s/^AE_.*/United Arab Emirates/I;s/^GB_.*/United Kingdom/I;s/^AT_.*/Austria/I;s/^BE_.*/Belgium/I;s/^BG_.*/Bulgaria/I;s/^BR_.*/Brazil/I;
+s/^CH_.*/Switzerland/I;s/^CZ_.*/Czech Republic/I;s/^DK_.*/Denmark/I;s/^ES_.*/Spain/I;s/^FR_.*/France/I;s/^HK_.*/Hong Kong/I;s/^HU_.*/Hungary/I;
+s/^IE_.*/Ireland/I;s/^IL_.*/Israel/I;s/^IN_.*/India/I;s/^IT_.*/Italy/I;s/^JP_.*/Japan/I;s/^MX_.*/Mexico/I;s/^NL_.*/Netherlands/I;s/^NO_.*/Norway/I;s/^NZ_.*/New Zealand/I;
+s/^PL_.*/Poland/I;s/^RO_.*/Romania/I;s/^RS_.*/Serbia/I;s/^SE_.*/Sweden/I;s/^SG_.*/Singapore/I;s/^ZA_.*/South Africa/I;s/_/ /g;'
 }
 
 sedCountryCodes(){
-	sed 's/AU/Australia/;s/CA/Canada/;s/DE/Germany/;s/UAE/United Arab Emirates/;s/UK/United Kingdom/;s/US/United States/;
-s/AE/United Arab Emirates/;s/GB/United Kingdom/;s/AT/Austria/;s/BE/Belgium/;s/BG/Bulgaria/;s/BR/Brazil/;
-s/CH/Switzerland/;s/CZ/Czech Republic/;s/DK/Denmark/;s/ES/Spain/;s/FR/France/;s/HK/Hong Kong/;s/HU/Hungary/;
-s/IE/Ireland/;s/IL/Israel/;s/IN/India/;s/IT/Italy/;s/JP/Japan/;s/MX/Mexico/;s/NL/Netherlands/;s/NZ/New Zealand/;
-s/PL/Poland/;s/RO/Romania/;s/RS/Serbia/;s/SE/Sweden/;s/SG/Singapore/;s/ZA/South Africa/;'
+	sed 's/ /_/g;s/^AU_/Australia/I;s/^CA_/Canada/I;s/^DE_/Germany/I;s/^UAE_/United Arab Emirates/I;s/^UK_/United Kingdom/I;s/^US_/United States/I;
+s/^AE_/United Arab Emirates/I;s/^GB_/United Kingdom/I;s/^AT_/Austria/I;s/^BE_/Belgium/I;s/^BG_/Bulgaria/I;s/^BR_/Brazil/I;
+s/^CH_/Switzerland/I;s/^CZ_/Czech Republic/I;s/^DK_/Denmark/I;s/^ES_/Spain/I;s/^FR_/France/I;s/^HK_/Hong Kong/I;s/^HU_/Hungary/I;
+s/^IE_/Ireland/I;s/^IL_/Israel/I;s/^IN_/India/I;s/^IT_/Italy/I;s/^JP_/Japan/I;s/^MX_/Mexico/I;s/^NL_/Netherlands/I;s/^NO_/Norway/I;s/^NZ_/New Zealand/I;
+s/^PL_/Poland/I;s/^RO_/Romania/I;s/^RS_/Serbia/I;s/^SE_/Sweden/I;s/^SG_/Singapore/I;s/^ZA_/South Africa/I;s/_/ /g;'
 }
 
 sedReverseCountryCodesPIA(){
-	sed 's/Australia/AU/;s/Canada/CA/;s/Germany/DE/;s/United Arab Emirates/UAE/;s/United Kingdom/UK/;s/United States/US/;'
+	sed 's/Australia/AU/;s/Canada/CA/;s/Germany/DE/;s/United Kingdom/UK/;s/United States/US/;'
 }
 
 sedReverseCountryCodesWeVPN(){
 	sed 's/Australia/AU/;s/Canada/CA/;s/Germany/DE/;s/United States/US/;s/United Arab Emirates/AE/;s/United Kingdom/GB/;
 s/Austria/AT/;s/Belgium/BE/;s/Bulgaria/BG/;s/Brazil/BR/;s/Switzerland/CH/;s/Czech Republic/CZ/;s/Denmark/DK/;s/Spain/ES/;s/France/FR/;
-s/Hong Kong/HK/;s/Hungary/HU/;s/Ireland/IE/;s/Israel/IL/;s/India/IN/;s/Italy/IT/;s/Japan/JP/;s/Mexico/MX/;s/Netherlands/NL/;s/New Zealand/NZ/;
-s/Poland/PL/;s/Romania/RO/;s/Serbia/RS/;s/Sweden/SE/;s/Singapore/SG/;s/South Africa/ZA/;'
+s/Hong Kong/HK/;s/Hungary/HU/;s/Ireland/IE/;s/Israel/IL/;s/India/IN/;s/Italy/IT/;s/Japan/JP/;s/Mexico/MX/;s/Netherlands/NL/;s/Norway/NO/;s/New Zealand/NZ/;
+s/Poland/PL/;s/Romania/RO/;s/Serbia/RS/;s/Sweden/SE/;s/Singapore/SG/;s/South Africa/ZA/;s/_/ /g;'
 }
 
 getCountryNames(){
 	if [ "$1" = "NordVPN" ]; then
 		echo "$2" | jq -r -e '.[] | .name // empty'
 	elif [ "$1" = "PIA" ] || [ "$1" = "WeVPN" ]; then
-		echo "$2" | sort -u -k 1,1 | sedCountryCodesDestructive | sort | awk '{$1=$1;print}'
+		echo "$2" | sedCountryCodesDestructive | awk '{$1=$1;print}' | awk '{for(i=1;i<=NF;i++){ $i=toupper(substr($i,1,1)) substr($i,2) }}1' | sort -u
 	fi
 }
 
@@ -585,7 +624,7 @@ getCityNames(){
 	if [ "$1" = "NordVPN" ]; then
 		echo "$2" | jq -r -e '.[] | select(.name=="'"$3"'") | .cities[] | .name // empty'
 	elif [ "$1" = "PIA" ] || [ "$1" = "WeVPN" ]; then
-		echo "$2" | sedCountryCodes | sort | grep "$3" | sed "s/$3//" | awk '{$1=$1;print}'
+		echo "$2" | sedCountryCodes | grep "$3" | sed "s/$3//" | awk '{$1=$1;print}' | awk '{for(i=1;i<=NF;i++){ $i=toupper(substr($i,1,1)) substr($i,2) }}1' | sort
 	fi
 }
 
@@ -646,7 +685,7 @@ getConnectState(){
 }
 
 getOVPNArchives(){
-	Print_Output "true" "Refreshing OpenVPN file archives..." "$PASS"
+	Print_Output true "Refreshing OpenVPN file archives..." "$PASS"
 	
 	### PIA ###
 	# Standard UDP
@@ -659,13 +698,13 @@ getOVPNArchives(){
 	Download_File https://www.privateinternetaccess.com/openvpn/openvpn-strong-tcp.zip /tmp/pia_tcp_strong.zip
 	###########
 	
-	piachanged="$(CompareArchiveContents "/tmp/pia*.zip")"
+	piachanged="$(CompareArchiveContents /tmp/pia*.zip)"
 	
 	if [ "$piachanged" = "true" ]; then
 		/opt/bin/7z -ba l "$OVPN_ARCHIVE_DIR/pia_udp_standard.zip" -- *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//' | sort | awk '{$1=$1;print}' > "$SCRIPT_DIR/pia_countrydata"
-		Print_Output "true" "Changes detected in PIA OpenVPN file archives, local copies updated" "$PASS"
+		Print_Output true "Changes detected in PIA OpenVPN file archives, local copies updated" "$PASS"
 	else
-		Print_Output "true" "No changes in PIA OpenVPN file archives" "$WARN"
+		Print_Output true "No changes in PIA OpenVPN file archives" "$WARN"
 	fi
 	
 	### WeVPN ###
@@ -675,13 +714,13 @@ getOVPNArchives(){
 	Download_File https://wevpn.com/resources/openvpn/TCP.zip /tmp/wevpn_tcp_standard.zip
 	###########
 	
-	wevpnchanged="$(CompareArchiveContents "/tmp/wevpn*.zip")"
+	wevpnchanged="$(CompareArchiveContents /tmp/wevpn*.zip)"
 	
 	if [ "$wevpnchanged" = "true" ]; then
 		/opt/bin/7z -ba l "$OVPN_ARCHIVE_DIR/wevpn_tcp_standard.zip" -- *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//;s/-UDP//;s/-TCP//;s/_/ /;' | sort | awk '{$1=$1;print}' > "$SCRIPT_DIR/wevpn_countrydata"
-		Print_Output "true" "Changes detected in WeVPN OpenVPN file archives, local copies updated" "$PASS"
+		Print_Output true "Changes detected in WeVPN OpenVPN file archives, local copies updated" "$PASS"
 	else
-		Print_Output "true" "No changes in WeVPN OpenVPN file archives" "$WARN"
+		Print_Output true "No changes in WeVPN OpenVPN file archives" "$WARN"
 	fi
 }
 
@@ -709,15 +748,26 @@ CompareArchiveContents(){
 }
 
 ListVPNClients(){
+	showload="$1"
+	
+	if [ "$showload" = "true" ]; then
+		printf "Checking server loads using NordVPN API...\\n\\n"
+	fi
+	
 	printf "VPN client list:\\n\\n"
 	for i in 1 2 3 4 5; do
 		VPN_CLIENTDESC="$(nvram get vpn_client"$i"_desc)"
+		if [ "$showload" = "true" ]; then
+			if ! echo "$VPN_CLIENTDESC" | grep -iq "nordvpn"; then
+				continue
+			fi
+		fi
 		MANAGEDSTATE=""
 		CONNECTSTATE=""
 		SCHEDULESTATE=""
-		if [ "$(grep "vpn""$i""_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
+		if [ "$(grep "vpn${i}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
 			MANAGEDSTATE="Managed"
-		elif [ "$(grep "vpn""$i""_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+		elif [ "$(grep "vpn${i}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
 			MANAGEDSTATE="Unmanaged"
 		fi
 		if [ "$(getConnectState "$i")" = "2" ]; then
@@ -725,16 +775,24 @@ ListVPNClients(){
 		else
 			CONNECTSTATE="Inactive"
 		fi
-		if [ "$(grep "vpn""$i""_schenabled" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
+		if [ "$(grep "vpn${i}_schenabled" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
 			SCHEDULESTATE="Scheduled"
-		elif [ "$(grep "vpn""$i""_schenabled" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+		elif [ "$(grep "vpn${i}_schenabled" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
 			SCHEDULESTATE="Unscheduled"
 		fi
-		COUNTRYNAME="$(grep "vpn""$i""_countryname" "$SCRIPT_CONF" | cut -f2 -d"=")"
+		COUNTRYNAME="$(grep "vpn${i}_countryname" "$SCRIPT_CONF" | cut -f2 -d"=")"
 		[ -z "$COUNTRYNAME" ] && COUNTRYNAME="None"
-		CITYNAME="$(grep "vpn""$i""_cityname" "$SCRIPT_CONF" | cut -f2 -d"=")"
+		CITYNAME="$(grep "vpn${i}_cityname" "$SCRIPT_CONF" | cut -f2 -d"=")"
 		[ -z "$CITYNAME" ] && CITYNAME="None"
+		
+		if [ "$showload" = "true" ]; then
+			SERVERLOAD="$(getServerLoad "$VPN_CLIENTDESC")"
+		fi
+		
 		printf "%s.    %s (%s, %s and %s)\\n" "$i" "$VPN_CLIENTDESC" "$MANAGEDSTATE" "$CONNECTSTATE" "$SCHEDULESTATE"
+		if [ "$showload" = "true" ]; then
+			printf "      Current server load: %s%%\\n" "$SERVERLOAD"
+		fi
 		printf "      Chosen country: %s - Preferred city: %s\\n\\n" "$COUNTRYNAME" "$CITYNAME"
 	done
 	printf "\\n"
@@ -750,104 +808,105 @@ UpdateVPNConfig(){
 		shift
 	fi
 	VPN_NO="$1"
-	VPN_PROVIDER="$(grep "vpn""$VPN_NO""_provider" "$SCRIPT_CONF" | cut -f2 -d"=")"
-	VPN_PROT_SHORT="$(grep "vpn""$VPN_NO""_protocol" "$SCRIPT_CONF" | cut -f2 -d"=")"
+	VPN_PROVIDER="$(grep "vpn${VPN_NO}_provider" "$SCRIPT_CONF" | cut -f2 -d"=")"
+	VPN_PROT_SHORT="$(grep "vpn${VPN_NO}_protocol" "$SCRIPT_CONF" | cut -f2 -d"=")"
 	VPN_PROT="openvpn_""$(echo "$VPN_PROT_SHORT" | tr "A-Z" "a-z")"
-	VPN_TYPE_SHORT="$(grep "vpn""$VPN_NO""_type" "$SCRIPT_CONF" | cut -f2 -d"=")"
+	VPN_TYPE_SHORT="$(grep "vpn${VPN_NO}_type" "$SCRIPT_CONF" | cut -f2 -d"=")"
 	VPN_TYPE=""
 	if [ "$VPN_TYPE_SHORT" = "Double" ]; then
 		VPN_TYPE="legacy_""$(echo "$VPN_TYPE_SHORT" | tr "A-Z" "a-z")""_vpn"
 	else
 		VPN_TYPE="legacy_""$(echo "$VPN_TYPE_SHORT" | tr "A-Z" "a-z")"
 	fi
-	VPN_COUNTRYID="$(grep "vpn""$VPN_NO""_countryid" "$SCRIPT_CONF" | cut -f2 -d"=")"
-	VPN_COUNTRYNAME="$(grep "vpn""$VPN_NO""_countryname" "$SCRIPT_CONF" | cut -f2 -d"=")"
-	VPN_CITYID="$(grep "vpn""$VPN_NO""_cityid" "$SCRIPT_CONF" | cut -f2 -d"=")"
-	VPN_CITYNAME="$(grep "vpn""$VPN_NO""_cityname" "$SCRIPT_CONF" | cut -f2 -d"=")"
+	VPN_COUNTRYID="$(grep "vpn${VPN_NO}_countryid" "$SCRIPT_CONF" | cut -f2 -d"=")"
+	VPN_COUNTRYNAME="$(grep "vpn${VPN_NO}_countryname" "$SCRIPT_CONF" | cut -f2 -d"=")"
+	VPN_CITYID="$(grep "vpn${VPN_NO}_cityid" "$SCRIPT_CONF" | cut -f2 -d"=")"
+	VPN_CITYNAME="$(grep "vpn${VPN_NO}_cityname" "$SCRIPT_CONF" | cut -f2 -d"=")"
 	vJSON=""
 	OVPNFILE=""
 	OVPN_ADDR=""
 	
 	if [ "$VPN_PROVIDER" = "NordVPN" ]; then
-		Print_Output "true" "Retrieving recommended VPN server using NordVPN API with below parameters" "$PASS"
+		Print_Output true "Retrieving recommended VPN server using NordVPN API with below parameters" "$PASS"
 		if [ "$VPN_COUNTRYID" = "0" ]; then
-			Print_Output "true" "Protocol: $VPN_PROT_SHORT - Type: $VPN_TYPE_SHORT" "$PASS"
+			Print_Output true "Protocol: $VPN_PROT_SHORT - Type: $VPN_TYPE_SHORT" "$PASS"
 			vJSON="$(getRecommendedServers "$VPN_TYPE" "$VPN_PROT" "$VPN_COUNTRYID")"
 		else
 			if [ "$VPN_CITYID" = "0" ]; then
-				Print_Output "true" "Protocol: $VPN_PROT_SHORT - Type: $VPN_TYPE_SHORT - Country: $VPN_COUNTRYNAME" "$PASS"
+				Print_Output true "Protocol: $VPN_PROT_SHORT - Type: $VPN_TYPE_SHORT - Country: $VPN_COUNTRYNAME" "$PASS"
 				vJSON="$(getRecommendedServers "$VPN_TYPE" "$VPN_PROT" "$VPN_COUNTRYID")"
 			else
-				Print_Output "true" "Protocol: $VPN_PROT_SHORT - Type: $VPN_TYPE_SHORT - Country: $VPN_COUNTRYNAME - City: $VPN_CITYNAME" "$PASS"
+				Print_Output true "Protocol: $VPN_PROT_SHORT - Type: $VPN_TYPE_SHORT - Country: $VPN_COUNTRYNAME - City: $VPN_CITYNAME" "$PASS"
 				vJSON="$(getServersforCity "$VPN_TYPE" "$VPN_PROT" "$VPN_COUNTRYID" "$VPN_CITYID")"
 				if [ -z "$vJSON" ]; then
-					Print_Output "true" "No VPN servers found for $VPN_CITYNAME, removing filter for city" "$WARN"
+					Print_Output true "No VPN servers found for $VPN_CITYNAME, removing filter for city" "$WARN"
 					vJSON="$(getRecommendedServers "$VPN_TYPE" "$VPN_PROT" "$VPN_COUNTRYID")"
 					if [ -z "$vJSON" ]; then
-						Print_Output "true" "No VPN servers found for $VPN_COUNTRYNAME, removing filter for country" "$WARN"
+						Print_Output true "No VPN servers found for $VPN_COUNTRYNAME, removing filter for country" "$WARN"
 						vJSON="$(getRecommendedServers "$VPN_TYPE" "$VPN_PROT" "0")"
 					fi
 				fi
 			fi
 		fi
 		
-		[ -z "$vJSON" ] && Print_Output "true" "Error contacting NordVPN API" "$ERR" && return 1
+		[ -z "$vJSON" ] && Print_Output true "Error contacting NordVPN API" "$ERR" && return 1
 		OVPN_HOSTNAME="$(getHostname "$vJSON")"
-		[ -z "$OVPN_HOSTNAME" ] && Print_Output "true" "Could not determine hostname for VPN server" "$ERR" && return 1
+		[ -z "$OVPN_HOSTNAME" ] && Print_Output true "Could not determine hostname for VPN server" "$ERR" && return 1
 		OVPNFILE="$OVPN_HOSTNAME.$(echo "$VPN_PROT" | cut -f2 -d"_").ovpn"
 		OVPN_DETAIL="$(getOVPNcontents "$OVPNFILE" "$(echo "$VPN_PROT" | cut -f2 -d"_")")"
 	elif [ "$VPN_PROVIDER" = "PIA" ]; then
-		OVPNARCHIVE="$OVPN_ARCHIVE_DIR/pia_""$(echo "$VPN_PROT" | cut -f2 -d"_")""_$(echo "$VPN_TYPE" | cut -f2 -d"_").zip"
+		OVPNARCHIVE="$OVPN_ARCHIVE_DIR/pia_$(echo "$VPN_PROT" | cut -f2 -d"_")_$(echo "$VPN_TYPE" | cut -f2 -d"_").zip"
 		OVPN_FILENAME="$(echo "$VPN_COUNTRYNAME" | sedReverseCountryCodesPIA)"
 		if [ -n "$VPN_CITYNAME" ]; then
-			OVPN_FILENAME="$OVPN_FILENAME $VPN_CITYNAME"
+			OVPN_FILENAME="${OVPN_FILENAME}_${VPN_CITYNAME}"
 		fi
+		OVPN_FILENAME="$(echo "$OVPN_FILENAME" | tr "A-Z" "a-z" | sed 's/ /_/g;')"
 		/opt/bin/7z e -bsp0 -bso0 "$OVPNARCHIVE" -o/tmp "$OVPN_FILENAME.ovpn"
 		OVPN_DETAIL="$(cat "/tmp/$OVPN_FILENAME.ovpn")"
 		rm -f "/tmp/$OVPN_FILENAME.ovpn"
 	elif [ "$VPN_PROVIDER" = "WeVPN" ]; then
-		OVPNARCHIVE="$OVPN_ARCHIVE_DIR/wevpn_""$(echo "$VPN_PROT" | cut -f2 -d"_")""_$(echo "$VPN_TYPE" | cut -f2 -d"_").zip"
-		OVPN_FILENAME="$(echo "$VPN_COUNTRYNAME" | sedReverseCountryCodesWeVPN)"'_'"$(echo "$VPN_CITYNAME" | tr "A-Z" "a-z")"'-'"$VPN_PROT_SHORT"
+		OVPNARCHIVE="$OVPN_ARCHIVE_DIR/wevpn_$(echo "$VPN_PROT" | cut -f2 -d"_")_$(echo "$VPN_TYPE" | cut -f2 -d"_").zip"
+		OVPN_FILENAME="$(echo "$VPN_COUNTRYNAME" | sedReverseCountryCodesWeVPN)"'_'"$(echo "$VPN_CITYNAME" | tr "A-Z" "a-z")-$VPN_PROT_SHORT"
 		/opt/bin/7z e -bsp0 -bso0 "$OVPNARCHIVE" -o/tmp "$OVPN_FILENAME.ovpn"
 		OVPN_DETAIL="$(cat "/tmp/$OVPN_FILENAME.ovpn")"
 		rm -f "/tmp/$OVPN_FILENAME.ovpn"
 	fi
 	
-	[ -z "$OVPN_DETAIL" ] && Print_Output "true" "Error retrieving VPN server ovpn file" "$ERR" && return 1
+	[ -z "$OVPN_DETAIL" ] && Print_Output true "Error retrieving VPN server ovpn file" "$ERR" && return 1
 	
 	OVPN_ADDR="$(getIP "$OVPN_DETAIL")"
-	[ -z "$OVPN_ADDR" ] && Print_Output "true" "Could not determine address for VPN server" "$ERR" && return 1
+	[ -z "$OVPN_ADDR" ] && Print_Output true "Could not determine address for VPN server" "$ERR" && return 1
 	OVPN_PORT="$(getPort "$OVPN_DETAIL")"
-	[ -z "$OVPN_PORT" ] && Print_Output "true" "Error determining port for VPN server" "$ERR" && return 1
+	[ -z "$OVPN_PORT" ] && Print_Output true "Error determining port for VPN server" "$ERR" && return 1
 	OVPN_CIPHER="$(getCipher "$OVPN_DETAIL")"
-	[ -z "$OVPN_CIPHER" ] && Print_Output "true" "Error determining cipher for VPN server" "$ERR" && return 1
+	[ -z "$OVPN_CIPHER" ] && Print_Output true "Error determining cipher for VPN server" "$ERR" && return 1
 	OVPN_AUTHDIGEST="$(getAuthDigest "$OVPN_DETAIL")"
-	[ -z "$OVPN_AUTHDIGEST" ] && Print_Output "true" "Error determining auth digest for VPN server" "$ERR" && return 1
+	[ -z "$OVPN_AUTHDIGEST" ] && Print_Output true "Error determining auth digest for VPN server" "$ERR" && return 1
 	CLIENT_CA="$(getClientCA "$OVPN_DETAIL")"
-	[ -z "$CLIENT_CA" ] && Print_Output "true" "Error determing VPN server Certificate Authority certificate" "$ERR" && return 1
+	[ -z "$CLIENT_CA" ] && Print_Output true "Error determing VPN server Certificate Authority certificate" "$ERR" && return 1
 	
 	STATIC_KEY=""
 	if [ "$VPN_PROVIDER" != "PIA" ]; then
 		STATIC_KEY="$(getStaticKey "$OVPN_DETAIL" "$VPN_PROVIDER")"
-		[ -z "$STATIC_KEY" ] && Print_Output "true" "Error determing VPN static key" "$ERR" && return 1
+		[ -z "$STATIC_KEY" ] && Print_Output true "Error determing VPN static key" "$ERR" && return 1
 	fi
 	
 	CLIENT_KEY=""
 	if [ "$VPN_PROVIDER" = "WeVPN" ]; then
 		CLIENT_KEY="$(getKey "$OVPN_DETAIL")"
-		[ -z "$CLIENT_KEY" ] && Print_Output "true" "Error determing VPN client key" "$ERR" && return 1
+		[ -z "$CLIENT_KEY" ] && Print_Output true "Error determing VPN client key" "$ERR" && return 1
 	fi
 	
 	CLIENT_CRT=""
 	if [ "$VPN_PROVIDER" = "WeVPN" ]; then
 		CLIENT_CRT="$(getClientCert "$OVPN_DETAIL")"
-		[ -z "$CLIENT_CRT" ] && Print_Output "true" "Error determing VPN client cert" "$ERR" && return 1
+		[ -z "$CLIENT_CRT" ] && Print_Output true "Error determing VPN client cert" "$ERR" && return 1
 	fi
 	
 	CLIENT_CRL=""
 	if [ "$VPN_PROVIDER" = "PIA" ]; then
 		CLIENT_CRL="$(getCRL "$OVPN_DETAIL")"
-		[ -z "$CLIENT_CRL" ] && Print_Output "true" "Error determing VPN client CRL" "$ERR" && return 1
+		[ -z "$CLIENT_CRL" ] && Print_Output true "Error determing VPN client CRL" "$ERR" && return 1
 	fi
 	
 	EXISTING_ADDR="$(nvram get vpn_client"$VPN_NO"_addr)"
@@ -862,15 +921,22 @@ UpdateVPNConfig(){
 	OVPN_HOSTNAME_SHORT=""
 	if [ "$VPN_PROVIDER" = "NordVPN" ]; then
 		OVPN_HOSTNAME_SHORT="$(echo "$OVPN_HOSTNAME" | cut -f1 -d'.' | tr "a-z" "A-Z")"
-	elif [ "$VPN_PROVIDER" = "PIA" ] || [ "$VPN_PROVIDER" = "WeVPN" ]; then
+	elif [ "$VPN_PROVIDER" = "PIA" ]; then
+		if echo "$OVPN_ADDR" | grep -q "-" ; then
+			OVPN_HOSTNAME_SHORT="$(echo "$OVPN_ADDR" | cut -f1 -d'.' | awk '{print toupper(substr($0,0,2))tolower(substr($0,3))}')"
+		else
+			OVPN_HOSTNAME_SHORT="$(echo "$OVPN_ADDR" | cut -f1 -d'.' | awk '{print toupper(substr($0,0,1))tolower(substr($0,2))}')"
+		fi
+	elif [ "$VPN_PROVIDER" = "WeVPN" ]; then
 		OVPN_HOSTNAME_SHORT="$(echo "$OVPN_ADDR" | cut -f1 -d'.' | awk '{print toupper(substr($0,0,1))tolower(substr($0,2))}')"
 	fi
 	
 	if [ "$OVPN_ADDR" = "$EXISTING_ADDR" ] && [ "$OVPN_PORT" = "$EXISTING_PORT" ] && [ "$VPN_PROT_SHORT" = "$EXISTING_PROTO" ]; then
-		Print_Output "true" "VPN client $VPN_NO server - unchanged" "$WARN"
+		Print_Output true "VPN client $VPN_NO server - unchanged" "$WARN"
+		return 1
 	fi
 	
-	Print_Output "true" "Updating VPN client $VPN_NO to $VPN_PROVIDER server" "$PASS"
+	Print_Output true "Updating VPN client $VPN_NO to $VPN_PROVIDER server" "$PASS"
 	
 	if [ -z "$(nvram get vpn_client"$VPN_NO"_addr)" ]; then
 		nvram set vpn_client"$VPN_NO"_adns="3"
@@ -972,17 +1038,43 @@ mssfix 1450"
 	
 	if [ "$ISUNATTENDED" = "true" ]; then
 		if [ -z "$(nvram get vpn_client"$VPN_NO"_username)" ]; then
-			Print_Output "true" "No username set for VPN client $VPN_NO" "$WARN"
+			Print_Output true "No username set for VPN client $VPN_NO" "$WARN"
 		fi
 		
 		if [ -z "$(nvram get vpn_client"$VPN_NO"_password)" ]; then
-			Print_Output "true" "No password set for VPN client $VPN_NO" "$WARN"
+			Print_Output true "No password set for VPN client $VPN_NO" "$WARN"
 		fi
 	else
+		if [ -n "$(nvram get vpn_client"$VPN_NO"_username)" ] && [ -n "$(nvram get vpn_client"$VPN_NO"_password)" ]; then
+			while true; do
+				printf "\\n\\e[1mDo you want to update the username and password for the VPN client? (y/n)\\e[0m\\n"
+				read -r confirm
+				case "$confirm" in
+					y|Y)
+						printf "Please enter username:    "
+						read -r vpnusn
+						nvram set vpn_client"$VPN_NO"_username="$vpnusn"
+						printf "\\n"
+						printf "Please enter password:    "
+						read -r vpnpwd
+						nvram set vpn_client"$VPN_NO"_password="$vpnpwd"
+						printf "\\n"
+						break
+					;;
+					n|N)
+						break
+					;;
+					*)
+						printf "\\n\\e[1mPlease enter a valid choice (y/n)\\e[0m\\n"
+					;;
+				esac
+			done
+		fi
+		
 		if [ -z "$(nvram get vpn_client"$VPN_NO"_username)" ]; then
 			printf "\\n\\e[1mNo username set for VPN client %s\\e[0m\\n" "$VPN_NO"
 			printf "Please enter username:    "
-			read -r "vpnusn"
+			read -r vpnusn
 			nvram set vpn_client"$VPN_NO"_username="$vpnusn"
 			printf "\\n"
 		fi
@@ -990,7 +1082,7 @@ mssfix 1450"
 		if [ -z "$(nvram get vpn_client"$VPN_NO"_password)" ]; then
 			printf "\\n\\e[1mNo password set for VPN client %s\\e[0m\\n" "$VPN_NO"
 			printf "Please enter password:    "
-			read -r "vpnpwd"
+			read -r vpnpwd
 			nvram set vpn_client"$VPN_NO"_password="$vpnpwd"
 			printf "\\n"
 		fi
@@ -1006,7 +1098,7 @@ mssfix 1450"
 		rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_crt
 	elif [ "$VPN_PROVIDER" = "PIA" ]; then
 		echo "$CLIENT_CA" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_ca
-		echo "$CLIENT_CRL" > vpn_crt_client"$VPN_NO"_crl
+		echo "$CLIENT_CRL" > /jffs/openvpn/vpn_crt_client"$VPN_NO"_crl
 		rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_static
 		rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_key
 		rm -f /jffs/openvpn/vpn_crt_client"$VPN_NO"_crt
@@ -1021,71 +1113,71 @@ mssfix 1450"
 	if nvram get vpn_clientx_eas | grep -q "$VPN_NO"; then
 		service restart_vpnclient"$VPN_NO" >/dev/null 2>&1
 	fi
-	Print_Output "true" "VPN client $VPN_NO updated successfully ($OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT)" "$PASS"
+	Print_Output true "VPN client $VPN_NO updated successfully ($OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT)" "$PASS"
 }
 
 ManageVPN(){
 	VPN_NO="$1"
 	
 	if [ -z "$(nvram get vpn_client"$VPN_NO"_username)" ] && [ -z "$(nvram get vpn_client"$VPN_NO"_password)" ]; then
-		Print_Output "false" "No username or password set for VPN client $VPN_NO, cannot enable management" "$ERR"
+		Print_Output false "No username or password set for VPN client $VPN_NO, cannot enable management" "$ERR"
 		return 1
 	fi
 	
-	if [ "$(grep "vpn""$VPN_NO""_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
+	if [ "$(grep "vpn${VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
 		printf "\\n"
-		Print_Output "false" "VPN client $VPN_NO is already managed by $SCRIPT_NAME" "$WARN"
-	elif [ "$(grep "vpn""$VPN_NO""_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
-		Print_Output "true" "Enabling management of VPN client $VPN_NO" "$PASS"
+		Print_Output false "VPN client $VPN_NO is already managed by $SCRIPT_NAME" "$WARN"
+	elif [ "$(grep "vpn${VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+		Print_Output true "Enabling management of VPN client $VPN_NO" "$PASS"
 		sed -i 's/^vpn'"$VPN_NO"'_managed.*$/vpn'"$VPN_NO"'_managed=true/' "$SCRIPT_CONF"
-		Print_Output "true" "Management of VPN client $VPN_NO successfully enabled" "$PASS"
+		Print_Output true "Management of VPN client $VPN_NO successfully enabled" "$PASS"
 	fi
 }
 
 UnmanageVPN(){
 	VPN_NO="$1"
 	
-	if [ "$(grep "vpn""$VPN_NO""_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
-		Print_Output "true" "Removing management of VPN client $VPN_NO" "$PASS"
+	if [ "$(grep "vpn${VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
+		Print_Output true "Removing management of VPN client $VPN_NO" "$PASS"
 		sed -i 's/^vpn'"$VPN_NO"'_managed.*$/vpn'"$VPN_NO"'_managed=false/' "$SCRIPT_CONF"
 		CancelScheduleVPN "$VPN_NO"
-		Print_Output "true" "Management of VPN client $VPN_NO successfully removed" "$PASS"
-	elif [ "$(grep "vpn""$VPN_NO""_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+		Print_Output true "Management of VPN client $VPN_NO successfully removed" "$PASS"
+	elif [ "$(grep "vpn${VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
 		printf "\\n"
-		Print_Output "false" "VPN client $VPN_NO is not managed by $SCRIPT_NAME" "$WARN"
+		Print_Output false "VPN client $VPN_NO is not managed by $SCRIPT_NAME" "$WARN"
 	fi
 }
 
 ScheduleVPN(){
 	VPN_NO="$1"
-	CRU_DAYNUMBERS="$(grep "vpn""$VPN_NO""_schdays" "$SCRIPT_CONF" | cut -f2 -d"=" | sed 's/Sun/0/;s/Mon/1/;s/Tues/2/;s/Wed/3/;s/Thurs/4/;s/Fri/5/;s/Sat/6/;')"
-	CRU_HOURS="$(grep "vpn""$VPN_NO""_schhours" "$SCRIPT_CONF" | cut -f2 -d"=")"
-	CRU_MINUTES="$(grep "vpn""$VPN_NO""_schmins" "$SCRIPT_CONF" | cut -f2 -d"=")"
+	CRU_DAYNUMBERS="$(grep "vpn${VPN_NO}_schdays" "$SCRIPT_CONF" | cut -f2 -d"=" | sed 's/Sun/0/;s/Mon/1/;s/Tues/2/;s/Wed/3/;s/Thurs/4/;s/Fri/5/;s/Sat/6/;')"
+	CRU_HOURS="$(grep "vpn${VPN_NO}_schhours" "$SCRIPT_CONF" | cut -f2 -d"=")"
+	CRU_MINUTES="$(grep "vpn${VPN_NO}_schmins" "$SCRIPT_CONF" | cut -f2 -d"=")"
 	
-	Print_Output "true" "Configuring scheduled update for VPN client $VPN_NO" "$PASS"
+	Print_Output true "Configuring scheduled update for VPN client $VPN_NO" "$PASS"
 	
 	if cru l | grep -q "$SCRIPT_NAME$VPN_NO"; then
-		cru d "$SCRIPT_NAME""_VPN""$VPN_NO"
+		cru d "${SCRIPT_NAME}_VPN${VPN_NO}"
 	fi
 	
-	cru a "$SCRIPT_NAME""_VPN""$VPN_NO" "$CRU_MINUTES $CRU_HOURS * * $CRU_DAYNUMBERS /jffs/scripts/$SCRIPT_NAME updatevpn $VPN_NO"
+	cru a "${SCRIPT_NAME}_VPN${VPN_NO}" "$CRU_MINUTES $CRU_HOURS * * $CRU_DAYNUMBERS /jffs/scripts/$SCRIPT_NAME updatevpn $VPN_NO"
 	
 	if [ -f /jffs/scripts/services-start ]; then
-		sed -i "/$SCRIPT_NAME""_VPN""$VPN_NO/d" /jffs/scripts/services-start
-		echo "cru a $SCRIPT_NAME""_VPN""$VPN_NO \"$CRU_MINUTES $CRU_HOURS * * $CRU_DAYNUMBERS /jffs/scripts/$SCRIPT_NAME updatevpn $VPN_NO\" # $SCRIPT_NAME" >> /jffs/scripts/services-start
+		sed -i "/${SCRIPT_NAME}_VPN${VPN_NO}/d" /jffs/scripts/services-start
+		echo "cru a ${SCRIPT_NAME}_VPN${VPN_NO} \"$CRU_MINUTES $CRU_HOURS * * $CRU_DAYNUMBERS /jffs/scripts/$SCRIPT_NAME updatevpn $VPN_NO\" # $SCRIPT_NAME" >> /jffs/scripts/services-start
 	else
 		echo "#!/bin/sh" >> /jffs/scripts/services-start
-		echo "cru a $SCRIPT_NAME""_VPN""$VPN_NO \"$CRU_MINUTES $CRU_HOURS * * $CRU_DAYNUMBERS /jffs/scripts/$SCRIPT_NAME updatevpn $VPN_NO\" # $SCRIPT_NAME" >> /jffs/scripts/services-start
+		echo "cru a ${SCRIPT_NAME}_VPN${VPN_NO} \"$CRU_MINUTES $CRU_HOURS * * $CRU_DAYNUMBERS /jffs/scripts/$SCRIPT_NAME updatevpn $VPN_NO\" # $SCRIPT_NAME" >> /jffs/scripts/services-start
 		chmod 755 /jffs/scripts/services-start
 	fi
 	
-	Print_Output "true" "Scheduled update created for VPN client $VPN_NO" "$PASS"
+	Print_Output true "Scheduled update created for VPN client $VPN_NO" "$PASS"
 }
 
 CancelScheduleVPN(){
 	VPN_NO="$1"
 	SCHEDULESTATE=""
-	if ! cru l | grep -q "#$SCRIPT_NAME""_VPN""$VPN_NO#"; then
+	if ! cru l | grep -q "#${SCRIPT_NAME}_VPN${VPN_NO}#"; then
 		SCHEDULESTATE="Unscheduled"
 	else
 		SCHEDULESTATE="Scheduled"
@@ -1093,28 +1185,23 @@ CancelScheduleVPN(){
 	
 	sed -i 's/^vpn'"$VPN_NO"'_schenabled.*$/vpn'"$VPN_NO"'_schenabled=false/' "$SCRIPT_CONF"
 	
-	if [ "$SCHEDULESTATE" = "Scheduled" ]; then
-		Print_Output "true" "Removing scheduled update for VPN client $VPN_NO" "$PASS"
+	Print_Output true "Removing scheduled update for VPN client $VPN_NO" "$PASS"
 		
-		if cru l | grep -q "$SCRIPT_NAME""_VPN""$VPN_NO"; then
-			cru d "$SCRIPT_NAME""_VPN""$VPN_NO"
-		fi
-		
-		if grep -q "$SCRIPT_NAME""_VPN""$VPN_NO" /jffs/scripts/services-start; then
-			sed -i "/$SCRIPT_NAME""_VPN""$VPN_NO/d" /jffs/scripts/services-start
-		fi
-		
-		Print_Output "true" "Scheduled update cancelled for VPN client $VPN_NO" "$PASS"
-	else
-		printf "\\n"
-		Print_Output "false" "No schedule to cancel for VPN client $VPN_NO" "$WARN"
+	if cru l | grep -q "${SCRIPT_NAME}_VPN${VPN_NO}"; then
+		cru d "${SCRIPT_NAME}_VPN${VPN_NO}"
 	fi
+	
+	if grep -q "${SCRIPT_NAME}_VPN${VPN_NO}" /jffs/scripts/services-start; then
+		sed -i "/$SCRIPT_NAME""_VPN""$VPN_NO/d" /jffs/scripts/services-start
+	fi
+	
+	Print_Output true "Scheduled update cancelled for VPN client $VPN_NO" "$PASS"
 }
 
-Shortcut_vpnmgr(){
+Shortcut_Script(){
 	case $1 in
 		create)
-			if [ -d "/opt/bin" ] && [ ! -f "/opt/bin/$SCRIPT_NAME" ] && [ -f "/jffs/scripts/$SCRIPT_NAME" ]; then
+			if [ -d /opt/bin ] && [ ! -f "/opt/bin/$SCRIPT_NAME" ] && [ -f "/jffs/scripts/$SCRIPT_NAME" ]; then
 				ln -s /jffs/scripts/"$SCRIPT_NAME" /opt/bin
 				chmod 0755 /opt/bin/"$SCRIPT_NAME"
 			fi
@@ -1129,7 +1216,7 @@ Shortcut_vpnmgr(){
 
 SetVPNClient(){
 	ScriptHeader
-	ListVPNClients
+	ListVPNClients "false"
 	printf "Choose options as follows:\\n"
 	printf "    - VPN client [1-5]\\n"
 	printf "\\n"
@@ -1140,12 +1227,12 @@ SetVPNClient(){
 	
 	while true; do
 		printf "\\n\\e[1mPlease enter the VPN client number (1-5):\\e[0m    "
-		read -r "vpn_choice"
+		read -r vpn_choice
 		
 		if [ "$vpn_choice" = "e" ]; then
 			exitmenu="exit"
 			break
-		elif ! Validate_Number "" "$vpn_choice" "silent"; then
+		elif ! Validate_Number "" "$vpn_choice" silent; then
 			printf "\\n\\e[31mPlease enter a valid number (1-5)\\e[0m\\n"
 		else
 			if [ "$vpn_choice" -lt 1 ] || [ "$vpn_choice" -gt 5 ]; then
@@ -1163,7 +1250,7 @@ SetVPNClient(){
 		return 0
 	else
 		printf "\\n"
-		Print_Output "false" "VPN client selection cancelled" "$WARN"
+		Print_Output false "VPN client selection cancelled" "$WARN"
 		return 1
 	fi
 }
@@ -1184,12 +1271,12 @@ SetVPNParameters(){
 	
 	while true; do
 		printf "\\n\\e[1mPlease enter the VPN client number (1-5):\\e[0m    "
-		read -r "vpn_choice"
+		read -r vpn_choice
 		
 		if [ "$vpn_choice" = "e" ]; then
 			exitmenu="exit"
 			break
-		elif ! Validate_Number "" "$vpn_choice" "silent"; then
+		elif ! Validate_Number "" "$vpn_choice" silent; then
 			printf "\\n\\e[31mPlease enter a valid number (1-5)\\e[0m\\n"
 		else
 			if [ "$vpn_choice" -lt 1 ] || [ "$vpn_choice" -gt 5 ]; then
@@ -1209,7 +1296,7 @@ SetVPNParameters(){
 			printf "    2. Private Internet Access (PIA)\\n"
 			printf "    3. WeVPN\\n\\n"
 			printf "Choose an option:    "
-			read -r "provmenu"
+			read -r provmenu
 			
 			case "$provmenu" in
 				1)
@@ -1246,7 +1333,7 @@ SetVPNParameters(){
 				printf "    2. Double\\n"
 				printf "    3. P2P\\n\\n"
 				printf "Choose an option:    "
-				read -r "typemenu"
+				read -r typemenu
 				
 				case "$typemenu" in
 					1)
@@ -1279,7 +1366,7 @@ SetVPNParameters(){
 				printf "    1. Standard\\n"
 				printf "    2. Strong\\n\\n"
 				printf "Choose an option:    "
-				read -r "typemenu"
+				read -r typemenu
 				
 				case "$typemenu" in
 					1)
@@ -1312,7 +1399,7 @@ SetVPNParameters(){
 			printf "    1. UDP\\n"
 			printf "    2. TCP\\n\\n"
 			printf "Choose an option:    "
-			read -r "protmenu"
+			read -r protmenu
 			
 			case "$protmenu" in
 				1)
@@ -1340,7 +1427,7 @@ SetVPNParameters(){
 			if [ "$vpnprovider" = "NordVPN" ]; then
 				while true; do
 					printf "\\n\\e[1mWould you like to select a country (y/n)?\\e[0m    "
-					read -r "country_select"
+					read -r country_select
 					
 					if [ "$country_select" = "e" ]; then
 						exitmenu="exit"
@@ -1364,16 +1451,16 @@ SetVPNParameters(){
 			LISTCOUNTRIES=""
 			if [ "$vpnprovider" = "NordVPN" ]; then
 				countrydata="$(cat "$SCRIPT_DIR/nordvpn_countrydata")"
-				[ -z "$countrydata" ] && Print_Output "true" "Error, country data from NordVPN is missing" "$ERR" && return 1
-				LISTCOUNTRIES="$(getCountryNames "NordVPN" "$countrydata")"
+				[ -z "$countrydata" ] && Print_Output true "Error, country data from NordVPN is missing" "$ERR" && return 1
+				LISTCOUNTRIES="$(getCountryNames NordVPN "$countrydata")"
 			elif [ "$vpnprovider" = "PIA" ]; then
 				countrydata="$(cat "$SCRIPT_DIR/pia_countrydata")"
-				[ -z "$countrydata" ] && Print_Output "true" "Error, country data from PIA is missing" "$ERR" && return 1
-				LISTCOUNTRIES="$(getCountryNames "PIA" "$countrydata")"
+				[ -z "$countrydata" ] && Print_Output true "Error, country data from PIA is missing" "$ERR" && return 1
+				LISTCOUNTRIES="$(getCountryNames PIA "$countrydata")"
 			elif [ "$vpnprovider" = "WeVPN" ]; then
 				countrydata="$(cat "$SCRIPT_DIR/wevpn_countrydata")"
-				[ -z "$countrydata" ] && Print_Output "true" "Error, country data from WeVPN is missing" "$ERR" && return 1
-				LISTCOUNTRIES="$(getCountryNames "WeVPN" "$countrydata")"
+				[ -z "$countrydata" ] && Print_Output true "Error, country data from WeVPN is missing" "$ERR" && return 1
+				LISTCOUNTRIES="$(getCountryNames WeVPN "$countrydata")"
 			fi
 			COUNTCOUNTRIES="$(echo "$LISTCOUNTRIES" | wc -l)"
 			while true; do
@@ -1390,12 +1477,12 @@ SetVPNParameters(){
 				unset IFS
 				
 				printf "\\nChoose an option:    "
-				read -r "country_choice"
+				read -r country_choice
 				
 				if [ "$country_choice" = "e" ]; then
 					exitmenu="exit"
 					break
-				elif ! Validate_Number "" "$country_choice" "silent"; then
+				elif ! Validate_Number "" "$country_choice" silent; then
 					printf "\\n\\e[31mPlease enter a valid number (1-%s)\\e[0m\\n" "$COUNTCOUNTRIES"
 				else
 					if [ "$country_choice" -lt 1 ] || [ "$country_choice" -gt "$COUNTCOUNTRIES" ]; then
@@ -1414,31 +1501,31 @@ SetVPNParameters(){
 			if [ "$exitmenu" != "exit" ]; then
 				citycount=0
 				if [ "$vpnprovider" = "NordVPN" ]; then
-					citycount="$(getCityCount "NordVPN" "$countrydata" "$countryname")"
+					citycount="$(getCityCount NordVPN "$countrydata" "$countryname")"
 				elif [ "$vpnprovider" = "PIA" ]; then
 					countrydata="$(cat "$SCRIPT_DIR/pia_countrydata")"
-					citycount="$(getCityCount "PIA" "$countrydata" "$countryname")"
+					citycount="$(getCityCount PIA "$countrydata" "$countryname")"
 				elif [ "$vpnprovider" = "WeVPN" ]; then
 					countrydata="$(cat "$SCRIPT_DIR/wevpn_countrydata")"
-					citycount="$(getCityCount "WeVPN" "$countrydata" "$countryname")"
+					citycount="$(getCityCount WeVPN "$countrydata" "$countryname")"
 				fi
 				
-				if [ "$citycount" -eq "1" ]; then
+				if [ "$citycount" -eq 1 ]; then
 					if [ "$vpnprovider" = "NordVPN" ]; then
-						cityname="$(getCityNames "NordVPN" "$countrydata" "$countryname")"
+						cityname="$(getCityNames NordVPN "$countrydata" "$countryname")"
 						cityid="$(getCityID "$countrydata" "$countryname" "$cityname")"
 					elif [ "$vpnprovider" = "PIA" ]; then
 						countrydata="$(cat "$SCRIPT_DIR/pia_countrydata")"
-						cityname="$(getCityNames "PIA" "$countrydata" "$countryname")"
+						cityname="$(getCityNames PIA "$countrydata" "$countryname")"
 					elif [ "$vpnprovider" = "WeVPN" ]; then
 						countrydata="$(cat "$SCRIPT_DIR/wevpn_countrydata")"
-						cityname="$(getCityNames "WeVPN" "$countrydata" "$countryname")"
+						cityname="$(getCityNames WeVPN "$countrydata" "$countryname")"
 					fi
-				elif [ "$citycount" -gt "1" ]; then
+				elif [ "$citycount" -gt 1 ]; then
 					if [ "$vpnprovider" = "NordVPN" ]; then
 						while true; do
 							printf "\\n\\e[1mWould you like to select a city (y/n)?\\e[0m    "
-							read -r "city_select"
+							read -r city_select
 							
 							if [ "$city_select" = "e" ]; then
 								exitmenu="exit"
@@ -1463,13 +1550,13 @@ SetVPNParameters(){
 				LISTCITIES=""
 				
 				if [ "$vpnprovider" = "NordVPN" ]; then
-					LISTCITIES="$(getCityNames "NordVPN" "$countrydata" "$countryname")"
+					LISTCITIES="$(getCityNames NordVPN "$countrydata" "$countryname")"
 				elif [ "$vpnprovider" = "PIA" ]; then
 					countrydata="$(cat "$SCRIPT_DIR/pia_countrydata")"
-					LISTCITIES="$(getCityNames "PIA" "$countrydata" "$countryname")"
+					LISTCITIES="$(getCityNames PIA "$countrydata" "$countryname")"
 				elif [ "$vpnprovider" = "WeVPN" ]; then
 					countrydata="$(cat "$SCRIPT_DIR/wevpn_countrydata")"
-					LISTCITIES="$(getCityNames "WeVPN" "$countrydata" "$countryname")"
+					LISTCITIES="$(getCityNames WeVPN "$countrydata" "$countryname")"
 				fi
 				
 				COUNTCITIES="$(echo "$LISTCITIES" | wc -l)"
@@ -1479,18 +1566,18 @@ SetVPNParameters(){
 					#shellcheck disable=SC2039
 					IFS=$'\n'
 					for CITY in $LISTCITIES; do
-						printf "    %s. %s\\n" "$COUNTER" "$(echo "$CITY" | awk '{print toupper(substr($0,0,1))tolower(substr($0,2))}')"
+						printf "    %s. %s\\n" "$COUNTER" "$CITY"
 						COUNTER=$((COUNTER+1))
 					done
 					unset IFS
 					
 					printf "\\nChoose an option:    "
-					read -r "city_choice"
+					read -r city_choice
 					
 					if [ "$city_choice" = "e" ]; then
 						exitmenu="exit"
 						break
-					elif ! Validate_Number "" "$city_choice" "silent"; then
+					elif ! Validate_Number "" "$city_choice" silent; then
 						printf "\\n\\e[31mPlease enter a valid number (1-%s)\\e[0m\\n" "$COUNTCITIES"
 					else
 						if [ "$city_choice" -lt 1 ] || [ "$city_choice" -gt "$COUNTCITIES" ]; then
@@ -1526,18 +1613,19 @@ SetVPNParameters(){
 SetScheduleParameters(){
 	exitmenu=""
 	vpnnum=""
+	formattype=""
 	crudays=""
 	cruhours=""
 	crumins=""
 	
 	while true; do
 		printf "\\n\\e[1mPlease enter the VPN client number (1-5):\\e[0m    "
-		read -r "vpn_choice"
+		read -r vpn_choice
 		
 		if [ "$vpn_choice" = "e" ]; then
 			exitmenu="exit"
 			break
-		elif ! Validate_Number "" "$vpn_choice" "silent"; then
+		elif ! Validate_Number "" "$vpn_choice" silent; then
 			printf "\\n\\e[31mPlease enter a valid number (1-5)\\e[0m\\n"
 		else
 			if [ "$vpn_choice" -lt 1 ] || [ "$vpn_choice" -gt 5 ]; then
@@ -1551,13 +1639,13 @@ SetScheduleParameters(){
 	done
 	
 	if [ "$exitmenu" != "exit" ]; then
-		if [ "$(grep "vpn""$vpnnum""_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
-			Print_Output "false" "VPN client $vpnnum is not managed, cannot enable schedule" "$ERR"
+		if [ "$(grep "vpn${vpnnum}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+			Print_Output false "VPN client $vpnnum is not managed, cannot enable schedule" "$ERR"
 			return 1
 		fi
 		while true; do
 			printf "\\n\\e[1mPlease choose which day(s) to update VPN configuration (0-6, * for every day, or comma separated days):\\e[0m    "
-			read -r "day_choice"
+			read -r day_choice
 			
 			if [ "$day_choice" = "e" ]; then
 				exitmenu="exit"
@@ -1566,11 +1654,13 @@ SetScheduleParameters(){
 				crudays="$day_choice"
 				printf "\\n"
 				break
+			elif [ -z "$day_choice" ]; then
+				printf "\\n\\e[31mPlease enter a valid number (0-6) or comma separated values\\e[0m\\n"
 			else
 				crudaystmp="$(echo "$day_choice" | sed "s/,/ /g")"
 				crudaysvalidated="true"
 				for i in $crudaystmp; do
-					if ! Validate_Number "" "$i" "silent"; then
+					if ! Validate_Number "" "$i" silent; then
 						printf "\\n\\e[31mPlease enter a valid number (0-6) or comma separated values\\e[0m\\n"
 						crudaysvalidated="false"
 						break
@@ -1590,79 +1680,194 @@ SetScheduleParameters(){
 			fi
 		done
 	fi
-		
+	
 	if [ "$exitmenu" != "exit" ]; then
 		while true; do
-			printf "\\n\\e[1mPlease choose which hour(s) to update VPN configuration (0-23, * for every hour, or comma separated hours):\\e[0m    "
-			read -r "hour_choice"
+			printf "\\n\\e[1mPlease choose the format to specify the hour/minute(s) to update VPN configuration:\\e[0m\\n"
+			printf "    1. Every X hours/minutes\\n"
+			printf "    2. Custom\\n\\n"
+			printf "Choose an option:    "
+			read -r formatmenu
 			
-			if [ "$hour_choice" = "e" ]; then
-				exitmenu="exit"
-				break
-			elif [ "$hour_choice" = "*" ]; then
-				cruhours="$hour_choice"
-				printf "\\n"
-				break
-			else
-				cruhourstmp="$(echo "$hour_choice" | sed "s/,/ /g")"
-				cruhoursvalidated="true"
-				for i in $cruhourstmp; do
-					if ! Validate_Number "" "$i" "silent"; then
-						printf "\\n\\e[31mPlease enter a valid number (0-23) or comma separated values\\e[0m\\n"
-						cruhoursvalidated="false"
-						break
-					else
-						if [ "$i" -lt 0 ] || [ "$i" -gt 23 ]; then
-							printf "\\n\\e[31mPlease enter a number between 0 and 23 or comma separated values\\e[0m\\n"
-							cruhoursvalidated="false"
-							break
-						fi
-					fi
-				done
-				if [ "$cruhoursvalidated" = "true" ]; then
-					cruhours="$hour_choice"
+			case "$formatmenu" in
+				1)
+					formattype="everyx"
 					printf "\\n"
 					break
-				fi
-			fi
+				;;
+				2)
+					formattype="custom"
+					printf "\\n"
+					break
+				;;
+				e)
+					exitmenu="exit"
+					break
+				;;
+				*)
+					printf "\\n\\e[31mPlease enter a valid choice (1-2)\\e[0m\\n"
+				;;
+			esac
 		done
 	fi
 	
 	if [ "$exitmenu" != "exit" ]; then
-		while true; do
-			printf "\\n\\e[1mPlease choose which minutes(s) to update VPN configuration (0-59, * for every minute, or comma separated minutes):\\e[0m    "
-			read -r "min_choice"
-			
-			if [ "$min_choice" = "e" ]; then
-				exitmenu="exit"
-				break
-			elif [ "$min_choice" = "*" ]; then
-				crumins="$min_choice"
-				printf "\\n"
-				break
-			else
-				cruminstmp="$(echo "$min_choice" | sed "s/,/ /g")"
-				cruminsvalidated="true"
-				for i in $cruminstmp; do
-					if ! Validate_Number "" "$i" "silent"; then
-						printf "\\n\\e[31mPlease enter a valid number (0-59) or comma separated values\\e[0m\\n"
-						cruminsvalidated="false"
+		if [ "$formattype" = "everyx" ]; then
+			while true; do
+				printf "\\n\\e[1mPlease choose whether to specify every X hours or every X minutes to update VPN configuration:\\e[0m\\n"
+				printf "    1. Hours\\n"
+				printf "    2. Minutes\\n\\n"
+				printf "Choose an option:    "
+				read -r formatmenu
+				
+				case "$formatmenu" in
+					1)
+						formattype="hours"
+						printf "\\n"
+						break
+					;;
+					2)
+						formattype="mins"
+						printf "\\n"
+						break
+					;;
+					e)
+						exitmenu="exit"
+						break
+					;;
+					*)
+						printf "\\n\\e[31mPlease enter a valid choice (1-2)\\e[0m\\n"
+					;;
+				esac
+			done
+		fi
+	fi
+	
+	if [ "$exitmenu" != "exit" ]; then
+		if [ "$formattype" = "hours" ]; then
+			while true; do
+				printf "\\n\\e[1mPlease choose how often to update VPN configuration (every X hours, where X is 1-24):\\e[0m    "
+				read -r hour_choice
+				
+				if [ "$hour_choice" = "e" ]; then
+					exitmenu="exit"
+					break
+				elif ! Validate_Number "" "$hour_choice" silent; then
+						printf "\\n\\e[31mPlease enter a valid number (1-24)\\e[0m\\n"
+				elif [ "$hour_choice" -lt 1 ] || [ "$hour_choice" -gt 24 ]; then
+					printf "\\n\\e[31mPlease enter a number between 1 and 24\\e[0m\\n"
+				else
+					if [ "$hour_choice" -eq 24 ]; then
+						cruhours="0"
+						crumins="0"
+						printf "\\n"
 						break
 					else
-						if [ "$i" -lt 0 ] || [ "$i" -gt 59 ]; then
-							printf "\\n\\e[31mPlease enter a number between 0 and 59 or comma separated values\\e[0m\\n"
-							cruminsvalidated="false"
-							break
-						fi
+						cruhours="*/$hour_choice"
+						crumins="0"
+						printf "\\n"
+						break
 					fi
-				done
-				if [ "$cruminsvalidated" = "true" ]; then
-					crumins="$min_choice"
+				fi
+			done
+		elif [ "$formattype" = "mins" ]; then
+			while true; do
+				printf "\\n\\e[1mPlease choose how often to update VPN configuration (every X minutes, where X is 1-30):\\e[0m    "
+				read -r min_choice
+				
+				if [ "$min_choice" = "e" ]; then
+					exitmenu="exit"
+					break
+				elif ! Validate_Number "" "$min_choice" silent; then
+						printf "\\n\\e[31mPlease enter a valid number (1-30)\\e[0m\\n"
+				elif [ "$min_choice" -lt 1 ] || [ "$min_choice" -gt 30 ]; then
+					printf "\\n\\e[31mPlease enter a number between 1 and 30\\e[0m\\n"
+				else
+					crumins="*/$min_choice"
+					cruhours="*"
 					printf "\\n"
 					break
 				fi
-			fi
-		done
+			done
+		fi
+	fi
+	
+	if [ "$exitmenu" != "exit" ]; then
+		if [ "$formattype" = "custom" ]; then
+			while true; do
+				printf "\\n\\e[1mPlease choose which hour(s) to update VPN configuration (0-23, * for every hour, or comma separated hours):\\e[0m    "
+				read -r hour_choice
+				
+				if [ "$hour_choice" = "e" ]; then
+					exitmenu="exit"
+					break
+				elif [ "$hour_choice" = "*" ]; then
+					cruhours="$hour_choice"
+					printf "\\n"
+					break
+				else
+					cruhourstmp="$(echo "$hour_choice" | sed "s/,/ /g")"
+					cruhoursvalidated="true"
+					for i in $cruhourstmp; do
+						if ! Validate_Number "" "$i" silent; then
+							printf "\\n\\e[31mPlease enter a valid number (0-23) or comma separated values\\e[0m\\n"
+							cruhoursvalidated="false"
+							break
+						else
+							if [ "$i" -lt 0 ] || [ "$i" -gt 23 ]; then
+								printf "\\n\\e[31mPlease enter a number between 0 and 23 or comma separated values\\e[0m\\n"
+								cruhoursvalidated="false"
+								break
+							fi
+						fi
+					done
+					if [ "$cruhoursvalidated" = "true" ]; then
+						cruhours="$hour_choice"
+						printf "\\n"
+						break
+					fi
+				fi
+			done
+		fi
+	fi
+	
+	if [ "$exitmenu" != "exit" ]; then
+		if [ "$formattype" = "custom" ]; then
+			while true; do
+				printf "\\n\\e[1mPlease choose which minutes(s) to update VPN configuration (0-59, * for every minute, or comma separated minutes):\\e[0m    "
+				read -r min_choice
+				
+				if [ "$min_choice" = "e" ]; then
+					exitmenu="exit"
+					break
+				elif [ "$min_choice" = "*" ]; then
+					crumins="$min_choice"
+					printf "\\n"
+					break
+				else
+					cruminstmp="$(echo "$min_choice" | sed "s/,/ /g")"
+					cruminsvalidated="true"
+					for i in $cruminstmp; do
+						if ! Validate_Number "" "$i" silent; then
+							printf "\\n\\e[31mPlease enter a valid number (0-59) or comma separated values\\e[0m\\n"
+							cruminsvalidated="false"
+							break
+						else
+							if [ "$i" -lt 0 ] || [ "$i" -gt 59 ]; then
+								printf "\\n\\e[31mPlease enter a number between 0 and 59 or comma separated values\\e[0m\\n"
+								cruminsvalidated="false"
+								break
+							fi
+						fi
+					done
+					if [ "$cruminsvalidated" = "true" ]; then
+						crumins="$min_choice"
+						printf "\\n"
+						break
+					fi
+				fi
+			done
+		fi
 	fi
 	
 	if [ "$exitmenu" != "exit" ]; then
@@ -1679,7 +1884,7 @@ SetScheduleParameters(){
 PressEnter(){
 	while true; do
 		printf "Press enter to continue..."
-		read -r "key"
+		read -r key
 		case "$key" in
 			*)
 				break
@@ -1710,7 +1915,8 @@ ScriptHeader(){
 }
 
 MainMenu(){
-	printf "1.    List VPN client configurations\\n\\n"
+	printf "1.    List VPN client configurations\\n"
+	printf "1l.   List NordVPN clients with server load percentages\\n\\n"
 	printf "2.    Update configuration for a managed VPN client\\n\\n"
 	printf "3.    Enable management for a VPN client\\n"
 	printf "4.    Disable management for a VPN client\\n\\n"
@@ -1729,11 +1935,17 @@ MainMenu(){
 	
 	while true; do
 		printf "Choose an option:    "
-		read -r "menu"
+		read -r menu
 		case "$menu" in
 			1)
 				printf "\\n"
 				Menu_ListVPN
+				PressEnter
+				break
+			;;
+			1l)
+				printf "\\n"
+				Menu_ListVPN_WithLoad
 				PressEnter
 				break
 			;;
@@ -1814,7 +2026,7 @@ MainMenu(){
 			z)
 				while true; do
 					printf "\\n\\e[1mAre you sure you want to uninstall %s? (y/n)\\e[0m\\n" "$SCRIPT_NAME"
-					read -r "confirm"
+					read -r confirm
 					case "$confirm" in
 						y|Y)
 							Menu_Uninstall
@@ -1838,12 +2050,17 @@ MainMenu(){
 
 Menu_ListVPN(){
 	ScriptHeader
-	ListVPNClients
+	ListVPNClients "false"
+}
+
+Menu_ListVPN_WithLoad(){
+	ScriptHeader
+	ListVPNClients "true"
 }
 
 Menu_UpdateVPN(){
 	ScriptHeader
-	ListVPNClients
+	ListVPNClients "false"
 	printf "Choose options as follows:\\n"
 	printf "    - VPN client [1-5]\\n"
 	printf "    - VPN provider (pick from list)\\n"
@@ -1868,26 +2085,26 @@ Menu_UpdateVPN(){
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_protocol.*$/vpn'"$GLOBAL_VPN_NO"'_protocol='"$VPN_PROT_SHORT"'/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_countryname.*$/vpn'"$GLOBAL_VPN_NO"'_countryname='"$GLOBAL_COUNTRY_NAME"'/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_countryid.*$/vpn'"$GLOBAL_VPN_NO"'_countryid='"$GLOBAL_COUNTRY_ID"'/' "$SCRIPT_CONF"
-		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_cityname.*$/vpn'"$GLOBAL_VPN_NO"'_cityname='"$( echo "$GLOBAL_CITY_NAME" | awk '{print toupper(substr($0,0,1))tolower(substr($0,2))}')"'/' "$SCRIPT_CONF"
+		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_cityname.*$/vpn'"$GLOBAL_VPN_NO"'_cityname='"$GLOBAL_CITY_NAME"'/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_cityid.*$/vpn'"$GLOBAL_VPN_NO"'_cityid='"$GLOBAL_CTIY_ID"'/' "$SCRIPT_CONF"
 		UpdateVPNConfig "$GLOBAL_VPN_NO"
 	else
 		printf "\\n"
-		Print_Output "false" "VPN client update cancelled" "$WARN"
+		Print_Output false "VPN client update cancelled" "$WARN"
 	fi
 	Clear_Lock
 }
 
 Menu_SearchVPN(){
 	if SetVPNClient; then
-		if [ "$(grep "vpn""$GLOBAL_VPN_NO""_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
-			Print_Output "false" "VPN client $GLOBAL_VPN_NO is not managed, cannot search for new server" "$ERR"
+		if [ "$(grep "vpn${GLOBAL_VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+			Print_Output false "VPN client $GLOBAL_VPN_NO is not managed, cannot search for new server" "$ERR"
 			return 1
 		fi
-		UpdateVPNConfig "unattended" "$GLOBAL_VPN_NO"
+		UpdateVPNConfig unattended "$GLOBAL_VPN_NO"
 	else
 		printf "\\n"
-		Print_Output "false" "VPN server search cancelled" "$WARN"
+		Print_Output false "VPN server search cancelled" "$WARN"
 	fi
 	Clear_Lock
 }
@@ -1897,7 +2114,7 @@ Menu_ManageVPN(){
 		ManageVPN "$GLOBAL_VPN_NO"
 	else
 		printf "\\n"
-		Print_Output "false" "VPN client management enabling cancelled" "$WARN"
+		Print_Output false "VPN client management enabling cancelled" "$WARN"
 	fi
 }
 
@@ -1906,13 +2123,13 @@ Menu_UnmanageVPN(){
 		UnmanageVPN "$GLOBAL_VPN_NO"
 	else
 		printf "\\n"
-		Print_Output "false" "VPN client management removal cancelled" "$WARN"
+		Print_Output false "VPN client management removal cancelled" "$WARN"
 	fi
 }
 
 Menu_ScheduleVPN(){
 	ScriptHeader
-	ListVPNClients
+	ListVPNClients "false"
 	printf "Choose options as follows:\\n"
 	printf "    - VPN client [1-5]\\n"
 	printf "    - day(s) to update [0-6]\\n"
@@ -1925,19 +2142,19 @@ Menu_ScheduleVPN(){
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_managed.*$/vpn'"$GLOBAL_VPN_NO"'_managed=true/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_schenabled.*$/vpn'"$GLOBAL_VPN_NO"'_schenabled=true/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_schdays.*$/vpn'"$GLOBAL_VPN_NO"'_schdays='"$(echo "$GLOBAL_CRU_DAYNUMBERS" | sed 's/0/Sun/;s/1/Mon/;s/2/Tues/;s/3/Wed/;s/4/Thurs/;s/5/Fri/;s/6/Sat/;')"'/' "$SCRIPT_CONF"
-		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_schhours.*$/vpn'"$GLOBAL_VPN_NO"'_schhours='"$GLOBAL_CRU_HOURS"'/' "$SCRIPT_CONF"
-		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_schmins.*$/vpn'"$GLOBAL_VPN_NO"'_schmins='"$GLOBAL_CRU_MINS"'/' "$SCRIPT_CONF"
+		sed -i 's~^vpn'"$GLOBAL_VPN_NO"'_schhours.*$~vpn'"$GLOBAL_VPN_NO"'_schhours='"$GLOBAL_CRU_HOURS"'~' "$SCRIPT_CONF"
+		sed -i 's~^vpn'"$GLOBAL_VPN_NO"'_schmins.*$~vpn'"$GLOBAL_VPN_NO"'_schmins='"$GLOBAL_CRU_MINS"'~' "$SCRIPT_CONF"
 		ScheduleVPN "$GLOBAL_VPN_NO"
 	else
 		printf "\\n"
-		Print_Output "false" "VPN client update scheduling cancelled" "$WARN"
+		Print_Output false "VPN client update scheduling cancelled" "$WARN"
 	fi
 }
 
 Menu_EnableScheduleVPN(){
 	if SetVPNClient; then
-		if [ "$(grep "vpn""$GLOBAL_VPN_NO""_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
-			Print_Output "false" "VPN client $GLOBAL_VPN_NO is not managed, cannot enable schedule" "$ERR"
+		if [ "$(grep "vpn${GLOBAL_VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+			Print_Output false "VPN client $GLOBAL_VPN_NO is not managed, cannot enable schedule" "$ERR"
 			return 1
 		fi
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_managed.*$/vpn'"$GLOBAL_VPN_NO"'_managed=true/' "$SCRIPT_CONF"
@@ -1945,20 +2162,20 @@ Menu_EnableScheduleVPN(){
 		ScheduleVPN "$GLOBAL_VPN_NO"
 	else
 		printf "\\n"
-		Print_Output "false" "VPN client schedule enabling cancelled" "$WARN"
+		Print_Output false "VPN client schedule enabling cancelled" "$WARN"
 	fi
 }
 
 Menu_CancelScheduleVPN(){
 	if SetVPNClient; then
-		if [ "$(grep "vpn""$GLOBAL_VPN_NO""_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
-			Print_Output "false" "VPN client $GLOBAL_VPN_NO is not managed, cannot cancel schedule" "$ERR"
+		if [ "$(grep "vpn${GLOBAL_VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+			Print_Output false "VPN client $GLOBAL_VPN_NO is not managed, cannot cancel schedule" "$ERR"
 			return 1
 		fi
 		CancelScheduleVPN "$GLOBAL_VPN_NO"
 	else
 		printf "\\n"
-		Print_Output "false" "VPN client schedule cancellation cancelled" "$WARN"
+		Print_Output false "VPN client schedule cancellation cancelled" "$WARN"
 	fi
 }
 
@@ -1968,22 +2185,22 @@ Check_Requirements(){
 	if [ "$(nvram get jffs2_scripts)" -ne 1 ]; then
 		nvram set jffs2_scripts=1
 		nvram commit
-		Print_Output "true" "Custom JFFS Scripts enabled" "$WARN"
+		Print_Output true "Custom JFFS Scripts enabled" "$WARN"
 	fi
 	
-	if [ ! -f "/opt/bin/opkg" ]; then
-		Print_Output "true" "Entware not detected!" "$ERR"
+	if [ ! -f /opt/bin/opkg ]; then
+		Print_Output true "Entware not detected!" "$ERR"
 		CHECKSFAILED="true"
 	fi
 	
-	if ! Firmware_Version_Check "install" ; then
-		Print_Output "true" "Unsupported firmware version detected" "$ERR"
-		Print_Output "true" "$SCRIPT_NAME requires Merlin 384.15/384.13_4 or Fork 43E5 (or later)" "$ERR"
+	if ! Firmware_Version_Check ; then
+		Print_Output true "Unsupported firmware version detected" "$ERR"
+		Print_Output true "$SCRIPT_NAME requires Merlin 384.15/384.13_4 or Fork 43E5 (or later)" "$ERR"
 		CHECKSFAILED="true"
 	fi
 	
 	if [ "$CHECKSFAILED" = "false" ]; then
-		Print_Output "true" "Installing required packages from Entware" "$PASS"
+		Print_Output true "Installing required packages from Entware" "$PASS"
 		opkg update
 		opkg install jq
 		opkg install p7zip
@@ -1995,21 +2212,19 @@ Check_Requirements(){
 }
 
 Menu_Install(){
-	Print_Output "true" "Welcome to $SCRIPT_NAME $SCRIPT_VERSION, a script by h0me5k1n and JackYaz"
+	Print_Output true "Welcome to $SCRIPT_NAME $SCRIPT_VERSION, a script by h0me5k1n and JackYaz"
 	sleep 1
 	
-	Print_Output "true" "Checking your router meets the requirements for $SCRIPT_NAME"
+	Print_Output true "Checking your router meets the requirements for $SCRIPT_NAME"
 	
 	if ! Check_Requirements; then
-		Print_Output "true" "Requirements for $SCRIPT_NAME not met, please see above for the reason(s)" "$CRIT"
+		Print_Output true "Requirements for $SCRIPT_NAME not met, please see above for the reason(s)" "$CRIT"
 		PressEnter
 		Clear_Lock
 		rm -f "/jffs/scripts/$SCRIPT_NAME" 2>/dev/null
 		exit 1
 	fi
 	
-	Process_Upgrade
-	
 	Create_Dirs
 	Conf_Exists
 	Create_Symlinks
@@ -2017,25 +2232,45 @@ Menu_Install(){
 	Auto_Startup create 2>/dev/null
 	Auto_ServiceEvent create 2>/dev/null
 	
-	Update_File "vpnmgr_www.asp"
-	Update_File "shared-jy.tar.gz"
+	Update_File vpnmgr_www.asp
+	Update_File shared-jy.tar.gz
 	
 	getCountryData
 	getOVPNArchives
 	
-	Shortcut_vpnmgr create
+	Shortcut_Script create
 	Clear_Lock
 }
 
 Menu_Startup(){
+	if [ -z "$1" ]; then
+		Print_Output true "Missing argument for startup, not starting $SCRIPT_NAME" "$WARN"
+		exit 1
+	elif [ "$1" != "force" ]; then
+		if [ ! -f "$1/entware/bin/opkg" ]; then
+			Print_Output true "$1 does not contain Entware, not starting $SCRIPT_NAME" "$WARN"
+			exit 1
+		else
+			Print_Output true "$1 contains Entware, starting $SCRIPT_NAME" "$WARN"
+		fi
+	fi
+	
+	NTP_Ready
+	
+	Check_Lock
+	
+	if [ "$1" != "force" ]; then
+		sleep 25
+	fi
+	
 	Create_Dirs
 	Conf_Exists
-	Set_Version_Custom_Settings "local"
+	Set_Version_Custom_Settings local
 	Create_Symlinks
 	Auto_Cron create 2>/dev/null
 	Auto_Startup create 2>/dev/null
 	Auto_ServiceEvent create 2>/dev/null
-	Shortcut_vpnmgr create
+	Shortcut_Script create
 	Mount_WebUI
 	Clear_Lock
 }
@@ -2051,7 +2286,7 @@ Menu_ForceUpdate(){
 }
 
 Menu_Uninstall(){
-	Print_Output "true" "Removing $SCRIPT_NAME..." "$PASS"
+	Print_Output true "Removing $SCRIPT_NAME..." "$PASS"
 	
 	Auto_Cron delete 2>/dev/null
 	Auto_Startup delete 2>/dev/null
@@ -2060,35 +2295,30 @@ Menu_Uninstall(){
 	rm -rf "$SCRIPT_WEB_DIR" 2>/dev/null
 	rm -rf "$SCRIPT_DIR" 2>/dev/null
 	
-	Shortcut_vpnmgr delete
+	Shortcut_Script delete
 	
 	rm -f "/jffs/scripts/$SCRIPT_NAME" 2>/dev/null
 	Clear_Lock
-	Print_Output "true" "Uninstall completed" "$PASS"
+	Print_Output true "Uninstall completed" "$PASS"
 }
 
 NTP_Ready(){
-	if [ "$1" = "service_event" ]; then
-		if [ -n "$2" ] && [ "$(echo "$3" | grep -c "$SCRIPT_NAME")" -eq 0 ]; then
-			exit 0
-		fi
-	fi
-	if [ "$(nvram get ntp_ready)" = "0" ]; then
+	if [ "$(nvram get ntp_ready)" -eq 0 ]; then
 		ntpwaitcount="0"
 		Check_Lock
-		while [ "$(nvram get ntp_ready)" = "0" ] && [ "$ntpwaitcount" -lt "300" ]; do
+		while [ "$(nvram get ntp_ready)" -eq 0 ] && [ "$ntpwaitcount" -lt 300 ]; do
 			ntpwaitcount="$((ntpwaitcount + 1))"
-			if [ "$ntpwaitcount" = "60" ]; then
-				Print_Output "true" "Waiting for NTP to sync..." "$WARN"
+			if [ "$ntpwaitcount" -eq 60 ]; then
+				Print_Output true "Waiting for NTP to sync..." "$WARN"
 			fi
 			sleep 1
 		done
-		if [ "$ntpwaitcount" -ge "300" ]; then
-			Print_Output "true" "NTP failed to sync after 5 minutes. Please resolve!" "$CRIT"
+		if [ "$ntpwaitcount" -ge 300 ]; then
+			Print_Output true "NTP failed to sync after 5 minutes. Please resolve!" "$CRIT"
 			Clear_Lock
 			exit 1
 		else
-			Print_Output "true" "NTP synced, $SCRIPT_NAME will now continue" "$PASS"
+			Print_Output true "NTP synced, $SCRIPT_NAME will now continue" "$PASS"
 			Clear_Lock
 		fi
 	fi
@@ -2096,77 +2326,45 @@ NTP_Ready(){
 
 ### function based on @Adamm00's Skynet USB wait function ###
 Entware_Ready(){
-	if [ "$1" = "service_event" ]; then
-		if [ -n "$2" ] && [ "$(echo "$3" | grep -c "$SCRIPT_NAME")" -eq 0 ]; then
-			exit 0
-		fi
-	fi
-	
-	if [ ! -f "/opt/bin/opkg" ] && ! echo "$@" | grep -wqE "(install|uninstall|update|forceupdate)"; then
+	if [ ! -f /opt/bin/opkg ]; then
 		Check_Lock
 		sleepcount=1
-		while [ ! -f "/opt/bin/opkg" ] && [ "$sleepcount" -le 10 ]; do
-			Print_Output "true" "Entware not found, sleeping for 10s (attempt $sleepcount of 10)" "$ERR"
+		while [ ! -f /opt/bin/opkg ] && [ "$sleepcount" -le 10 ]; do
+			Print_Output true "Entware not found, sleeping for 10s (attempt $sleepcount of 10)" "$ERR"
 			sleepcount="$((sleepcount + 1))"
 			sleep 10
 		done
-		if [ ! -f "/opt/bin/opkg" ]; then
-			Print_Output "true" "Entware not found and is required for $SCRIPT_NAME to run, please resolve" "$CRIT"
+		if [ ! -f /opt/bin/opkg ]; then
+			Print_Output true "Entware not found and is required for $SCRIPT_NAME to run, please resolve" "$CRIT"
 			Clear_Lock
 			exit 1
 		else
-			Print_Output "true" "Entware found, $SCRIPT_NAME will now continue" "$PASS"
+			Print_Output true "Entware found, $SCRIPT_NAME will now continue" "$PASS"
 			Clear_Lock
 		fi
 	fi
 }
 ### ###
 
-Process_Upgrade(){
-	if grep -q "^nvpnmgr" /jffs/addons/custom_settings.txt; then
-		sed -i "s/nvpnmgr/vpnmgr/g" /jffs/addons/custom_settings.txt
-	fi
-	if grep -q "nvpnmgr" "/var/spool/cron/crontabs/$USER"; then
-		sed -i "s/nvpnmgr/vpnmgr/g" "/var/spool/cron/crontabs/$USER"
-	fi
-	if [ -d /jffs/addons/nvpnmgr.d ]; then
-		mv /jffs/addons/nvpnmgr.d /jffs/addons/vpnmgr.d
-	fi
-	if [ -f /jffs/addons/vpnmgr.d/nvpnmgr_www.asp ]; then
-		rm -f /jffs/addons/vpnmgr.d/nvpnmgr_www.asp
-	fi
-	if [ -f /jffs/addons/vpnmgr.d/nvpncountrydata ]; then
-		rm -f /jffs/addons/vpnmgr.d/nvpncountrydata
-	fi
-	if [ -f /opt/bin/nvpnmgr ]; then
-		rm -f /opt/bin/nvpnmgr
-	fi
-	if [ -f /jffs/scripts/nvpnmgr ]; then
-		rm -f /jffs/scripts/nvpnmgr
-	fi
-}
-
-NTP_Ready "$@"
-Entware_Ready "$@"
-
 if [ -z "$1" ]; then
+	NTP_Ready
+	Entware_Ready
 	if [ ! -f /opt/bin/7z ]; then
 		opkg update
 		opkg install p7zip
 		opkg install column
 	fi
-	Process_Upgrade
 	Create_Dirs
 	Conf_Exists
-	Set_Version_Custom_Settings "local"
+	Set_Version_Custom_Settings local
 	Auto_Cron create 2>/dev/null
 	Auto_Startup create 2>/dev/null
 	Auto_ServiceEvent create 2>/dev/null
-	Shortcut_vpnmgr create
+	Shortcut_Script create
 	if [ ! -f "$SCRIPT_DIR/nordvpn_countrydata" ]; then
 		getCountryData
 	fi
-	if [ "$(/usr/bin/find "$OVPN_ARCHIVE_DIR" -name "*.zip" | wc -l)" -lt "4" ]; then
+	if [ "$(/usr/bin/find "$OVPN_ARCHIVE_DIR" -name "*.zip" | wc -l)" -lt 4 ]; then
 		getOVPNArchives
 	fi
 	
@@ -2183,102 +2381,102 @@ case "$1" in
 		exit 0
 	;;
 	updatevpn)
-		UpdateVPNConfig "unattended" "$2"
+		NTP_Ready
+		Entware_Ready
+		UpdateVPNConfig unattended "$2"
 		exit 0
 	;;
 	refreshcacheddata)
+		NTP_Ready
+		Entware_Ready
 		getCountryData
 		getOVPNArchives
 		exit 0
 	;;
 	startup)
-		Check_Lock
-		Print_Output "true" "Sleeping for 30s before running startup routine" ""
-		sleep 30
-		Menu_Startup
+		Menu_Startup "$2"
 		exit 0
 	;;
 	service_event)
 		if [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME" ]; then
-			Check_Lock
 			Conf_FromSettings
 			for i in 1 2 3 4 5; do
-				if [ "$(grep "vpn""$i""_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
+				if [ "$(grep "vpn${i}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
 					ManageVPN "$i"
-					if [ "$(grep "vpn""$i""_schenabled" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
+					if [ "$(grep "vpn${i}_schenabled" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
 						ScheduleVPN "$i"
-					elif [ "$(grep "vpn""$i""_schenabled" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+					elif [ "$(grep "vpn${i}_schenabled" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
 						CancelScheduleVPN "$i"
 					fi
-					UpdateVPNConfig "unattended" "$i"
-				elif [ "$(grep "vpn""$i""_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+					UpdateVPNConfig unattended "$i"
+				elif [ "$(grep "vpn${i}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
 					UnmanageVPN "$i"
 				fi
 			done
-			Clear_Lock
 			exit 0
-		elif [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME""refreshcacheddata" ]; then
+		elif [ "$2" = "start" ] && [ "$3" = "${SCRIPT_NAME}refreshcacheddata" ]; then
+			Check_Lock webui
+			echo 'var refreshcacheddatastatus = "InProgress";' > /tmp/detect_vpnmgr.js
+			sleep 1
 			getCountryData
+			sleep 1
 			getOVPNArchives
-			exit 0
-		elif [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME""checkupdate" ]; then
-			Check_Lock
-			updatecheckresult="$(Update_Check)"
+			sleep 1
+			echo 'var refreshcacheddatastatus = "Done";' > /tmp/detect_vpnmgr.js
 			Clear_Lock
 			exit 0
-		elif [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME""doupdate" ]; then
-			Check_Lock
-			Update_Version "force" "unattended"
-			Clear_Lock
+		elif [ "$2" = "start" ] && [ "$3" = "${SCRIPT_NAME}getserverload" ]; then
+			rm -f /tmp/vpnmgrserverloads
+			for i in 1 2 3 4 5; do
+				VPN_CLIENTDESC="$(nvram get vpn_client"$i"_desc)"
+				if ! echo "$VPN_CLIENTDESC" | grep -iq "nordvpn"; then
+					continue
+				fi
+				printf "var vpn%s_serverload=%s;\\r\\n" "$i" "$(getServerLoad "$VPN_CLIENTDESC")" >> /tmp/vpnmgrserverloads.tmp
+			done
+			mv /tmp/vpnmgrserverloads.tmp /tmp/vpnmgrserverloads
+		elif [ "$2" = "start" ] && [ "$3" = "${SCRIPT_NAME}checkupdate" ]; then
+			Update_Check
+			exit 0
+		elif [ "$2" = "start" ] && [ "$3" = "${SCRIPT_NAME}doupdate" ]; then
+			Update_Version force unattended
 			exit 0
 		fi
 		exit 0
 	;;
-	develop)
-		Check_Lock
-		sed -i 's/^readonly SCRIPT_BRANCH.*$/readonly SCRIPT_BRANCH="develop"/' "/jffs/scripts/$SCRIPT_NAME"
-		Clear_Lock
-		exec "$0" "update"
-		exit 0
-	;;
-	stable)
-		Check_Lock
-		sed -i 's/^readonly SCRIPT_BRANCH.*$/readonly SCRIPT_BRANCH="master"/' "/jffs/scripts/$SCRIPT_NAME"
-		Clear_Lock
-		exec "$0" "update"
+	checkupdate)
+		Update_Check
 		exit 0
 	;;
 	update)
-		Check_Lock
-		Update_Version "unattended"
-		Clear_Lock
+		Update_Version unattended
 		exit 0
 	;;
 	forceupdate)
-		Check_Lock
-		Update_Version "force" "unattended"
-		Clear_Lock
+		Update_Version force unattended
 		exit 0
 	;;
 	setversion)
-		Check_Lock
-		Set_Version_Custom_Settings "local"
-		Set_Version_Custom_Settings "server" "$SCRIPT_VERSION"
-		Clear_Lock
+		Set_Version_Custom_Settings local
+		Set_Version_Custom_Settings server "$SCRIPT_VERSION"
 		if [ -z "$2" ]; then
 			exec "$0"
 		fi
 		exit 0
 	;;
-	checkupdate)
-		Check_Lock
-		#shellcheck disable=SC2034
-		updatecheckresult="$(Update_Check)"
-		Clear_Lock
+	develop)
+		SCRIPT_BRANCH="develop"
+		SCRIPT_REPO="https://raw.githubusercontent.com/jackyaz/$SCRIPT_NAME/$SCRIPT_BRANCH"
+		Update_Version force
+		exit 0
+	;;
+	stable)
+		SCRIPT_BRANCH="master"
+		SCRIPT_REPO="https://raw.githubusercontent.com/jackyaz/$SCRIPT_NAME/$SCRIPT_BRANCH"
+		Update_Version force
 		exit 0
 	;;
 	uninstall)
-		Check_Lock
 		Menu_Uninstall
 		exit 0
 	;;
