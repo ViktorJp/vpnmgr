@@ -199,6 +199,19 @@ var $j=jQuery.noConflict(),daysofweek=["Mon","Tues","Wed","Thurs","Fri","Sat","S
 <span id="refreshcacheddata_text" style="display:none;">Cached data updated</span>
 </td>
 </tr>
+
+<tr>
+<th width="20%">Show VPN server load in client description
+<span style="color:#FFCC00;">(NordVPN servers only)</span>
+</th>
+<td>
+<input type="button" class="button_gen" onclick="GetServerLoad();" value="Load" id="btnGetServerLoad">
+<img id="imgGetServerLoad" style="display:none;vertical-align:middle;" src="images/InternetScan.gif"/>
+<span id="getserverload_text" style="display:none;">Server loads retrieved, see client descriptions</span>
+</td>
+</tr>
+
+
 </table>
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable" style="border:0px;" id="table_buttons">
