@@ -528,7 +528,7 @@ Conf_Exists(){
 
 # use to create content of vJSON variable; $1 VPN type, $2 VPN protocol, $3 country id
 getRecommendedServers(){
-	curlstring="https://api.nordvpn.com/v1/servers/recommendations?filters\[servers_groups\]\[identifier\]=$1&filters\[servers_technologies\]\[identifier\]=$2"
+	curlstring="https://api.nordvpn.com/v1/servers/recommendations?filters\[servers_groups\]\[identifier\]=${1}&filters\[servers_technologies\]\[identifier\]=${2}"
 	if [ "$3" != "0" ]; then
 		curlstring="${curlstring}&filters\[country_id\]=$3"
 	fi
