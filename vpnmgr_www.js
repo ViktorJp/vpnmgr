@@ -791,6 +791,51 @@ function DoUpdate(){
 	document.form.submit();
 }
 
+function getserverload_status(){
+	$j.ajax({
+		url: '/ext/vpnmgr/vpnmgrserverloads.js',
+		dataType: 'script',
+		timeout: 1000,
+		error: function(xhr){
+			//do nothing
+		},
+		success: function(data){
+			clearInterval(getserverloadinterval);
+			showhide("imgGetServerLoad", false);
+			showhide("getserverload_text", true);
+			
+			for(var i=1; i<=5; i++){
+				try{
+					if($j("#vpnmgr_vpn"+i+"_desc").html().indexOf("|") != -1){
+						$j("#vpnmgr_vpn"+i+"_desc").html($j("#vpnmgr_vpn"+i+"_desc").html().substring(0,$j("#vpnmgr_vpn"+i+"_desc").html().indexOf("|")-1) + " | " + eval("vpn"+i+"_serverload") + "%");
+					}
+					else{
+						$j("#vpnmgr_vpn"+i+"_desc").html($j("#vpnmgr_vpn"+i+"_desc").html() + " | " + eval("vpn"+i+"_serverload") + "%");
+					}
+				}
+				catch(err){
+					continue;
+				}
+			}
+			setTimeout(showhide, 3000,'getserverload_text',false);
+			setTimeout(showhide, 3100,'btnGetServerLoad',true);
+		}
+	});
+}
+
+function GetServerLoad(){
+	showhide("btnGetServerLoad", false);
+	document.formScriptActions.action_script.value = "start_vpnmgrgetserverload";
+	document.formScriptActions.submit();
+	showhide("imgGetServerLoad", true);
+	showhide("getserverload_text", false);
+	setTimeout(StartGetServerLoadInterval, 1000);
+}
+
+function StartGetServerLoadInterval(){
+	getserverloadinterval = setInterval(getserverload_status, 1000);
+}
+
 function RefreshCachedData(){
 	showhide("btnRefreshCachedData", false);
 	document.formScriptActions.action_script.value = "start_vpnmgrrefreshcacheddata";
