@@ -5,6 +5,9 @@ var nordvpncountries = [];
 var piacountries = [];
 var wevpncountries = [];
 
+var refreshcacheddatainterval;
+var getserverloadinterval;
+
 function SettingHint(hintid){
 	var tag_name = document.getElementsByTagName('a');
 	for (var i=0;i<tag_name.length;i++){
@@ -540,7 +543,7 @@ function initial(){
 	SetCurrentPage();
 	LoadCustomSettings();
 	show_menu();
-	getNordVPNCountryData();
+	GetNordVPNCountryData();
 	ScriptUpdateLayout();
 }
 
@@ -797,9 +800,8 @@ function RefreshCachedData(){
 	setTimeout(StartRefreshCachedDataInterval, 1000);
 }
 
-var myinterval;
 function StartRefreshCachedDataInterval(){
-	myinterval = setInterval(refreshcacheddata_status, 1000);
+	refreshcacheddatainterval = setInterval(refreshcacheddata_status, 1000);
 }
 
 var refreshcount=1;
@@ -821,7 +823,7 @@ function refreshcacheddata_status(){
 			else if (refreshcacheddatastatus == "Done"){
 				document.getElementById("refreshcacheddata_text").innerHTML = "Refreshing data...";
 				refreshcount=1;
-				clearInterval(myinterval);
+				clearInterval(refreshcacheddatainterval);
 				PostRefreshCachedData();
 			}
 			else if (refreshcacheddatastatus == "LOCKED"){
@@ -829,7 +831,7 @@ function refreshcacheddata_status(){
 				document.getElementById("refreshcacheddata_text").innerHTML = "Cached data refresh already running!";
 				showhide("refreshcacheddata_text", true);
 				showhide("btnRefreshCachedData", true);
-				clearInterval(myinterval);
+				clearInterval(refreshcacheddatainterval);
 			}
 		}
 	});
@@ -840,7 +842,7 @@ function PostRefreshCachedData(){
 		$j("#table_config_vpn"+vpnno).prev("div").remove();
 		$j("#table_config_vpn"+vpnno).remove();
 	}
-	setTimeout(getNordVPNCountryData, 3000);
+	setTimeout(GetNordVPNCountryData, 3000);
 }
 
 function GetVersionNumber(versiontype){
@@ -860,40 +862,40 @@ function GetVersionNumber(versiontype){
 	}
 }
 
-function getNordVPNCountryData(){
+function GetNordVPNCountryData(){
 	$j.ajax({
 		url: '/ext/vpnmgr/nordvpn_countrydata.htm',
 		dataType: 'json',
 		error: function(xhr){
-			setTimeout(getNordVPNCountryData, 1000);
+			setTimeout(GetNordVPNCountryData, 1000);
 		},
 		success: function(data){
 			nordvpncountries = data;
-			getPIACountryData();
+			GetPIACountryData();
 		}
 	});
 }
 
-function getPIACountryData(){
+function GetPIACountryData(){
 	$j.ajax({
 		url: '/ext/vpnmgr/pia_countrydata.htm',
 		dataType: 'text',
 		error: function(xhr){
-			setTimeout(getPIACountryData, 1000);
+			setTimeout(GetPIACountryData, 1000);
 		},
 		success: function(data){
 			piacountries = parseCountryData(data);
-			getWeVPNCountryData();
+			GetWeVPNCountryData();
 		}
 	});
 }
 
-function getWeVPNCountryData(){
+function GetWeVPNCountryData(){
 	$j.ajax({
 		url: '/ext/vpnmgr/wevpn_countrydata.htm',
 		dataType: 'text',
 		error: function(xhr){
-			setTimeout(getWeVPNCountryData, 1000);
+			setTimeout(GetWeVPNCountryData, 1000);
 		},
 		success: function(data){
 			wevpncountries = parseCountryData(data);
