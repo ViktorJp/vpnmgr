@@ -584,7 +584,7 @@ function BuildConfigTable(prefix,title){
 	
 	/* PASSWORD */
 	charthtml+='<tr>';
-	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(4);">Password</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="password" class="input_30_table" onchange="" name="vpnmgr_'+prefix+'_pwd" id="vpnmgr_'+prefix+'_pwd"><input type="checkbox" name="show_pass_'+prefix+'" onclick="pass_checked(document.form.vpnmgr_'+prefix+'_pwd,document.form.show_pass_'+prefix+')">Show password</td>';
+	charthtml+='<td class="settingname"><a class="hintstyle" href="javascript:void(0);" onclick="SettingHint(4);">Password</a></td><td class="settingvalue"><input autocomplete="off" autocapitalize="off" type="password" class="input_30_table" onchange="" name="vpnmgr_'+prefix+'_pwd" id="vpnmgr_'+prefix+'_pwd">&nbsp;&nbsp;&nbsp;<input type="checkbox" name="show_pass_'+prefix+'" onclick="pass_checked(document.form.vpnmgr_'+prefix+'_pwd,document.form.show_pass_'+prefix+')" style="vertical-align:middle;"><label for="vpnmgr_'+prefix+'_pwd" style="vertical-align:middle;margin-right:10px;margin-bottom:5px;">Show password?</label></td>';
 	charthtml+='</tr>';
 	
 	/* TYPE */
