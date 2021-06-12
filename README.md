@@ -1,6 +1,6 @@
 # vpnmgr
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/f73bdf3124904744b1844b4099f77bfe)](https://www.codacy.com/gh/jackyaz/vpnmgr/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jackyaz/vpnmgr&amp;utm_campaign=Badge_Grade)
-[![Build Status](https://travis-ci.com/jackyaz/vpnmgr.svg?branch=master)](https://travis-ci.com/jackyaz/vpnmgr)
+![Shellcheck](https://github.com/jackyaz/vpnmgr/actions/workflows/shellcheck.yml/badge.svg)
 
 ## v2.2.0
 ### Updated on 2021-02-07

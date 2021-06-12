@@ -14,8 +14,13 @@
 ###################################################
 
 ########         Shellcheck directives     ########
+# shellcheck disable=SC2016
 # shellcheck disable=SC2018
 # shellcheck disable=SC2019
+# shellcheck disable=SC2039
+# shellcheck disable=SC2140
+# shellcheck disable=SC2155
+# shellcheck disable=SC3003
 ###################################################
 
 ### Start of script variables ###
@@ -305,7 +310,6 @@ Auto_ServiceEvent(){
 		create)
 			if [ -f /jffs/scripts/service-event ]; then
 				STARTUPLINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/service-event)
-				# shellcheck disable=SC2016
 				STARTUPLINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME service_event"' "$@" & # '"$SCRIPT_NAME" /jffs/scripts/service-event)
 				
 				if [ "$STARTUPLINECOUNT" -gt 1 ] || { [ "$STARTUPLINECOUNTEX" -eq 0 ] && [ "$STARTUPLINECOUNT" -gt 0 ]; }; then
@@ -313,13 +317,11 @@ Auto_ServiceEvent(){
 				fi
 				
 				if [ "$STARTUPLINECOUNTEX" -eq 0 ]; then
-					# shellcheck disable=SC2016
 					echo "/jffs/scripts/$SCRIPT_NAME service_event"' "$@" & # '"$SCRIPT_NAME" >> /jffs/scripts/service-event
 				fi
 			else
 				echo "#!/bin/sh" > /jffs/scripts/service-event
 				echo "" >> /jffs/scripts/service-event
-				# shellcheck disable=SC2016
 				echo "/jffs/scripts/$SCRIPT_NAME service_event"' "$@" & # '"$SCRIPT_NAME" >> /jffs/scripts/service-event
 				chmod 0755 /jffs/scripts/service-event
 			fi
@@ -798,9 +800,6 @@ ListVPNClients(){
 	printf "\\n"
 }
 
-#shellcheck disable=SC2140
-#shellcheck disable=SC2018
-#shellcheck disable=SC2019
 UpdateVPNConfig(){
 	ISUNATTENDED=""
 	if [ "$1" = "unattended" ]; then
@@ -1466,7 +1465,6 @@ SetVPNParameters(){
 			while true; do
 				printf "\\n\\e[1mPlease select a country:\\e[0m\\n"
 				COUNTER="1"
-				#shellcheck disable=SC2039
 				IFS=$'\n'
 				for COUNTRY in $LISTCOUNTRIES; do
 					printf "    %s. %s\\n" "$COUNTER" "$COUNTRY" >> /tmp/vpnmgr_countrylist
@@ -1563,7 +1561,6 @@ SetVPNParameters(){
 				while true; do
 					printf "\\n\\e[1mPlease select a city:\\e[0m\\n"
 					COUNTER="1"
-					#shellcheck disable=SC2039
 					IFS=$'\n'
 					for CITY in $LISTCITIES; do
 						printf "    %s. %s\\n" "$COUNTER" "$CITY"
