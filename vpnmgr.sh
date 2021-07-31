@@ -1214,7 +1214,7 @@ SetVPNClient(){
 	ScriptHeader
 	ListVPNClients false "$1"
 	printf "Choose options as follows:\\n"
-	printf "    - VPN client [1-5]\\n"
+	printf "    - VPN client (pick from list)\\n"
 	printf "\\n"
 	printf "${BOLD}#########################################################${CLEARFORMAT}\\n"
 	
@@ -2135,7 +2135,7 @@ Menu_UpdateVPN(){
 	ScriptHeader
 	ListVPNClients false hide
 	printf "Choose options as follows:\\n"
-	printf "    - VPN client [1-5]\\n"
+	printf "    - VPN client (pick from list)\\n"
 	printf "    - VPN provider (pick from list)\\n"
 	printf "    - type of VPN (pick from list)\\n"
 	printf "    - protocol (pick from list)\\n"
@@ -2160,9 +2160,6 @@ Menu_UpdateVPN(){
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_cityname.*$/vpn'"$GLOBAL_VPN_NO"'_cityname='"$GLOBAL_CITY_NAME"'/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_cityid.*$/vpn'"$GLOBAL_VPN_NO"'_cityid='"$GLOBAL_CTIY_ID"'/' "$SCRIPT_CONF"
 		UpdateVPNConfig "$GLOBAL_VPN_NO"
-	else
-		printf "\\n"
-		Print_Output false "VPN client update cancelled" "$WARN"
 	fi
 	Clear_Lock
 }
@@ -2171,7 +2168,7 @@ Menu_ScheduleVPN(){
 	ScriptHeader
 	ListVPNClients false hide
 	printf "Choose options as follows:\\n"
-	printf "    - VPN client [1-5]\\n"
+	printf "    - VPN client (pick from list)\\n"
 	printf "    - day(s) to update [0-6]\\n"
 	printf "    - hour(s) to update [0-23]\\n"
 	printf "    - minute(s) to update [0-59]\\n"
@@ -2184,9 +2181,6 @@ Menu_ScheduleVPN(){
 		sed -i 's~^vpn'"$GLOBAL_VPN_NO"'_schhours.*$~vpn'"$GLOBAL_VPN_NO"'_schhours='"$GLOBAL_CRU_HOURS"'~' "$SCRIPT_CONF"
 		sed -i 's~^vpn'"$GLOBAL_VPN_NO"'_schmins.*$~vpn'"$GLOBAL_VPN_NO"'_schmins='"$GLOBAL_CRU_MINS"'~' "$SCRIPT_CONF"
 		ScheduleVPN "$GLOBAL_VPN_NO"
-	else
-		printf "\\n"
-		Print_Output false "VPN client update scheduling cancelled" "$WARN"
 	fi
 }
 
