@@ -811,7 +811,7 @@ ListVPNClients(){
 			MANAGEDSTATE="${BOLD}Unmanaged${CLEARFORMAT}"
 		fi
 		if [ "$(getConnectState "$i")" = "2" ]; then
-			CONNECTSTATE="${PASS}Active${CLEARFORMAT}"
+			CONNECTSTATE="${BOLD}${PASS}Active${CLEARFORMAT}"
 		else
 			CONNECTSTATE="${BOLD}${ERR}Inactive${CLEARFORMAT}"
 		fi
@@ -829,7 +829,7 @@ ListVPNClients(){
 			SERVERLOAD="$(getServerLoad "$VPN_CLIENTDESC")"
 		fi
 		
-		printf "%s.   $VPN_CLIENTDESC ($MANAGEDSTATE, $CONNECTSTATE and $SCHEDULESTATE)\\n" "$i" 
+		printf "%s.    $VPN_CLIENTDESC ($MANAGEDSTATE, $CONNECTSTATE and $SCHEDULESTATE)\\n" "$i"
 		if [ "$showload" = "true" ]; then
 			printf "      Current server load: %s%%\\n" "$SERVERLOAD"
 		fi
