@@ -835,7 +835,11 @@ ListVPNClients(){
 			SERVERLOAD="$(getServerLoad "$VPN_CLIENTDESC")"
 		fi
 		
-		printf "%s.    $VPN_CLIENTDESC ($MANAGEDSTATE, $SCHEDULESTATE, $CUSTOMSETTINGSTATE, $CONNECTSTATE)\\n" "$i"
+		if [ "$(grep "vpn${i}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
+			printf "%s.    $VPN_CLIENTDESC ($MANAGEDSTATE, $SCHEDULESTATE, $CUSTOMSETTINGSTATE, $CONNECTSTATE)\\n" "$i"
+		else
+			printf "%s.    $VPN_CLIENTDESC ($MANAGEDSTATE, $CONNECTSTATE)\\n" "$i"
+		fi
 		if [ "$showload" = "true" ]; then
 			printf "      Current server load: %s%%\\n" "$SERVERLOAD"
 		fi
