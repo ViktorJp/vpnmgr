@@ -1957,7 +1957,7 @@ MainMenu(){
 	printf "1l.   List NordVPN clients with server load percentages\\n\\n"
 	printf "2.    Update configuration for a managed VPN client\\n\\n"
 	printf "3.    Toggle management for a VPN client\\n\\n"
-	printf "4.    Search for new recommended server/reload server\\n"
+	printf "4.    Search for new recommended server/reload server\\n\\n"
 	printf "5.    Update schedule for a VPN client\\n"
 	printf "6.    Toggle scheduled VPN client update/reload\\n\\n"
 	printf "r.    Refresh cached data from VPN providers\\n\\n"
