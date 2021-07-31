@@ -2318,6 +2318,25 @@ Menu_Uninstall(){
 	Auto_Startup delete 2>/dev/null
 	Auto_ServiceEvent delete 2>/dev/null
 	
+	LOCKFILE=/tmp/addonwebui.lock
+	FD=386
+	eval exec "$FD>$LOCKFILE"
+	flock -x "$FD"
+	Get_WebUI_Page "$SCRIPT_DIR/vpnmgr_www.asp"
+	if [ -n "$MyPage" ] && [ "$MyPage" != "none" ] && [ -f /tmp/menuTree.js ]; then
+		sed -i "\\~$MyPage~d" /tmp/menuTree.js
+		umount /www/require/modules/menuTree.js
+		mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
+		rm -f "$SCRIPT_WEBPAGE_DIR/$MyPage"
+		rm -f "$SCRIPT_WEBPAGE_DIR/$(echo $MyPage | cut -f1 -d'.').title"
+	fi
+	flock -u "$FD"
+	rm -f "$SCRIPT_DIR/vpnmgr_www.asp" 2>/dev/null
+	
+	SETTINGSFILE="/jffs/addons/custom_settings.txt"
+	sed -i '/vpnmgr_version_local/d' "$SETTINGSFILE"
+	sed -i '/vpnmgr_version_server/d' "$SETTINGSFILE"
+	
 	rm -rf "$SCRIPT_WEB_DIR" 2>/dev/null
 	rm -rf "$SCRIPT_DIR" 2>/dev/null
 	
