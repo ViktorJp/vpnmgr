@@ -805,15 +805,21 @@ ListVPNClients(){
 		MANAGEDSTATE=""
 		CONNECTSTATE=""
 		SCHEDULESTATE=""
+		CUSTOMSETTINGSTATE=""
 		if [ "$(grep "vpn${i}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
-			MANAGEDSTATE="${SETTING}Managed${CLEARFORMAT}"
+			MANAGEDSTATE="${BOLD}${PASS}Managed${CLEARFORMAT}"
 		elif [ "$(grep "vpn${i}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
-			MANAGEDSTATE="${BOLD}Unmanaged${CLEARFORMAT}"
+			MANAGEDSTATE="${BOLD}${ERR}Unmanaged${CLEARFORMAT}"
 		fi
 		if [ "$(getConnectState "$i")" = "2" ]; then
-			CONNECTSTATE="${BOLD}${PASS}Active${CLEARFORMAT}"
+			CONNECTSTATE="${BOLD}${PASS}Connected${CLEARFORMAT}"
 		else
-			CONNECTSTATE="${BOLD}${ERR}Inactive${CLEARFORMAT}"
+			CONNECTSTATE="${BOLD}${ERR}Disconnected${CLEARFORMAT}"
+		fi
+		if [ "$(grep "vpn${i}_customsettings" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
+			CUSTOMSETTINGSTATE="${SETTING}Customised${CLEARFORMAT}"
+		elif [ "$(grep "vpn${i}_customsettings" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+			CUSTOMSETTINGSTATE="${BOLD}Uncustomised${CLEARFORMAT}"
 		fi
 		if [ "$(grep "vpn${i}_schenabled" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
 			SCHEDULESTATE="${SETTING}Scheduled${CLEARFORMAT}"
@@ -829,7 +835,7 @@ ListVPNClients(){
 			SERVERLOAD="$(getServerLoad "$VPN_CLIENTDESC")"
 		fi
 		
-		printf "%s.    $VPN_CLIENTDESC ($MANAGEDSTATE, $CONNECTSTATE and $SCHEDULESTATE)\\n" "$i"
+		printf "%s.    $VPN_CLIENTDESC ($MANAGEDSTATE, $SCHEDULESTATE, $CUSTOMSETTINGSTATE, $CONNECTSTATE)\\n" "$i"
 		if [ "$showload" = "true" ]; then
 			printf "      Current server load: %s%%\\n" "$SERVERLOAD"
 		fi
