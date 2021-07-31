@@ -1,19 +1,19 @@
 #!/bin/sh
 
-###################################################
-##                                               ##
-## __   __ _ __   _ __   _ __ ___    __ _  _ __  ##
-## \ \ / /| '_ \ | '_ \ | '_ ` _ \  / _` || '__| ##
-##  \ V / | |_) || | | || | | | | || (_| || |    ##
-##   \_/  | .__/ |_| |_||_| |_| |_| \__, ||_|    ##
-##        | |                        __/ |       ##
-##        |_|                       |___/        ##
-##                                               ##
-##       https://github.com/jackyaz/vpnmgr       ##
-##              forked from h0me5k1n             ##
-###################################################
+#######################################################
+##                                                   ##
+##   __   __ _ __   _ __   _ __ ___    __ _  _ __    ##
+##   \ \ / /| '_ \ | '_ \ | '_ ` _ \  / _` || '__|   ##
+##    \ V / | |_) || | | || | | | | || (_| || |      ##
+##     \_/  | .__/ |_| |_||_| |_| |_| \__, ||_|      ##
+##          | |                        __/ |         ##
+##          |_|                       |___/          ##
+##                                                   ##
+##         https://github.com/jackyaz/vpnmgr         ##
+##                forked from h0me5k1n               ##
+#######################################################
 
-########         Shellcheck directives     ########
+##########         Shellcheck directives     ##########
 # shellcheck disable=SC2016
 # shellcheck disable=SC2018
 # shellcheck disable=SC2019
@@ -21,7 +21,7 @@
 # shellcheck disable=SC2140
 # shellcheck disable=SC2155
 # shellcheck disable=SC3003
-###################################################
+#######################################################
 
 ### Start of script variables ###
 readonly SCRIPT_NAME="vpnmgr"
@@ -1895,20 +1895,20 @@ PressEnter(){
 ScriptHeader(){
 	clear
 	printf "\\n"
-	printf "\\e[1m###################################################\\e[0m\\n"
-	printf "\\e[1m##                                               ##\\e[0m\\n"
-	printf "\\e[1m## __   __ _ __   _ __   _ __ ___    __ _  _ __  ##\\e[0m\\n"
-	printf "\\e[1m## \ \ / /| '_ \ | '_ \ | '_   _ \  / _  || '__| ##\\e[0m\\n"
-	printf "\\e[1m##  \ V / | |_) || | | || | | | | || (_| || |    ##\\e[0m\\n"
-	printf "\\e[1m##   \_/  | .__/ |_| |_||_| |_| |_| \__, ||_|    ##\\e[0m\\n"
-	printf "\\e[1m##        | |                        __/ |       ##\\e[0m\\n"
-	printf "\\e[1m##        |_|                       |___/        ##\\e[0m\\n"
-	printf "\\e[1m##                                               ##\\e[0m\\n"
-	printf "\\e[1m##               %s on %-9s             ##\\e[0m\\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
-	printf "\\e[1m##                                               ##\\e[0m\\n"
-	printf "\\e[1m##       https://github.com/jackyaz/vpnmgr       ##\\e[0m\\n"
-	printf "\\e[1m##                                               ##\\e[0m\\n"
-	printf "\\e[1m###################################################\\e[0m\\n"
+	printf "${BOLD}#######################################################${CLEARFORMAT}\\n"
+	printf "${BOLD}##                                                   ##${CLEARFORMAT}\\n"
+	printf "${BOLD}##   __   __ _ __   _ __   _ __ ___    __ _  _ __    ##${CLEARFORMAT}\\n"
+	printf "${BOLD}##   \ \ / /| '_ \ | '_ \ | '_   _ \  / _  || '__|   ##${CLEARFORMAT}\\n"
+	printf "${BOLD}##    \ V / | |_) || | | || | | | | || (_| || |      ##${CLEARFORMAT}\\n"
+	printf "${BOLD}##     \_/  | .__/ |_| |_||_| |_| |_| \__, ||_|      ##${CLEARFORMAT}\\n"
+	printf "${BOLD}##          | |                        __/ |         ##${CLEARFORMAT}\\n"
+	printf "${BOLD}##          |_|                       |___/          ##${CLEARFORMAT}\\n"
+	printf "${BOLD}##                                                   ##${CLEARFORMAT}\\n"
+	printf "${BOLD}##                 %s on %-11s             ##${CLEARFORMAT}\\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
+	printf "${BOLD}##                                                   ##${CLEARFORMAT}\\n"
+	printf "${BOLD}##         https://github.com/jackyaz/vpnmgr         ##${CLEARFORMAT}\\n"
+	printf "${BOLD}##                                                   ##${CLEARFORMAT}\\n"
+	printf "${BOLD}#######################################################${CLEARFORMAT}\\n"
 	printf "\\n"
 }
 
