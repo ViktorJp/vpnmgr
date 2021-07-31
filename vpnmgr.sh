@@ -789,6 +789,7 @@ CompareArchiveContents(){
 
 ListVPNClients(){
 	showload="$1"
+	showunmanaged="$2"
 	
 	if [ "$showload" = "true" ]; then
 		printf "Checking server loads using NordVPN API...\\n\\n"
@@ -809,6 +810,9 @@ ListVPNClients(){
 		if [ "$(grep "vpn${i}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
 			MANAGEDSTATE="${BOLD}${PASS}Managed${CLEARFORMAT}"
 		elif [ "$(grep "vpn${i}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+			if [ "$showunmanaged" = "hide" ]; then
+				continue
+			fi
 			MANAGEDSTATE="${BOLD}${ERR}Unmanaged${CLEARFORMAT}"
 		fi
 		if [ "$(getConnectState "$i")" = "2" ]; then
@@ -1208,7 +1212,7 @@ Shortcut_Script(){
 
 SetVPNClient(){
 	ScriptHeader
-	ListVPNClients "false"
+	ListVPNClients false "$1"
 	printf "Choose options as follows:\\n"
 	printf "    - VPN client [1-5]\\n"
 	printf "\\n"
@@ -1281,6 +1285,10 @@ SetVPNParameters(){
 	done
 	
 	if [ "$exitmenu" != "exit" ]; then
+		if [ "$(grep "vpn${vpnnum}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+			Print_Output false "VPN client $vpnnum is not managed" "$ERR"
+			return 1
+		fi
 		while true; do
 			printf "\\n${BOLD}Please select a VPN provider:${CLEARFORMAT}\\n"
 			printf "    1. NordVPN\\n"
@@ -1983,14 +1991,14 @@ MainMenu(){
 			1)
 				printf "\\n"
 				ScriptHeader
-				ListVPNClients false
+				ListVPNClients false show
 				PressEnter
 				break
 			;;
 			1l)
 				printf "\\n"
 				ScriptHeader
-				ListVPNClients true
+				ListVPNClients true show
 				PressEnter
 				break
 			;;
@@ -2004,7 +2012,7 @@ MainMenu(){
 			;;
 			3)
 				printf "\\n"
-				if SetVPNClient; then
+				if SetVPNClient show; then
 					if [ "$(grep "vpn${GLOBAL_VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
 						ManageVPN "$GLOBAL_VPN_NO"
 					else
@@ -2017,7 +2025,7 @@ MainMenu(){
 			4)
 				printf "\\n"
 				if Check_Lock menu; then
-					if SetVPNClient; then
+					if SetVPNClient hide; then
 						if [ "$(grep "vpn${GLOBAL_VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
 							Print_Output false "VPN client $GLOBAL_VPN_NO is not managed, cannot search for new server" "$ERR"
 							break
@@ -2031,7 +2039,7 @@ MainMenu(){
 			;;
 			5)
 				printf "\\n"
-				if SetVPNClient; then
+				if SetVPNClient hide; then
 					if [ "$(grep "vpn${GLOBAL_VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
 						Print_Output false "VPN client $GLOBAL_VPN_NO is not managed, cannot enable schedule" "$ERR"
 						break
@@ -2053,7 +2061,7 @@ MainMenu(){
 			;;
 			7)
 				printf "\\n"
-				if SetVPNClient; then
+				if SetVPNClient hide; then
 					if [ "$(grep "vpn${GLOBAL_VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
 						Print_Output false "VPN client $GLOBAL_VPN_NO is not managed, cannot apply custom settings" "$ERR"
 						break
@@ -2125,7 +2133,7 @@ MainMenu(){
 
 Menu_UpdateVPN(){
 	ScriptHeader
-	ListVPNClients "false"
+	ListVPNClients false hide
 	printf "Choose options as follows:\\n"
 	printf "    - VPN client [1-5]\\n"
 	printf "    - VPN provider (pick from list)\\n"
@@ -2144,7 +2152,6 @@ Menu_UpdateVPN(){
 			VPN_TYPE_SHORT="$(echo "$VPN_TYPE_SHORT" | awk '{print toupper(substr($0,0,1))tolower(substr($0,2))}')"
 		fi
 		
-		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_managed.*$/vpn'"$GLOBAL_VPN_NO"'_managed=true/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_provider.*$/vpn'"$GLOBAL_VPN_NO"'_provider='"$GLOBAL_VPN_PROVIDER"'/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_type.*$/vpn'"$GLOBAL_VPN_NO"'_type='"$VPN_TYPE_SHORT"'/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_protocol.*$/vpn'"$GLOBAL_VPN_NO"'_protocol='"$VPN_PROT_SHORT"'/' "$SCRIPT_CONF"
@@ -2162,7 +2169,7 @@ Menu_UpdateVPN(){
 
 Menu_ScheduleVPN(){
 	ScriptHeader
-	ListVPNClients "false"
+	ListVPNClients false hide
 	printf "Choose options as follows:\\n"
 	printf "    - VPN client [1-5]\\n"
 	printf "    - day(s) to update [0-6]\\n"
