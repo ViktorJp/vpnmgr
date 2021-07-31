@@ -18,6 +18,7 @@
 # shellcheck disable=SC2018
 # shellcheck disable=SC2019
 # shellcheck disable=SC2039
+# shellcheck disable=SC2059
 # shellcheck disable=SC2140
 # shellcheck disable=SC2155
 # shellcheck disable=SC3003
