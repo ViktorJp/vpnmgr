@@ -829,7 +829,7 @@ ListVPNClients(){
 			SERVERLOAD="$(getServerLoad "$VPN_CLIENTDESC")"
 		fi
 		
-		printf "%s.    %s (%s, %s and %s)\\n" "$i" "$VPN_CLIENTDESC" "$MANAGEDSTATE" "$CONNECTSTATE" "$SCHEDULESTATE"
+		printf "%s.   $VPN_CLIENTDESC ($MANAGEDSTATE, $CONNECTSTATE and $SCHEDULESTATE)\\n" "$i" 
 		if [ "$showload" = "true" ]; then
 			printf "      Current server load: %s%%\\n" "$SERVERLOAD"
 		fi
