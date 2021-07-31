@@ -1222,14 +1222,14 @@ SetVPNClient(){
 	vpnnum=""
 	
 	while true; do
-		printf "\\n${BOLD}Please enter the VPN client number (1-5):${CLEARFORMAT}  "
+		printf "\\n${BOLD}Please enter the VPN client number (pick from list):${CLEARFORMAT}  "
 		read -r vpn_choice
 		
 		if [ "$vpn_choice" = "e" ]; then
 			exitmenu="exit"
 			break
 		elif ! Validate_Number "$vpn_choice"; then
-			printf "\\n\\e[31mPlease enter a valid number (1-5)${CLEARFORMAT}\\n"
+			printf "\\n\\e[31mPlease enter a valid number (pick from list)${CLEARFORMAT}\\n"
 		else
 			if [ "$vpn_choice" -lt 1 ] || [ "$vpn_choice" -gt 5 ]; then
 				printf "\\n\\e[31mPlease enter a number between 1 and 5${CLEARFORMAT}\\n"
@@ -1265,14 +1265,14 @@ SetVPNParameters(){
 	cityid=0
 	
 	while true; do
-		printf "\\n${BOLD}Please enter the VPN client number (1-5):${CLEARFORMAT}  "
+		printf "\\n${BOLD}Please enter the VPN client number (pick from list):${CLEARFORMAT}  "
 		read -r vpn_choice
 		
 		if [ "$vpn_choice" = "e" ]; then
 			exitmenu="exit"
 			break
 		elif ! Validate_Number "$vpn_choice"; then
-			printf "\\n\\e[31mPlease enter a valid number (1-5)${CLEARFORMAT}\\n"
+			printf "\\n\\e[31mPlease enter a valid number (pick from list)${CLEARFORMAT}\\n"
 		else
 			if [ "$vpn_choice" -lt 1 ] || [ "$vpn_choice" -gt 5 ]; then
 				printf "\\n\\e[31mPlease enter a number between 1 and 5${CLEARFORMAT}\\n"
@@ -1617,14 +1617,14 @@ SetScheduleParameters(){
 	crumins=""
 	
 	while true; do
-		printf "\\n${BOLD}Please enter the VPN client number (1-5):${CLEARFORMAT}  "
+		printf "\\n${BOLD}Please enter the VPN client number (pick from list):${CLEARFORMAT}  "
 		read -r vpn_choice
 		
 		if [ "$vpn_choice" = "e" ]; then
 			exitmenu="exit"
 			break
 		elif ! Validate_Number "$vpn_choice"; then
-			printf "\\n\\e[31mPlease enter a valid number (1-5)${CLEARFORMAT}\\n"
+			printf "\\n\\e[31mPlease enter a valid number (pick from list)${CLEARFORMAT}\\n"
 		else
 			if [ "$vpn_choice" -lt 1 ] || [ "$vpn_choice" -gt 5 ]; then
 				printf "\\n\\e[31mPlease enter a number between 1 and 5${CLEARFORMAT}\\n"
