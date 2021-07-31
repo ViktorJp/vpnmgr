@@ -2405,7 +2405,6 @@ if [ -z "$1" ]; then
 	fi
 	Create_Dirs
 	Conf_Exists
-	Set_Version_Custom_Settings local
 	Auto_Cron create 2>/dev/null
 	Auto_Startup create 2>/dev/null
 	Auto_ServiceEvent create 2>/dev/null
