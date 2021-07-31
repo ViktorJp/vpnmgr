@@ -2016,7 +2016,6 @@ MainMenu(){
 					if SetVPNClient; then
 						if [ "$(grep "vpn${GLOBAL_VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
 							Print_Output false "VPN client $GLOBAL_VPN_NO is not managed, cannot search for new server" "$ERR"
-							return 1
 						fi
 						UpdateVPNConfig unattended "$GLOBAL_VPN_NO"
 					fi
@@ -2030,7 +2029,6 @@ MainMenu(){
 				if SetVPNClient; then
 					if [ "$(grep "vpn${GLOBAL_VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
 						Print_Output false "VPN client $GLOBAL_VPN_NO is not managed, cannot enable schedule" "$ERR"
-						return 1
 					fi
 					if [ "$(grep "vpn${GLOBAL_VPN_NO}_schenabled" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
 						ScheduleVPN "$GLOBAL_VPN_NO"
@@ -2052,7 +2050,6 @@ MainMenu(){
 				if SetVPNClient; then
 					if [ "$(grep "vpn${GLOBAL_VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
 						Print_Output false "VPN client $GLOBAL_VPN_NO is not managed, cannot apply custom settings" "$ERR"
-						return 1
 					fi
 					if [ "$(grep "vpn${GLOBAL_VPN_NO}_customsettings" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
 						sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_customsettings.*$/vpn'"$GLOBAL_VPN_NO"'_customsettings=true/' "$SCRIPT_CONF"
