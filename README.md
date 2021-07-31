@@ -2,8 +2,8 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/f73bdf3124904744b1844b4099f77bfe)](https://www.codacy.com/gh/jackyaz/vpnmgr/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jackyaz/vpnmgr&amp;utm_campaign=Badge_Grade)
 ![Shellcheck](https://github.com/jackyaz/vpnmgr/actions/workflows/shellcheck.yml/badge.svg)
 
-## v2.2.0
-### Updated on 2021-02-07
+## v2.3.0
+### Updated on 2021-07-31
 ## About
 The concept for this script was originally developed by [@h0me5k1n](https://github.com/h0me5k1n/asusmerlin-nvpnmgr)
 
