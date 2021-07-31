@@ -540,17 +540,9 @@ Conf_Exists(){
 		dos2unix "$SCRIPT_CONF"
 		chmod 0644 "$SCRIPT_CONF"
 		sed -i -e 's/"//g' "$SCRIPT_CONF"
-		if [ "$(wc -l < "$SCRIPT_CONF")" -eq 45 ]; then
+		if ! grep -q "_customsettings" "$SCRIPT_CONF"; then
 			for i in 1 2 3 4 5; do
-				sed -i '/^vpn'"$i"'_schmins=.*/a vpn'"$i"'_cityid=0' "$SCRIPT_CONF"
-				sed -i '/^vpn'"$i"'_schmins=.*/a vpn'"$i"'_countryid=0' "$SCRIPT_CONF"
-				sed -i '/^vpn'"$i"'_schmins=.*/a vpn'"$i"'_cityname=' "$SCRIPT_CONF"
-				sed -i '/^vpn'"$i"'_schmins=.*/a vpn'"$i"'_countryname=' "$SCRIPT_CONF"
-			done
-		fi
-		if [ "$(wc -l < "$SCRIPT_CONF")" -eq 65 ]; then
-			for i in 1 2 3 4 5; do
-				sed -i '/^vpn'"$i"'_managed=.*/a vpn'"$i"'_provider=NordVPN' "$SCRIPT_CONF"
+				sed -i '/^vpn'"$i"'_type=.*/a vpn'"$i"'_customsettings=true' "$SCRIPT_CONF"
 			done
 		fi
 		return 0
@@ -562,6 +554,7 @@ Conf_Exists(){
 				echo "vpn${i}_provider=NordVPN"
 				echo "vpn${i}_protocol=UDP"
 				echo "vpn${i}_type=Standard"
+				echo "vpn${i}_customsettings=true"
 				echo "vpn${i}_schenabled=false"
 				echo "vpn${i}_schdays=*"
 				echo "vpn${i}_schhours=0"
