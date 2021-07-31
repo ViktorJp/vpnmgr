@@ -1028,55 +1028,8 @@ UpdateVPNConfig(){
 		nvram set vpn_client"$VPN_NO"_connretry=0
 	fi
 	
-	vpncustomoptions='remote-random
-resolv-retry infinite
-remote-cert-tls server
-ping 15
-ping-restart 0
-ping-timer-rem
-persist-key
-persist-tun
-reneg-sec 0
-fast-io
-disable-occ
-mute-replay-warnings
-auth-nocache
-sndbuf 524288
-rcvbuf 524288
-push "sndbuf 524288"
-push "rcvbuf 524288"
-pull-filter ignore "auth-token"
-pull-filter ignore "ifconfig-ipv6"
-pull-filter ignore "route-ipv6"'
-	
-	if [ "$VPN_PROT_SHORT" = "UDP" ]; then
-		vpncustomoptions="$vpncustomoptions
-explicit-exit-notify 3"
-	fi
-	
-	if [ "$VPN_PROVIDER" = "NordVPN" ]; then
-		vpncustomoptions="$vpncustomoptions
-tun-mtu 1500
-tun-mtu-extra 32
-mssfix 1450"
-	fi
-	
 	if [ "$(grep "vpn${VPN_NO}_customsettings" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
-		if [ "$(Firmware_Number_Check "$(nvram get buildno)")" -lt "$(Firmware_Number_Check 386.3)" ]; then
-			vpncustomoptionsbase64="$(echo "$vpncustomoptions" | head -c -1 | openssl base64 -A)"
-			
-			if [ "$(/bin/uname -m)" = "aarch64" ]; then
-				nvram set vpn_client"$VPN_NO"_cust2="$(echo "$vpncustomoptionsbase64" | cut -c0-255)"
-				nvram set vpn_client"$VPN_NO"_cust21="$(echo "$vpncustomoptionsbase64" | cut -c256-510)"
-				nvram set vpn_client"$VPN_NO"_cust22="$(echo "$vpncustomoptionsbase64" | cut -c511-765)"
-			elif [ "$(uname -o)" = "ASUSWRT-Merlin" ]; then
-				nvram set vpn_client"$VPN_NO"_cust2="$vpncustomoptionsbase64"
-			else
-				nvram set vpn_client"$VPN_NO"_custom="$vpncustomoptions"
-			fi
-		else
-			printf "%s" "$vpncustomoptions" > /jffs/openvpn/vpn_client"$VPN_NO"_custom3
-		fi
+		SetVPNCustomSettings "$VPN_NO"
 	fi
 	
 	if [ "$ISUNATTENDED" = "true" ]; then
@@ -1918,6 +1871,59 @@ SetScheduleParameters(){
 	fi
 }
 
+SetVPNCustomSettings(){
+	VPN_NO="$1"
+	vpncustomoptions='remote-random
+resolv-retry infinite
+remote-cert-tls server
+ping 15
+ping-restart 0
+ping-timer-rem
+persist-key
+persist-tun
+reneg-sec 0
+fast-io
+disable-occ
+mute-replay-warnings
+auth-nocache
+sndbuf 524288
+rcvbuf 524288
+push "sndbuf 524288"
+push "rcvbuf 524288"
+pull-filter ignore "auth-token"
+pull-filter ignore "ifconfig-ipv6"
+pull-filter ignore "route-ipv6"'
+	
+	if [ "$VPN_PROT_SHORT" = "UDP" ]; then
+		vpncustomoptions="$vpncustomoptions
+explicit-exit-notify 3"
+	fi
+	
+	if [ "$VPN_PROVIDER" = "NordVPN" ]; then
+		vpncustomoptions="$vpncustomoptions
+tun-mtu 1500
+tun-mtu-extra 32
+mssfix 1450"
+	fi
+	
+	if [ "$(Firmware_Number_Check "$(nvram get buildno)")" -lt "$(Firmware_Number_Check 386.3)" ]; then
+		vpncustomoptionsbase64="$(echo "$vpncustomoptions" | head -c -1 | openssl base64 -A)"
+		
+		if [ "$(/bin/uname -m)" = "aarch64" ]; then
+			nvram set vpn_client"$VPN_NO"_cust2="$(echo "$vpncustomoptionsbase64" | cut -c0-255)"
+			nvram set vpn_client"$VPN_NO"_cust21="$(echo "$vpncustomoptionsbase64" | cut -c256-510)"
+			nvram set vpn_client"$VPN_NO"_cust22="$(echo "$vpncustomoptionsbase64" | cut -c511-765)"
+		elif [ "$(uname -o)" = "ASUSWRT-Merlin" ]; then
+			nvram set vpn_client"$VPN_NO"_cust2="$vpncustomoptionsbase64"
+		else
+			nvram set vpn_client"$VPN_NO"_custom="$vpncustomoptions"
+		fi
+		nvram commit
+	else
+		printf "%s" "$vpncustomoptions" > /jffs/openvpn/vpn_client"$VPN_NO"_custom3
+	fi
+}
+
 PressEnter(){
 	while true; do
 		printf "Press enter to continue..."
@@ -1958,8 +1964,9 @@ MainMenu(){
 	printf "2.    Update configuration for a managed VPN client\\n\\n"
 	printf "3.    Toggle management for a VPN client\\n\\n"
 	printf "4.    Search for new recommended server/reload server\\n\\n"
-	printf "5.    Update schedule for a VPN client\\n"
-	printf "6.    Toggle scheduled VPN client update/reload\\n\\n"
+	printf "5.    Toggle scheduled VPN client update/reload\\n"
+	printf "6.    Update schedule for a VPN client\\n\\n"
+	printf "7.    Toggle %s custom settings for a VPN client\\n\\n" "$SCRIPT_NAME"
 	printf "r.    Refresh cached data from VPN providers\\n\\n"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Update %s with latest version (force)\\n\\n" "$SCRIPT_NAME"
@@ -2024,12 +2031,6 @@ MainMenu(){
 			;;
 			5)
 				printf "\\n"
-				Menu_ScheduleVPN
-				PressEnter
-				break
-			;;
-			6)
-				printf "\\n"
 				if SetVPNClient; then
 					if [ "$(grep "vpn${GLOBAL_VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
 						Print_Output false "VPN client $GLOBAL_VPN_NO is not managed, cannot enable schedule" "$ERR"
@@ -2039,6 +2040,29 @@ MainMenu(){
 						ScheduleVPN "$GLOBAL_VPN_NO"
 					else
 						CancelScheduleVPN "$GLOBAL_VPN_NO"
+					fi
+				fi
+				PressEnter
+				break
+			;;
+			6)
+				printf "\\n"
+				Menu_ScheduleVPN
+				PressEnter
+				break
+			;;
+			7)
+				printf "\\n"
+				if SetVPNClient; then
+					if [ "$(grep "vpn${GLOBAL_VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+						Print_Output false "VPN client $GLOBAL_VPN_NO is not managed, cannot apply custom settings" "$ERR"
+						return 1
+					fi
+					if [ "$(grep "vpn${GLOBAL_VPN_NO}_customsettings" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+						sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_customsettings.*$/vpn'"$GLOBAL_VPN_NO"'_customsettings=true/' "$SCRIPT_CONF"
+						SetVPNCustomSettings "$GLOBAL_VPN_NO"
+					else
+						sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_customsettings.*$/vpn'"$GLOBAL_VPN_NO"'_customsettings=false/' "$SCRIPT_CONF"
 					fi
 				fi
 				PressEnter
