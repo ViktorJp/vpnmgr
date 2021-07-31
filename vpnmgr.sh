@@ -2395,6 +2395,46 @@ Entware_Ready(){
 }
 ### ###
 
+Show_About(){
+	cat <<EOF
+About
+  $SCRIPT_NAME enables easy management of your VPN Client connections for
+various VPN providers on AsusWRT-Merlin. The following VPN Providers are
+currently supported: NordVPN, Private Internet Access (PIA) and WeVPN.
+NordVPN clients can be configured to automatically refresh on a scheduled
+basis with the recommended server as provided by the NordVPN API.
+License
+  $SCRIPT_NAME is free to use under the GNU General Public License
+  version 3 (GPL-3.0) https://opensource.org/licenses/GPL-3.0
+Help & Support
+  https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=11
+Source code
+  https://github.com/jackyaz/$SCRIPT_NAME
+EOF
+	printf "\\n"
+}
+### ###
+
+### function based on @dave14305's FlexQoS show_help function ###
+Show_Help(){
+	cat <<EOF
+Available commands:
+  $SCRIPT_NAME about              explains functionality
+  $SCRIPT_NAME update             checks for updates
+  $SCRIPT_NAME forceupdate        updates to latest version (force update)
+  $SCRIPT_NAME startup force      runs startup actions such as mount WebUI tab
+  $SCRIPT_NAME install            installs script
+  $SCRIPT_NAME uninstall          uninstalls script
+  $SCRIPT_NAME updatevpn X        refresh VPN Client X with the latest server (NordVPN) and settings
+  $SCRIPT_NAME refreshcacheddata  triggers a redownload of ovpn file archives from PIA and WeVPN
+  $SCRIPT_NAME ntpredirect        apply firewall rules to intercept and redirect NTP traffic
+  $SCRIPT_NAME develop            switch to development branch
+  $SCRIPT_NAME stable             switch to stable branch
+EOF
+	printf "\\n"
+}
+### ###
+
 if [ -z "$1" ]; then
 	NTP_Ready
 	Entware_Ready
@@ -2548,6 +2588,14 @@ case "$1" in
 		Create_Symlinks
 		exit 0
 	;;
+	about)
+		ScriptHeader
+		Show_About
+		exit 0
+	;;
+	help)
+		ScriptHeader
+		Show_Help
 		exit 0
 	;;
 	develop)
@@ -2567,7 +2615,9 @@ case "$1" in
 		exit 0
 	;;
 	*)
-		echo "Command not recognised, please try again"
+		ScriptHeader
+		Print_Output false "Command not recognised." "$ERR"
+		Print_Output false "For a list of available commands run: $SCRIPT_NAME help"
 		exit 1
 	;;
 esac
