@@ -120,14 +120,14 @@ Set_Version_Custom_Settings(){
 		local)
 			if [ -f "$SETTINGSFILE" ]; then
 				if [ "$(grep -c "vpnmgr_version_local" $SETTINGSFILE)" -gt 0 ]; then
-					if [ "$SCRIPT_VERSION" != "$(grep "vpnmgr_version_local" /jffs/addons/custom_settings.txt | cut -f2 -d' ')" ]; then
-						sed -i "s/vpnmgr_version_local.*/vpnmgr_version_local $SCRIPT_VERSION/" "$SETTINGSFILE"
+					if [ "$2" != "$(grep "vpnmgr_version_local" /jffs/addons/custom_settings.txt | cut -f2 -d' ')" ]; then
+						sed -i "s/vpnmgr_version_local.*/vpnmgr_version_local $2/" "$SETTINGSFILE"
 					fi
 				else
-					echo "vpnmgr_version_local $SCRIPT_VERSION" >> "$SETTINGSFILE"
+					echo "vpnmgr_version_local $2" >> "$SETTINGSFILE"
 				fi
 			else
-				echo "vpnmgr_version_local $SCRIPT_VERSION" >> "$SETTINGSFILE"
+				echo "vpnmgr_version_local $2" >> "$SETTINGSFILE"
 			fi
 		;;
 		server)
@@ -149,7 +149,7 @@ Set_Version_Custom_Settings(){
 Update_Check(){
 	echo 'var updatestatus = "InProgress";' > "$SCRIPT_WEB_DIR/detect_update.js"
 	doupdate="false"
-	localver=$(grep "SCRIPT_VERSION=" /jffs/scripts/"$SCRIPT_NAME" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
+	localver=$(grep "SCRIPT_VERSION=" "/jffs/scripts/$SCRIPT_NAME" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 	/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep -qF "jackyaz" || { Print_Output true "404 error detected - stopping update" "$ERR"; return 1; }
 	serverver=$(/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep "SCRIPT_VERSION=" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 	if [ "$localver" != "$serverver" ]; then
@@ -172,33 +172,44 @@ Update_Check(){
 }
 
 Update_Version(){
-	if [ -z "$1" ] || [ "$1" = "unattended" ]; then
+	if [ -z "$1" ]; then
 		updatecheckresult="$(Update_Check)"
 		isupdate="$(echo "$updatecheckresult" | cut -f1 -d',')"
 		localver="$(echo "$updatecheckresult" | cut -f2 -d',')"
 		serverver="$(echo "$updatecheckresult" | cut -f3 -d',')"
 		
 		if [ "$isupdate" = "version" ]; then
-			Print_Output true "New version of $SCRIPT_NAME available - updating to $serverver" "$PASS"
+			Print_Output true "New version of $SCRIPT_NAME available - $serverver" "$PASS"
 		elif [ "$isupdate" = "md5" ]; then
-			Print_Output true "MD5 hash of $SCRIPT_NAME does not match - downloading updated $serverver" "$PASS"
+			Print_Output true "MD5 hash of $SCRIPT_NAME does not match - hotfix available $serverver" "$PASS"
 		fi
 		
-		Update_File shared-jy.tar.gz
-		
 		if [ "$isupdate" != "false" ]; then
-			Update_File vpnmgr_www.asp
-			/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
-			chmod 0755 /jffs/scripts/"$SCRIPT_NAME"
-			Clear_Lock
-			if [ -z "$1" ]; then
-				exec "$0" setversion
-			elif [ "$1" = "unattended" ]; then
-				exec "$0" setversion unattended
-			fi
+			printf "\\n${BOLD}Do you want to continue with the update? (y/n)${CLEARFORMAT}  "
+			read -r confirm
+			case "$confirm" in
+				y|Y)
+					Update_File shared-jy.tar.gz
+					Update_File vpnmgr_www.asp
+					
+					/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
+					chmod 0755 "/jffs/scripts/$SCRIPT_NAME"
+					Set_Version_Custom_Settings local "$serverver"
+					Set_Version_Custom_Settings server "$serverver"
+					Clear_Lock
+					PressEnter
+					exec "$0"
+					exit 0
+				;;
+				*)
+					printf "\\n"
+					Clear_Lock
+					return 1
+				;;
+			esac
 			exit 0
 		else
-			Print_Output true "No new version - latest is $localver" "$WARN"
+			Print_Output true "No updates available - latest is $localver" "$WARN"
 			Clear_Lock
 		fi
 	fi
@@ -209,12 +220,15 @@ Update_Version(){
 		Update_File shared-jy.tar.gz
 		Update_File vpnmgr_www.asp
 		/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
-		chmod 0755 /jffs/scripts/"$SCRIPT_NAME"
+		chmod 0755 "/jffs/scripts/$SCRIPT_NAME_LOWER"
+		Set_Version_Custom_Settings local "$serverver"
+		Set_Version_Custom_Settings server "$serverver"
 		Clear_Lock
 		if [ -z "$2" ]; then
-			exec "$0" setversion
+			PressEnter
+			exec "$0"
 		elif [ "$2" = "unattended" ]; then
-			exec "$0" setversion unattended
+			exec "$0" postupdate
 		fi
 		exit 0
 	fi
@@ -2437,29 +2451,65 @@ case "$1" in
 			Update_Check
 			exit 0
 		elif [ "$2" = "start" ] && [ "$3" = "${SCRIPT_NAME}doupdate" ]; then
-			Update_Version force unattended
+			Update_Version force
 			exit 0
 		fi
 		exit 0
 	;;
-	checkupdate)
-		Update_Check
-		exit 0
-	;;
 	update)
-		Update_Version unattended
+		Update_Version
 		exit 0
 	;;
 	forceupdate)
-		Update_Version force unattended
+		Update_Version force
 		exit 0
 	;;
 	setversion)
-		Set_Version_Custom_Settings local
+		Set_Version_Custom_Settings local "$SCRIPT_VERSION"
 		Set_Version_Custom_Settings server "$SCRIPT_VERSION"
-		if [ -z "$2" ]; then
-			exec "$0"
+		if [ ! -f /opt/bin/7z ]; then
+			opkg update
+			opkg install p7zip
+			opkg install column
 		fi
+		Create_Dirs
+		Conf_Exists
+		Auto_Cron create 2>/dev/null
+		Auto_Startup create 2>/dev/null
+		Auto_ServiceEvent create 2>/dev/null
+		Shortcut_Script create
+		if [ ! -f "$SCRIPT_DIR/nordvpn_countrydata" ]; then
+			getCountryData
+		fi
+		if [ "$(/usr/bin/find "$OVPN_ARCHIVE_DIR" -name "*.zip" | wc -l)" -lt 4 ]; then
+			getOVPNArchives
+		fi
+		
+		Create_Symlinks
+		exit 0
+	;;
+	postupdate)
+		if [ ! -f /opt/bin/7z ]; then
+			opkg update
+			opkg install p7zip
+			opkg install column
+		fi
+		Create_Dirs
+		Conf_Exists
+		Auto_Cron create 2>/dev/null
+		Auto_Startup create 2>/dev/null
+		Auto_ServiceEvent create 2>/dev/null
+		Shortcut_Script create
+		if [ ! -f "$SCRIPT_DIR/nordvpn_countrydata" ]; then
+			getCountryData
+		fi
+		if [ "$(/usr/bin/find "$OVPN_ARCHIVE_DIR" -name "*.zip" | wc -l)" -lt 4 ]; then
+			getOVPNArchives
+		fi
+		
+		Create_Symlinks
+		exit 0
+	;;
 		exit 0
 	;;
 	develop)
