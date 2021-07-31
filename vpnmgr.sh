@@ -1126,28 +1126,18 @@ ManageVPN(){
 		return 1
 	fi
 	
-	if [ "$(grep "vpn${VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
-		printf "\\n"
-		Print_Output false "VPN client $VPN_NO is already managed by $SCRIPT_NAME" "$WARN"
-	elif [ "$(grep "vpn${VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
-		Print_Output true "Enabling management of VPN client $VPN_NO" "$PASS"
-		sed -i 's/^vpn'"$VPN_NO"'_managed.*$/vpn'"$VPN_NO"'_managed=true/' "$SCRIPT_CONF"
-		Print_Output true "Management of VPN client $VPN_NO successfully enabled" "$PASS"
-	fi
+	Print_Output true "Enabling management of VPN client $VPN_NO" "$PASS"
+	sed -i 's/^vpn'"$VPN_NO"'_managed.*$/vpn'"$VPN_NO"'_managed=true/' "$SCRIPT_CONF"
+	Print_Output true "Management of VPN client $VPN_NO successfully enabled" "$PASS"
 }
 
 UnmanageVPN(){
 	VPN_NO="$1"
 	
-	if [ "$(grep "vpn${VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
-		Print_Output true "Removing management of VPN client $VPN_NO" "$PASS"
-		sed -i 's/^vpn'"$VPN_NO"'_managed.*$/vpn'"$VPN_NO"'_managed=false/' "$SCRIPT_CONF"
-		CancelScheduleVPN "$VPN_NO"
-		Print_Output true "Management of VPN client $VPN_NO successfully removed" "$PASS"
-	elif [ "$(grep "vpn${VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
-		printf "\\n"
-		Print_Output false "VPN client $VPN_NO is not managed by $SCRIPT_NAME" "$WARN"
-	fi
+	Print_Output true "Removing management of VPN client $VPN_NO" "$PASS"
+	sed -i 's/^vpn'"$VPN_NO"'_managed.*$/vpn'"$VPN_NO"'_managed=false/' "$SCRIPT_CONF"
+	CancelScheduleVPN "$VPN_NO"
+	Print_Output true "Management of VPN client $VPN_NO successfully removed" "$PASS"
 }
 
 ScheduleVPN(){
@@ -2178,7 +2168,6 @@ Menu_ScheduleVPN(){
 	printf "${BOLD}#########################################################${CLEARFORMAT}\\n"
 	
 	if SetScheduleParameters; then
-		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_managed.*$/vpn'"$GLOBAL_VPN_NO"'_managed=true/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_schenabled.*$/vpn'"$GLOBAL_VPN_NO"'_schenabled=true/' "$SCRIPT_CONF"
 		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_schdays.*$/vpn'"$GLOBAL_VPN_NO"'_schdays='"$(echo "$GLOBAL_CRU_DAYNUMBERS" | sed 's/0/Sun/;s/1/Mon/;s/2/Tues/;s/3/Wed/;s/4/Thurs/;s/5/Fri/;s/6/Sat/;')"'/' "$SCRIPT_CONF"
 		sed -i 's~^vpn'"$GLOBAL_VPN_NO"'_schhours.*$~vpn'"$GLOBAL_VPN_NO"'_schhours='"$GLOBAL_CRU_HOURS"'~' "$SCRIPT_CONF"
