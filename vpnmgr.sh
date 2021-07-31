@@ -1612,6 +1612,7 @@ SetScheduleParameters(){
 	vpnnum=""
 	formattype=""
 	crudays=""
+	crudaysvalidated=""
 	cruhours=""
 	crumins=""
 	
