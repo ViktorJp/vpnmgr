@@ -1061,16 +1061,22 @@ tun-mtu-extra 32
 mssfix 1450"
 	fi
 	
-	vpncustomoptionsbase64="$(echo "$vpncustomoptions" | head -c -1 | openssl base64 -A)"
-	
-	if [ "$(/bin/uname -m)" = "aarch64" ]; then
-		nvram set vpn_client"$VPN_NO"_cust2="$(echo "$vpncustomoptionsbase64" | cut -c0-255)"
-		nvram set vpn_client"$VPN_NO"_cust21="$(echo "$vpncustomoptionsbase64" | cut -c256-510)"
-		nvram set vpn_client"$VPN_NO"_cust22="$(echo "$vpncustomoptionsbase64" | cut -c511-765)"
-	elif [ "$(uname -o)" = "ASUSWRT-Merlin" ]; then
-		nvram set vpn_client"$VPN_NO"_cust2="$vpncustomoptionsbase64"
-	else
-		nvram set vpn_client"$VPN_NO"_custom="$vpncustomoptions"
+	if [ "$(grep "vpn${VPN_NO}_customsettings" "$SCRIPT_CONF" | cut -f2 -d"=")" = "true" ]; then
+		if [ "$(Firmware_Number_Check "$(nvram get buildno)")" -lt "$(Firmware_Number_Check 386.3)" ]; then
+			vpncustomoptionsbase64="$(echo "$vpncustomoptions" | head -c -1 | openssl base64 -A)"
+			
+			if [ "$(/bin/uname -m)" = "aarch64" ]; then
+				nvram set vpn_client"$VPN_NO"_cust2="$(echo "$vpncustomoptionsbase64" | cut -c0-255)"
+				nvram set vpn_client"$VPN_NO"_cust21="$(echo "$vpncustomoptionsbase64" | cut -c256-510)"
+				nvram set vpn_client"$VPN_NO"_cust22="$(echo "$vpncustomoptionsbase64" | cut -c511-765)"
+			elif [ "$(uname -o)" = "ASUSWRT-Merlin" ]; then
+				nvram set vpn_client"$VPN_NO"_cust2="$vpncustomoptionsbase64"
+			else
+				nvram set vpn_client"$VPN_NO"_custom="$vpncustomoptions"
+			fi
+		else
+			printf "%s" "$vpncustomoptions" > /jffs/openvpn/vpn_client"$VPN_NO"_custom3
+		fi
 	fi
 	
 	if [ "$ISUNATTENDED" = "true" ]; then
