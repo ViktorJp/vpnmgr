@@ -1203,30 +1203,26 @@ ScheduleVPN(){
 		sed -i "/${SCRIPT_NAME}_VPN${VPN_NO}/d" /jffs/scripts/services-start
 		echo "cru a ${SCRIPT_NAME}_VPN${VPN_NO} \"$CRU_MINUTES $CRU_HOURS * * $CRU_DAYNUMBERS /jffs/scripts/$SCRIPT_NAME updatevpn $VPN_NO\" # $SCRIPT_NAME" >> /jffs/scripts/services-start
 	else
-		echo "#!/bin/sh" >> /jffs/scripts/services-start
+		echo "#!/bin/sh" > /jffs/scripts/services-start
 		echo "cru a ${SCRIPT_NAME}_VPN${VPN_NO} \"$CRU_MINUTES $CRU_HOURS * * $CRU_DAYNUMBERS /jffs/scripts/$SCRIPT_NAME updatevpn $VPN_NO\" # $SCRIPT_NAME" >> /jffs/scripts/services-start
 		chmod 755 /jffs/scripts/services-start
 	fi
+	
+	sed -i 's/^vpn'"$VPN_NO"'_schenabled.*$/vpn'"$VPN_NO"'_schenabled=true/' "$SCRIPT_CONF"
 	
 	Print_Output true "Scheduled update created for VPN client $VPN_NO" "$PASS"
 }
 
 CancelScheduleVPN(){
 	VPN_NO="$1"
-	SCHEDULESTATE=""
-	if ! cru l | grep -q "#${SCRIPT_NAME}_VPN${VPN_NO}#"; then
-		SCHEDULESTATE="Unscheduled"
-	else
-		SCHEDULESTATE="Scheduled"
-	fi
-	
-	sed -i 's/^vpn'"$VPN_NO"'_schenabled.*$/vpn'"$VPN_NO"'_schenabled=false/' "$SCRIPT_CONF"
 	
 	Print_Output true "Removing scheduled update for VPN client $VPN_NO" "$PASS"
 		
 	if cru l | grep -q "${SCRIPT_NAME}_VPN${VPN_NO}"; then
 		cru d "${SCRIPT_NAME}_VPN${VPN_NO}"
 	fi
+	
+	sed -i 's/^vpn'"$VPN_NO"'_schenabled.*$/vpn'"$VPN_NO"'_schenabled=false/' "$SCRIPT_CONF"
 	
 	if grep -q "${SCRIPT_NAME}_VPN${VPN_NO}" /jffs/scripts/services-start; then
 		sed -i "/${SCRIPT_NAME}_VPN${VPN_NO}/d" /jffs/scripts/services-start
@@ -1287,7 +1283,6 @@ SetVPNClient(){
 		return 0
 	else
 		printf "\\n"
-		Print_Output false "VPN client selection cancelled" "$WARN"
 		return 1
 	fi
 }
@@ -1955,12 +1950,10 @@ MainMenu(){
 	printf "1.    List VPN client configurations\\n"
 	printf "1l.   List NordVPN clients with server load percentages\\n\\n"
 	printf "2.    Update configuration for a managed VPN client\\n\\n"
-	printf "3.    Enable management for a VPN client\\n"
-	printf "4.    Disable management for a VPN client\\n\\n"
-	printf "5.    Search for new recommended server/reload server\\n"
-	printf "6.    Update schedule for a VPN client\\n"
-	printf "7.    Enable a scheduled VPN client update/reload\\n"
-	printf "8.    Delete a scheduled VPN client update/reload\\n\\n"
+	printf "3.    Toggle management for a VPN client\\n\\n"
+	printf "4.    Search for new recommended server/reload server\\n"
+	printf "5.    Update schedule for a VPN client\\n"
+	printf "6.    Toggle scheduled VPN client update/reload\\n\\n"
 	printf "r.    Refresh cached data from VPN providers\\n\\n"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Update %s with latest version (force)\\n\\n" "$SCRIPT_NAME"
@@ -1976,19 +1969,21 @@ MainMenu(){
 		case "$menu" in
 			1)
 				printf "\\n"
-				Menu_ListVPN
+				ScriptHeader
+				ListVPNClients false
 				PressEnter
 				break
 			;;
 			1l)
 				printf "\\n"
-				Menu_ListVPN_WithLoad
+				ScriptHeader
+				ListVPNClients true
 				PressEnter
 				break
 			;;
 			2)
 				printf "\\n"
-				if Check_Lock "menu"; then
+				if Check_Lock menu; then
 					Menu_UpdateVPN
 				fi
 				PressEnter
@@ -1996,39 +1991,50 @@ MainMenu(){
 			;;
 			3)
 				printf "\\n"
-				Menu_ManageVPN
+				if SetVPNClient; then
+					if [ "$(grep "vpn${GLOBAL_VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+						ManageVPN "$GLOBAL_VPN_NO"
+					else
+						UnmanageVPN "$GLOBAL_VPN_NO"
+					fi
+				fi
 				PressEnter
 				break
 			;;
 			4)
 				printf "\\n"
-				Menu_UnmanageVPN
+				if Check_Lock menu; then
+					if SetVPNClient; then
+						if [ "$(grep "vpn${GLOBAL_VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+							Print_Output false "VPN client $GLOBAL_VPN_NO is not managed, cannot search for new server" "$ERR"
+							return 1
+						fi
+						UpdateVPNConfig unattended "$GLOBAL_VPN_NO"
+					fi
+					Clear_Lock
+				fi
 				PressEnter
 				break
 			;;
 			5)
 				printf "\\n"
-				if Check_Lock "menu"; then
-					Menu_SearchVPN
-				fi
+				Menu_ScheduleVPN
 				PressEnter
 				break
 			;;
 			6)
 				printf "\\n"
-				Menu_ScheduleVPN
-				PressEnter
-				break
-			;;
-			7)
-				printf "\\n"
-				Menu_EnableScheduleVPN
-				PressEnter
-				break
-			;;
-			8)
-				printf "\\n"
-				Menu_CancelScheduleVPN
+				if SetVPNClient; then
+					if [ "$(grep "vpn${GLOBAL_VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+						Print_Output false "VPN client $GLOBAL_VPN_NO is not managed, cannot enable schedule" "$ERR"
+						return 1
+					fi
+					if [ "$(grep "vpn${GLOBAL_VPN_NO}_schenabled" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
+						ScheduleVPN "$GLOBAL_VPN_NO"
+					else
+						CancelScheduleVPN "$GLOBAL_VPN_NO"
+					fi
+				fi
 				PressEnter
 				break
 			;;
@@ -2041,7 +2047,7 @@ MainMenu(){
 			;;
 			u)
 				printf "\\n"
-				if Check_Lock "menu"; then
+				if Check_Lock menu; then
 					Update_Version
 					Clear_Lock
 				fi
@@ -2050,7 +2056,7 @@ MainMenu(){
 			;;
 			uf)
 				printf "\\n"
-				if Check_Lock "menu"; then
+				if Check_Lock menu; then
 					Update_Version force
 					Clear_Lock
 				fi
@@ -2085,16 +2091,6 @@ MainMenu(){
 	
 	ScriptHeader
 	MainMenu
-}
-
-Menu_ListVPN(){
-	ScriptHeader
-	ListVPNClients "false"
-}
-
-Menu_ListVPN_WithLoad(){
-	ScriptHeader
-	ListVPNClients "true"
 }
 
 Menu_UpdateVPN(){
@@ -2134,38 +2130,6 @@ Menu_UpdateVPN(){
 	Clear_Lock
 }
 
-Menu_SearchVPN(){
-	if SetVPNClient; then
-		if [ "$(grep "vpn${GLOBAL_VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
-			Print_Output false "VPN client $GLOBAL_VPN_NO is not managed, cannot search for new server" "$ERR"
-			return 1
-		fi
-		UpdateVPNConfig unattended "$GLOBAL_VPN_NO"
-	else
-		printf "\\n"
-		Print_Output false "VPN server search cancelled" "$WARN"
-	fi
-	Clear_Lock
-}
-
-Menu_ManageVPN(){
-	if SetVPNClient; then
-		ManageVPN "$GLOBAL_VPN_NO"
-	else
-		printf "\\n"
-		Print_Output false "VPN client management enabling cancelled" "$WARN"
-	fi
-}
-
-Menu_UnmanageVPN(){
-	if SetVPNClient; then
-		UnmanageVPN "$GLOBAL_VPN_NO"
-	else
-		printf "\\n"
-		Print_Output false "VPN client management removal cancelled" "$WARN"
-	fi
-}
-
 Menu_ScheduleVPN(){
 	ScriptHeader
 	ListVPNClients "false"
@@ -2187,34 +2151,6 @@ Menu_ScheduleVPN(){
 	else
 		printf "\\n"
 		Print_Output false "VPN client update scheduling cancelled" "$WARN"
-	fi
-}
-
-Menu_EnableScheduleVPN(){
-	if SetVPNClient; then
-		if [ "$(grep "vpn${GLOBAL_VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
-			Print_Output false "VPN client $GLOBAL_VPN_NO is not managed, cannot enable schedule" "$ERR"
-			return 1
-		fi
-		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_managed.*$/vpn'"$GLOBAL_VPN_NO"'_managed=true/' "$SCRIPT_CONF"
-		sed -i 's/^vpn'"$GLOBAL_VPN_NO"'_schenabled.*$/vpn'"$GLOBAL_VPN_NO"'_schenabled=true/' "$SCRIPT_CONF"
-		ScheduleVPN "$GLOBAL_VPN_NO"
-	else
-		printf "\\n"
-		Print_Output false "VPN client schedule enabling cancelled" "$WARN"
-	fi
-}
-
-Menu_CancelScheduleVPN(){
-	if SetVPNClient; then
-		if [ "$(grep "vpn${GLOBAL_VPN_NO}_managed" "$SCRIPT_CONF" | cut -f2 -d"=")" = "false" ]; then
-			Print_Output false "VPN client $GLOBAL_VPN_NO is not managed, cannot cancel schedule" "$ERR"
-			return 1
-		fi
-		CancelScheduleVPN "$GLOBAL_VPN_NO"
-	else
-		printf "\\n"
-		Print_Output false "VPN client schedule cancellation cancelled" "$WARN"
 	fi
 }
 
