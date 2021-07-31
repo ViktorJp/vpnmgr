@@ -2464,7 +2464,9 @@ case "$1" in
 			done
 			exit 0
 		elif [ "$2" = "start" ] && [ "$3" = "${SCRIPT_NAME}refreshcacheddata" ]; then
+			rm -f /tmp/detect_vpnmgr.js
 			Check_Lock webui
+			sleep 3
 			echo 'var refreshcacheddatastatus = "InProgress";' > /tmp/detect_vpnmgr.js
 			sleep 1
 			getCountryData
