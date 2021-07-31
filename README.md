@@ -5,9 +5,10 @@
 ## v2.3.0
 ### Updated on 2021-07-31
 ## About
-The concept for this script was originally developed by [@h0me5k1n](https://github.com/h0me5k1n/asusmerlin-nvpnmgr)
+vpnmgr enables easy management of your VPN Client connections for various VPN providers on AsusWRT-Merlin. The following VPN Providers are currently supported: NordVPN, Private Internet Access (PIA) and WeVPN.
+NordVPN clients can be configured to automatically refresh on a scheduled basis with the recommended server as provided by the NordVPN API.
 
-Easy management of your VPN Client connections for various VPN providers on AsusWRT-Merlin.
+The concept for this script was originally developed by [@h0me5k1n](https://github.com/h0me5k1n/asusmerlin-nvpnmgr)
 
 ### Supporting development
 Love the script and want to support future development? Any and all donations gratefully received!
@@ -46,4 +47,4 @@ If this does not work, you will need to use the full path:
 ![CLI UI](https://puu.sh/HevPC/4f5ddfc3d6.png)
 
 ## Help
-Please post about any issues and problems here: [Asuswrt-Merlin AddOns on SNBForums](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/)
+Please post about any issues and problems here: [Asuswrt-Merlin AddOns on SNBForums](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=11)
