@@ -3,7 +3,7 @@
 ![Shellcheck](https://github.com/jackyaz/vpnmgr/actions/workflows/shellcheck.yml/badge.svg)
 
 ## v2.3.0
-### Updated on 2021-07-31
+### Updated on 2021-08-03
 ## About
 vpnmgr enables easy management of your VPN Client connections for various VPN providers on AsusWRT-Merlin. The following VPN Providers are currently supported: NordVPN, Private Internet Access (PIA) and WeVPN.
 NordVPN clients can be configured to automatically refresh on a scheduled basis with the recommended server as provided by the NordVPN API.
