@@ -741,7 +741,7 @@ getOVPNArchives(){
 	piachanged="$(CompareArchiveContents "/tmp/pia_udp_standard.zip /tmp/pia_tcp_standard.zip /tmp/pia_udp_strong.zip /tmp/pia_tcp_strong.zip")"
 	
 	if [ "$piachanged" = "true" ]; then
-		/opt/bin/7z -ba l "$OVPN_ARCHIVE_DIR/pia_udp_standard.zip" -- *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//' | sort | awk '{$1=$1;print}' > "$SCRIPT_DIR/pia_countrydata"
+		/opt/bin/7za -ba l "$OVPN_ARCHIVE_DIR/pia_udp_standard.zip" -- *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//' | sort | awk '{$1=$1;print}' > "$SCRIPT_DIR/pia_countrydata"
 		Print_Output true "Changes detected in PIA OpenVPN file archives, local copies updated" "$PASS"
 	else
 		Print_Output true "No changes in PIA OpenVPN file archives" "$WARN"
@@ -757,7 +757,7 @@ getOVPNArchives(){
 	wevpnchanged="$(CompareArchiveContents "/tmp/wevpn_udp_standard.zip /tmp/wevpn_tcp_standard.zip")"
 	
 	if [ "$wevpnchanged" = "true" ]; then
-		/opt/bin/7z -ba l "$OVPN_ARCHIVE_DIR/wevpn_tcp_standard.zip" -- *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//;s/-UDP//;s/-TCP//;s/_/ /;' | sort | awk '{$1=$1;print}' > "$SCRIPT_DIR/wevpn_countrydata"
+		/opt/bin/7za -ba l "$OVPN_ARCHIVE_DIR/wevpn_tcp_standard.zip" -- *.ovpn | awk '{ for (i = 6; i <= NF; i++) { printf "%s ",$i } printf "\n"}' | sed 's/\.ovpn//;s/-UDP//;s/-TCP//;s/_/ /;' | sort | awk '{$1=$1;print}' > "$SCRIPT_DIR/wevpn_countrydata"
 		Print_Output true "Changes detected in WeVPN OpenVPN file archives, local copies updated" "$PASS"
 	else
 		Print_Output true "No changes in WeVPN OpenVPN file archives" "$WARN"
@@ -912,13 +912,13 @@ UpdateVPNConfig(){
 			OVPN_FILENAME="${OVPN_FILENAME}_${VPN_CITYNAME}"
 		fi
 		OVPN_FILENAME="$(echo "$OVPN_FILENAME" | tr "A-Z" "a-z" | sed 's/ /_/g;')"
-		/opt/bin/7z e -bsp0 -bso0 "$OVPNARCHIVE" -o/tmp "$OVPN_FILENAME.ovpn"
+		/opt/bin/7za e -bsp0 -bso0 "$OVPNARCHIVE" -o/tmp "$OVPN_FILENAME.ovpn"
 		OVPN_DETAIL="$(cat "/tmp/$OVPN_FILENAME.ovpn")"
 		rm -f "/tmp/$OVPN_FILENAME.ovpn"
 	elif [ "$VPN_PROVIDER" = "WeVPN" ]; then
 		OVPNARCHIVE="$OVPN_ARCHIVE_DIR/wevpn_$(echo "$VPN_PROT" | cut -f2 -d"_")_$(echo "$VPN_TYPE" | cut -f2 -d"_").zip"
 		OVPN_FILENAME="$(echo "$VPN_COUNTRYNAME" | sedReverseCountryCodesWeVPN)"'_'"$(echo "$VPN_CITYNAME" | tr "A-Z" "a-z")-$VPN_PROT_SHORT"
-		/opt/bin/7z e -bsp0 -bso0 "$OVPNARCHIVE" -o/tmp "$OVPN_FILENAME.ovpn"
+		/opt/bin/7za e -bsp0 -bso0 "$OVPNARCHIVE" -o/tmp "$OVPN_FILENAME.ovpn"
 		OVPN_DETAIL="$(cat "/tmp/$OVPN_FILENAME.ovpn")"
 		rm -f "/tmp/$OVPN_FILENAME.ovpn"
 	fi
@@ -2405,7 +2405,7 @@ EOF
 if [ -z "$1" ]; then
 	NTP_Ready
 	Entware_Ready
-	if [ ! -f /opt/bin/7z ]; then
+	if [ ! -f /opt/bin/7za ]; then
 		opkg update
 		opkg install p7zip
 		opkg install column
@@ -2512,7 +2512,7 @@ case "$1" in
 	setversion)
 		Set_Version_Custom_Settings local "$SCRIPT_VERSION"
 		Set_Version_Custom_Settings server "$SCRIPT_VERSION"
-		if [ ! -f /opt/bin/7z ]; then
+		if [ ! -f /opt/bin/7za ]; then
 			opkg update
 			opkg install p7zip
 			opkg install column
@@ -2534,7 +2534,7 @@ case "$1" in
 		exit 0
 	;;
 	postupdate)
-		if [ ! -f /opt/bin/7z ]; then
+		if [ ! -f /opt/bin/7za ]; then
 			opkg update
 			opkg install p7zip
 			opkg install column
