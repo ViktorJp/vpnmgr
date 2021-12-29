@@ -1121,7 +1121,9 @@ UpdateVPNConfig(){
 	fi
 	
 	if nvram get vpn_clientx_eas | grep -q "$VPN_NO"; then
-		service restart_vpnclient"$VPN_NO" >/dev/null 2>&1
+		service stop_vpnclient"$VPN_NO" >/dev/null 2>&1
+		sleep 5
+		service start_vpnclient"$VPN_NO" >/dev/null 2>&1
 	fi
 	Print_Output true "VPN client $VPN_NO updated successfully ($OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT)" "$PASS"
 }
