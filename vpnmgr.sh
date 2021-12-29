@@ -14,6 +14,7 @@
 #######################################################
 
 ##########         Shellcheck directives     ##########
+# shellcheck disable=SC2009
 # shellcheck disable=SC2016
 # shellcheck disable=SC2018
 # shellcheck disable=SC2019
@@ -1123,6 +1124,12 @@ UpdateVPNConfig(){
 	if nvram get vpn_clientx_eas | grep -q "$VPN_NO"; then
 		service stop_vpnclient"$VPN_NO" >/dev/null 2>&1
 		sleep 5
+		if [ ! -f /opt/bin/xargs ]; then
+			Print_Output true "Installing findutils from Entware"
+			opkg update
+			opkg install findutils
+		fi
+		ps | grep -v grep | grep -i "openvpn" | grep "client$VPN_NO" | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1
 		service start_vpnclient"$VPN_NO" >/dev/null 2>&1
 	fi
 	Print_Output true "VPN client $VPN_NO updated successfully ($OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT)" "$PASS"
@@ -2212,6 +2219,7 @@ Check_Requirements(){
 		opkg install jq
 		opkg install p7zip
 		opkg install column
+		opkg install findutils
 		return 0
 	else
 		return 1
