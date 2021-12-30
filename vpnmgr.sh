@@ -594,7 +594,7 @@ getServersforCity(){
 }
 
 getCountryData(){
-	Print_Output true "Refreshing NordVPN country data..." "$PASS"
+	Print_Output true "Refreshing NordVPN country data..."
 	/usr/sbin/curl -fsL --retry 3 "https://api.nordvpn.com/v1/servers/countries" | jq -r > /tmp/nordvpn_countrydata
 	countrydata="$(cat /tmp/nordvpn_countrydata)"
 	[ -z "$countrydata" ] && Print_Output true "Error, country data from NordVPN failed to download" "$ERR" && return 1
@@ -726,7 +726,7 @@ getConnectState(){
 }
 
 getOVPNArchives(){
-	Print_Output true "Refreshing OpenVPN file archives..." "$PASS"
+	Print_Output true "Refreshing OpenVPN file archives..."
 	
 	### PIA ###
 	# Standard UDP
@@ -879,7 +879,7 @@ UpdateVPNConfig(){
 	OVPN_ADDR=""
 	
 	if [ "$VPN_PROVIDER" = "NordVPN" ]; then
-		Print_Output true "Retrieving recommended VPN server using NordVPN API with below parameters" "$PASS"
+		Print_Output true "Retrieving recommended VPN server using NordVPN API with below parameters"
 		if [ "$VPN_COUNTRYID" -eq 0 ]; then
 			Print_Output true "Protocol: $VPN_PROT_SHORT - Type: $VPN_TYPE_SHORT" "$PASS"
 			vJSON="$(getRecommendedServers "$VPN_TYPE" "$VPN_PROT" "$VPN_COUNTRYID")"
@@ -988,7 +988,7 @@ UpdateVPNConfig(){
 		return 1
 	fi
 	
-	Print_Output true "Updating VPN client $VPN_NO to new $VPN_PROVIDER server" "$PASS"
+	Print_Output true "Updating VPN client $VPN_NO to new $VPN_PROVIDER server"
 	
 	if [ -z "$(nvram get vpn_client"$VPN_NO"_addr)" ]; then
 		nvram set vpn_client"$VPN_NO"_adns=3
@@ -1168,7 +1168,7 @@ ManageVPN(){
 		return 1
 	fi
 	
-	Print_Output true "Enabling management of VPN client $VPN_NO" "$PASS"
+	Print_Output true "Enabling management of VPN client $VPN_NO"
 	sed -i 's/^vpn'"$VPN_NO"'_managed.*$/vpn'"$VPN_NO"'_managed=true/' "$SCRIPT_CONF"
 	Print_Output true "Management of VPN client $VPN_NO successfully enabled" "$PASS"
 }
@@ -1176,7 +1176,7 @@ ManageVPN(){
 UnmanageVPN(){
 	VPN_NO="$1"
 	
-	Print_Output true "Removing management of VPN client $VPN_NO" "$PASS"
+	Print_Output true "Removing management of VPN client $VPN_NO"
 	sed -i 's/^vpn'"$VPN_NO"'_managed.*$/vpn'"$VPN_NO"'_managed=false/' "$SCRIPT_CONF"
 	CancelScheduleVPN "$VPN_NO"
 	Print_Output true "Management of VPN client $VPN_NO successfully removed" "$PASS"
@@ -1188,7 +1188,7 @@ ScheduleVPN(){
 	CRU_HOURS="$(grep "vpn${VPN_NO}_schhours" "$SCRIPT_CONF" | cut -f2 -d"=")"
 	CRU_MINUTES="$(grep "vpn${VPN_NO}_schmins" "$SCRIPT_CONF" | cut -f2 -d"=")"
 	
-	Print_Output true "Configuring scheduled update for VPN client $VPN_NO" "$PASS"
+	Print_Output true "Configuring scheduled update for VPN client $VPN_NO"
 	
 	if cru l | grep -q "${SCRIPT_NAME}${VPN_NO}"; then
 		cru d "${SCRIPT_NAME}_VPN${VPN_NO}"
@@ -1213,7 +1213,7 @@ ScheduleVPN(){
 CancelScheduleVPN(){
 	VPN_NO="$1"
 	
-	Print_Output true "Removing scheduled update for VPN client $VPN_NO" "$PASS"
+	Print_Output true "Removing scheduled update for VPN client $VPN_NO"
 		
 	if cru l | grep -q "${SCRIPT_NAME}_VPN${VPN_NO}"; then
 		cru d "${SCRIPT_NAME}_VPN${VPN_NO}"
