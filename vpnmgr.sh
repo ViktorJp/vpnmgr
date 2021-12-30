@@ -1144,6 +1144,7 @@ UpdateVPNConfig(){
 }
 
 RestartVPNClient(){
+	Print_Output true "Restarting VPN client $1"
 	service stop_vpnclient"$1" >/dev/null 2>&1
 	sleep 5
 	if [ ! -f /opt/bin/xargs ]; then
