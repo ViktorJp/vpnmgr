@@ -1122,17 +1122,38 @@ UpdateVPNConfig(){
 	fi
 	
 	if nvram get vpn_clientx_eas | grep -q "$VPN_NO"; then
-		service stop_vpnclient"$VPN_NO" >/dev/null 2>&1
-		sleep 5
-		if [ ! -f /opt/bin/xargs ]; then
-			Print_Output true "Installing findutils from Entware"
-			opkg update
-			opkg install findutils
+		RestartVPNClient "$VPN_NO"
+		
+		Print_Output true "Testing that VPN client $VPN_NO is up ($OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT)"
+		tunnelup="false"
+		for i in 1 2 3; do
+			ping -w 3 -I "tun1$VPN_NO" 1.1.1.1 >/dev/null 2>&1
+			if $? -eq 0 ; then
+				tunnelup="true"
+				break
+			else
+				RestartVPNClient "$VPN_NO"
+			fi
+		done
+		
+		if [ "$tunnelup" = "false" ]; then
+			Print_Output true "VPN client $VPN_NO did not come up after 3 attempts, please investigate! ($OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT)" "$CRIT"
 		fi
-		ps | grep -v grep | grep -i "openvpn" | grep "client$VPN_NO" | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1
-		service start_vpnclient"$VPN_NO" >/dev/null 2>&1
+		
 	fi
 	Print_Output true "VPN client $VPN_NO updated successfully ($OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT)" "$PASS"
+}
+
+RestartVPNClient(){
+	service stop_vpnclient"$1" >/dev/null 2>&1
+	sleep 3
+	if [ ! -f /opt/bin/xargs ]; then
+		Print_Output true "Installing findutils from Entware"
+		opkg update
+		opkg install findutils
+	fi
+	ps | grep -v grep | grep -i "openvpn" | grep "client$1" | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1
+	service start_vpnclient"$1" >/dev/null 2>&1
 }
 
 ManageVPN(){
