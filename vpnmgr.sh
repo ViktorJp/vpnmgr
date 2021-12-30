@@ -1058,7 +1058,7 @@ UpdateVPNConfig(){
 	else
 		if [ -n "$(nvram get vpn_client"$VPN_NO"_username)" ] && [ -n "$(nvram get vpn_client"$VPN_NO"_password)" ]; then
 			while true; do
-				printf "\\n${BOLD}Do you want to update the username and password for the VPN client? (y/n)${CLEARFORMAT}  "
+				printf "${BOLD}Do you want to update the username and password for the VPN client? (y/n)${CLEARFORMAT}  "
 				read -r confirm
 				case "$confirm" in
 					y|Y)
