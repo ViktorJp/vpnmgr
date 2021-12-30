@@ -988,7 +988,7 @@ UpdateVPNConfig(){
 		return 1
 	fi
 	
-	Print_Output true "Updating VPN client $VPN_NO to $VPN_PROVIDER server" "$PASS"
+	Print_Output true "Updating VPN client $VPN_NO to new $VPN_PROVIDER server" "$PASS"
 	
 	if [ -z "$(nvram get vpn_client"$VPN_NO"_addr)" ]; then
 		nvram set vpn_client"$VPN_NO"_adns=3
@@ -1138,6 +1138,8 @@ UpdateVPNConfig(){
 		
 		if [ "$tunnelup" = "false" ]; then
 			Print_Output true "VPN client $VPN_NO did not come up after 3 attempts, please investigate! ($OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT)" "$CRIT"
+		else
+			Print_Output true "VPN client $VPN_NO is up! ($OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT)" "$PASS"
 		fi
 		
 	fi
