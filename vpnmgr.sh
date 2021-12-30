@@ -1124,11 +1124,10 @@ UpdateVPNConfig(){
 	if nvram get vpn_clientx_eas | grep -q "$VPN_NO"; then
 		RestartVPNClient "$VPN_NO"
 		
-		Print_Output true "Testing that VPN client $VPN_NO is up ($OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT)"
+		Print_Output true "Testing that VPN client $VPN_NO is up with a 10s ping test to 1.1.1.1 ($OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT)"
 		tunnelup="false"
 		for i in 1 2 3; do
-			ping -w 3 -I "tun1$VPN_NO" 1.1.1.1 >/dev/null 2>&1
-			if [ $? -eq 0 ]; then
+			if ping -w 10 -I "tun1$VPN_NO" 1.1.1.1 >/dev/null 2>&1; then
 				tunnelup="true"
 				break
 			else
@@ -1146,7 +1145,7 @@ UpdateVPNConfig(){
 
 RestartVPNClient(){
 	service stop_vpnclient"$1" >/dev/null 2>&1
-	sleep 3
+	sleep 5
 	if [ ! -f /opt/bin/xargs ]; then
 		Print_Output true "Installing findutils from Entware"
 		opkg update
@@ -1154,6 +1153,7 @@ RestartVPNClient(){
 	fi
 	ps | grep -v grep | grep -i "openvpn" | grep "client$1" | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1
 	service start_vpnclient"$1" >/dev/null 2>&1
+	sleep 5
 }
 
 ManageVPN(){
