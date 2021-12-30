@@ -1073,6 +1073,7 @@ UpdateVPNConfig(){
 						break
 					;;
 					n|N)
+						printf "\\n"
 						break
 					;;
 					*)
