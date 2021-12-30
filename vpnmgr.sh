@@ -1467,6 +1467,7 @@ SetVPNParameters(){
 						break
 					elif [ "$country_select" = "n" ] || [ "$country_select" = "N" ]; then
 						choosecountry="false"
+						printf "\\n"
 						break
 					elif [ "$country_select" = "y" ] || [ "$country_select" = "Y" ]; then
 						choosecountry="true"
@@ -1564,6 +1565,7 @@ SetVPNParameters(){
 								break
 							elif [ "$city_select" = "n" ] || [ "$city_select" = "N" ]; then
 								choosecity="false"
+								printf "\\n"
 								break
 							elif [ "$city_select" = "y" ] || [ "$city_select" = "Y" ]; then
 								choosecity="true"
