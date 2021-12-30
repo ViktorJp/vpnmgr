@@ -1128,7 +1128,7 @@ UpdateVPNConfig(){
 		tunnelup="false"
 		for i in 1 2 3; do
 			ping -w 3 -I "tun1$VPN_NO" 1.1.1.1 >/dev/null 2>&1
-			if $? -eq 0 ; then
+			if [ $? -eq 0 ]; then
 				tunnelup="true"
 				break
 			else
