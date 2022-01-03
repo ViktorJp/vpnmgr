@@ -985,10 +985,9 @@ UpdateVPNConfig(){
 	
 	if [ "$OVPN_ADDR" = "$EXISTING_ADDR" ] && [ "$OVPN_PORT" = "$EXISTING_PORT" ] && [ "$VPN_PROT_SHORT" = "$EXISTING_PROTO" ]; then
 		Print_Output true "VPN client $VPN_NO server - unchanged" "$WARN"
-		return 1
+	else
+		Print_Output true "Updating VPN client $VPN_NO to new $VPN_PROVIDER server"
 	fi
-	
-	Print_Output true "Updating VPN client $VPN_NO to new $VPN_PROVIDER server"
 	
 	if [ -z "$(nvram get vpn_client"$VPN_NO"_addr)" ]; then
 		nvram set vpn_client"$VPN_NO"_adns=3
