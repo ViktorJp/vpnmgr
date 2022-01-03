@@ -995,7 +995,7 @@ UpdateVPNConfig(){
 		nvram set vpn_client"$VPN_NO"_enforce=1
 		if [ "$(Firmware_Number_Check "$(nvram get buildno)")" -lt "$(Firmware_Number_Check 384.18)" ]; then
 			nvram set vpn_client"$VPN_NO"_clientlist="<DummyVPN>172.16.14.1>0.0.0.0>VPN"
-		else
+		elif [ "$(Firmware_Number_Check "$(nvram get buildno)")" -lt "$(Firmware_Number_Check 386.3)" ]; then
 			nvram set vpn_client"$VPN_NO"_clientlist="<DummyVPN>172.16.14.1>>VPN"
 		fi
 		if ! nvram get vpn_clientx_eas | grep -q "$VPN_NO"; then
