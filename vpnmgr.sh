@@ -1135,14 +1135,37 @@ UpdateVPNConfig(){
 			fi
 		done
 		
+		retry="false"
 		if [ "$tunnelup" = "false" ]; then
 			Print_Output true "VPN client $VPN_NO did not come up after 3 attempts, please investigate! ($OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT)" "$CRIT"
+			if [ "$ISUNATTENDED" != "true" ]; then
+				while true; do
+					printf "${BOLD}Do you want to vpnmgr to retry? (y/n)${CLEARFORMAT}  "
+					read -r confirm
+					case "$confirm" in
+						y|Y)
+							retry="true"
+							break
+						;;
+						n|N)
+							printf "\\n"
+							break
+						;;
+						*)
+							printf "\\n${BOLD}Please enter a valid choice (y/n)${CLEARFORMAT}\\n"
+						;;
+					esac
+				done
+			fi
 		else
 			Print_Output true "VPN client $VPN_NO is up! ($OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT)" "$PASS"
 		fi
-		
 	fi
-	Print_Output true "VPN client $VPN_NO updated successfully ($OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT)" "$PASS"
+	if [ "$retry" = "false" ]; then
+		Print_Output true "VPN client $VPN_NO updated ($OVPN_HOSTNAME_SHORT $VPN_TYPE_SHORT $VPN_PROT_SHORT)" "$PASS"
+	else
+		UpdateVPNConfig "$VPN_NO"
+	fi
 }
 
 RestartVPNClient(){
