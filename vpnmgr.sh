@@ -1150,12 +1150,6 @@ RestartVPNClient(){
 	Print_Output true "Restarting VPN client $1"
 	service stop_vpnclient"$1" >/dev/null 2>&1
 	sleep 5
-	if [ ! -f /opt/bin/xargs ]; then
-		Print_Output true "Installing findutils from Entware"
-		opkg update
-		opkg install findutils
-	fi
-	ps | grep -v grep | grep -i "openvpn" | grep "client$1" | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1
 	service start_vpnclient"$1" >/dev/null 2>&1
 	sleep 5
 }
@@ -2246,7 +2240,6 @@ Check_Requirements(){
 		opkg install jq
 		opkg install p7zip
 		opkg install column
-		opkg install findutils
 		return 0
 	else
 		return 1
