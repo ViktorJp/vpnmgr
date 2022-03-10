@@ -1943,22 +1943,22 @@ SetVPNCustomSettings(){
 resolv-retry infinite
 remote-cert-tls server
 ping 15
-ping-restart 0
-ping-timer-rem
+ping-restart 60
 persist-key
 persist-tun
 reneg-sec 0
 fast-io
 disable-occ
 mute-replay-warnings
-auth-nocache
 sndbuf 524288
 rcvbuf 524288
 push "sndbuf 524288"
 push "rcvbuf 524288"
 pull-filter ignore "auth-token"
 pull-filter ignore "ifconfig-ipv6"
-pull-filter ignore "route-ipv6"'
+pull-filter ignore "route-ipv6"
+pull-filter ignore "ping"
+pull-filter ignore "ping-restart"'
 	
 	if [ "$VPN_PROT_SHORT" = "UDP" ]; then
 		vpncustomoptions="$vpncustomoptions
